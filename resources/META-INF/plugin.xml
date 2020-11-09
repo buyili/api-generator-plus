@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator</id>
-    <name>Api Generator</name>
+    <name>Api Generator2</name>
     <version>2020.09.10</version>
     <vendor email="wenbin1876@gmail.com">孤峰</vendor>
 
@@ -47,7 +47,7 @@
       用法：<br>
       <ul><li>将光标定位到方法区域或者类名，鼠标右键单击"Generate Api".</li></ul><br>
       自定义配置项：<br>
-      Preferences —> Other Settings —> Api Generator Setting<br><br>
+      Preferences —> Other Settings —> Api Generator2 Setting<br><br>
       <table border="1">
         <tr>
           <th align="left">配置项</th>

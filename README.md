@@ -1,6 +1,6 @@
-# Api Generator
+# Api Generator2
 ## 简介
-《Api Generator》是一款可以自动生成接口文档的IDEA插件。包括基于Spring注解的RESTful接口和用于定义dubbo api的普通接口。其中，RESTful接口将自动上传并托管在内网部署的YApi服务器上，而普通接口则以markdown文件的形式保存在指定目录。
+《Api Generator2》是一款可以自动生成接口文档的IDEA插件。包括基于Spring注解的RESTful接口和用于定义dubbo api的普通接口。其中，RESTful接口将自动上传并托管在内网部署的YApi服务器上，而普通接口则以markdown文件的形式保存在指定目录。
 所以，如果你想利用该插件的能力帮你生成REST接口文档，请先确保你已部署好自己的YApi服务端。   
 传送门：[如何部署YApi平台](https://hellosean1025.github.io/yapi/devops/index.html)
 ## 特性
@@ -11,7 +11,7 @@
 - 支持@NotNull、@ResponseBody等常用注解的解析，基于json5生成YApi文档
 ## 快速开始
 ### 安装插件
-Preferences → Plugins → Marketplace → 搜索“Api Generator” → 安装该插件 → 重启IDE
+Preferences → Plugins → Marketplace → 搜索“Api Generator2” → 安装该插件 → 重启IDE
 ### 开始使用
 #### 上传REST接口
 选择一个Controller类，将光标定位到方法区（方法名或者方法注释）或Controller类上，点击鼠标右键，在弹出的菜单项里选择“Generate Api”单击，文档瞬间已经自动生成并托管到YApi平台！   
@@ -19,7 +19,7 @@ Preferences → Plugins → Marketplace → 搜索“Api Generator” → 安装
 #### 生成dubbo接口文档
 操作方式同上，插件会自动识别出这是一个普通接口，插件会将文档以markdown的形式输出，默认保存在当前项目的target目录下。（保存路径可更改，见下文介绍）
 ## 插件设置
-自定义配置项： Preferences —> Other Settings —> Api Generator Setting  
+自定义配置项： Preferences —> Other Settings —> Api Generator2 Setting  
 配置项|含义|详细解释
 ---|---|---
 Exclude Fields|过滤字段（多个字段以","分隔）|该配置项功能类似JSONField，用于过滤不想被解析的字段，多用于排除二方包里的干扰字段
