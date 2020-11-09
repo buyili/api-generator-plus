@@ -278,7 +278,7 @@ public class ApiGenerateAction extends AnAction {
         yApiInterface.setCatid(getCatId(catNameMap, classDesc));
         yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getDesc());
         yApiInterface.setPath(buildPath(classRequestMapping, methodMapping));
-        if (containResponseBodyAnnotation(psiMethod.getAnnotations()) || controller.getText().contains("Rest")) {
+        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         } else {
@@ -307,6 +307,15 @@ public class ApiGenerateAction extends AnAction {
             }
         }
         return null;
+    }
+
+    private boolean containRequestBodyAnnotation(PsiAnnotation[] annotations) {
+        for (PsiAnnotation annotation : annotations) {
+            if (annotation.getText().contains(WebAnnotation.RequestBody)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean containResponseBodyAnnotation(PsiAnnotation[] annotations) {
