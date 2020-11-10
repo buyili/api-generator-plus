@@ -1,9 +1,12 @@
 package site.forgus.plugins.apigenerator.config;
 
+import com.intellij.execution.util.EnvVariablesTable;
+import com.intellij.execution.util.EnvironmentVariable;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.*;
+import com.intellij.ui.table.JBTable;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
@@ -11,8 +14,11 @@ import site.forgus.plugins.apigenerator.util.AssertUtils;
 import site.forgus.plugins.apigenerator.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class ApiGeneratorSetting implements Configurable {
 
@@ -96,6 +102,14 @@ public class ApiGeneratorSetting implements Configurable {
         yApiPanel.add(autoCatCheckBox);
 
         jbTabbedPane.addTab("YApi Setting", yApiPanel);
+
+        //YApi setting
+        JBPanel projectConfigPanel = new JBPanel(layout);
+
+        projectConfigPanel.add(new JBLabel("hello"));
+        ProjectConfigListTableWithButtons jbTable = new ProjectConfigListTableWithButtons();
+        projectConfigPanel.add(jbTable.getComponent());
+        jbTabbedPane.addTab("Project Config", projectConfigPanel);
         return jbTabbedPane;
     }
 
