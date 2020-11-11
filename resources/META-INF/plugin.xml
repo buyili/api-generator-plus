@@ -143,6 +143,10 @@
                 class="site.forgus.plugins.apigenerator.CopyAsCurlBashAction" text="Copy as cURL (bash)">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
+        <action id="site.forgus.plugins.apigenerator.CopyIPAction" class="site.forgus.plugins.apigenerator.CopyIPAction"
+                text="Copy IP">
+            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
+        </action>
     </actions>
 
     <depends>com.intellij.modules.java</depends>

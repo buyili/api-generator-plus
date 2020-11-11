@@ -30,7 +30,8 @@ public class CopyAsCurlCMDAction extends AnAction {
             NotificationUtil.errorNotify("this operate only support in class file", project);
             return;
         }
-        CurlUtils.copyAsCUrl(referenceAt, CUrlClientType.CMD);
+        CurlUtils curlUtils = new CurlUtils();
+        curlUtils.copyAsCUrl(project, referenceAt, CUrlClientType.CMD);
     }
 
 }

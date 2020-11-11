@@ -4,21 +4,23 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.ide.CopyPasteManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ui.TextTransferable;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigenerator.constant.CUrlClientType;
-import site.forgus.plugins.apigenerator.constant.WebAnnotation;
 import site.forgus.plugins.apigenerator.curl.CurlUtils;
-import site.forgus.plugins.apigenerator.normal.MethodInfo;
 import site.forgus.plugins.apigenerator.util.NotificationUtil;
 
 /**
  * @author lmx 2020/11/11 14:19
  */
 
-public class CopyAsCurlBashAction extends AnAction {
+public class CopyIPAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
@@ -31,7 +33,9 @@ public class CopyAsCurlBashAction extends AnAction {
             return;
         }
         CurlUtils curlUtils = new CurlUtils();
-        curlUtils.copyAsCUrl(project, referenceAt, CUrlClientType.BASH);
+        String baseApi = curlUtils.getBaseApi();
+        NotificationUtil.infoNotify("已复制到剪切板", baseApi, project);
+        CopyPasteManager.getInstance().setContents(new TextTransferable(baseApi));
     }
 
 }
