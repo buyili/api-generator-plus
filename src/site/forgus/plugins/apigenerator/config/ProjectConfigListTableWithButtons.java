@@ -3,101 +3,146 @@ package site.forgus.plugins.apigenerator.config;
 import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.util.ui.ListTableModel;
 import org.jetbrains.annotations.Nullable;
-import sun.swing.table.DefaultTableCellHeaderRenderer;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
-import java.awt.*;
-
-public class ProjectConfigListTableWithButtons extends ListTableWithButtons<ProjectConfigInfo> {
+public class ProjectConfigListTableWithButtons extends ListTableWithButtons<YApiProjectConfigInfo> {
     @Override
     protected ListTableModel createListModel() {
-        return new ListTableModel(new TokenColumnInfo(), new PathPrefixColumnInfo());
+        return new ListTableModel(new TokenColumnInfo(),new PackageNameColumnInfo(), new ProjectIdColumnInfo(),
+                new BasePathColumnInfo());
     }
 
     @Override
-    protected ProjectConfigInfo createElement() {
-        System.out.println("hello");
-        ProjectConfigInfo projectConfigInfo = new ProjectConfigInfo();
-        projectConfigInfo.setToken("");
-        projectConfigInfo.setPathPrefix("");
-        return projectConfigInfo;
+    protected YApiProjectConfigInfo createElement() {
+        return new YApiProjectConfigInfo();
     }
 
     @Override
-    protected boolean isEmpty(ProjectConfigInfo element) {
+    protected boolean isEmpty(YApiProjectConfigInfo element) {
         return false;
     }
 
     @Override
-    protected ProjectConfigInfo cloneElement(ProjectConfigInfo variable) {
-        return null;
+    protected YApiProjectConfigInfo cloneElement(YApiProjectConfigInfo variable) {
+        return variable.clone();
     }
 
     @Override
-    protected boolean canDeleteElement(ProjectConfigInfo selection) {
+    protected boolean canDeleteElement(YApiProjectConfigInfo selection) {
         return true;
     }
 
-    protected class TokenColumnInfo extends ElementsColumnInfoBase<ProjectConfigInfo> {
-        private final DefaultTableCellRenderer myModifiedRenderer = new DefaultTableCellRenderer() {
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                component.setEnabled(table.isEnabled() && (hasFocus || isSelected));
-                int height = component.getHeight();
-                System.out.println(height);
-                return component;
-            }
-        };
+    protected static class TokenColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
         protected TokenColumnInfo() {
-            super("Token");
+            super("项目Token");
         }
 
         @Override
-        public TableCellRenderer getRenderer(ProjectConfigInfo element) {
-            DefaultTableCellHeaderRenderer defaultTableCellHeaderRenderer = new DefaultTableCellHeaderRenderer();
-            return new DefaultTableCellRenderer() {
-                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                    table.setRowHeight(4);
-                    table.setAutoscrolls(true);
-                    Component component = super.getTableCellRendererComponent(table, element.getPathPrefix(), isSelected, hasFocus, row, column);
-                    component.setEnabled(table.isEnabled() && (hasFocus || isSelected));
-                    int height = component.getHeight();
-                    System.out.println(height);
-                    return component;
-                }
-            };
+        public boolean isCellEditable(YApiProjectConfigInfo projectConfigInfo) {
+            return true;
+        }
+
+        @Override
+        public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
+            if (projectConfigInfo != null) {
+                projectConfigInfo.setToken(value);
+            }
         }
 
         @Nullable
         @Override
-        protected String getDescription(ProjectConfigInfo element) {
-            return null;
+        protected String getDescription(YApiProjectConfigInfo element) {
+            return "";
         }
 
         @Nullable
         @Override
-        public String valueOf(ProjectConfigInfo projectConfigInfo) {
-            return projectConfigInfo.getToken();
+        public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
+            return projectConfigInfo == null ? "" : projectConfigInfo.getToken();
         }
     }
 
-    protected class PathPrefixColumnInfo extends ElementsColumnInfoBase<ProjectConfigInfo>{
-        protected PathPrefixColumnInfo() {
-            super("Path Prefix");
+    protected static class BasePathColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
+        protected BasePathColumnInfo() {
+            super("接口基本路径");
         }
 
         @Nullable
         @Override
-        protected String getDescription(ProjectConfigInfo element) {
-            return null;
+        protected String getDescription(YApiProjectConfigInfo element) {
+            return "自动拼接在每个接口之前";
+        }
+
+        @Override
+        public boolean isCellEditable(YApiProjectConfigInfo projectConfigInfo) {
+            return true;
+        }
+
+        @Override
+        public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
+            if (projectConfigInfo != null) {
+                projectConfigInfo.setBasePath(value);
+            }
         }
 
         @Nullable
         @Override
-        public String valueOf(ProjectConfigInfo projectConfigInfo) {
-            return projectConfigInfo.getPathPrefix();
+        public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
+            return projectConfigInfo == null ? "" : projectConfigInfo.getBasePath();
+        }
+    }
+
+    protected static class PackageNameColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
+        protected PackageNameColumnInfo() {
+            super("模块包名");
+        }
+
+        @Nullable
+        @Override
+        protected String getDescription(YApiProjectConfigInfo element) {
+            return "多模块项目中模块包名";
+        }
+
+        @Override
+        public boolean isCellEditable(YApiProjectConfigInfo projectConfigInfo) {
+            return true;
+        }
+
+        @Override
+        public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
+            if (projectConfigInfo != null) {
+                projectConfigInfo.setPackageName(value);
+            }
+        }
+
+        @Nullable
+        @Override
+        public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
+            return projectConfigInfo == null ? "" : projectConfigInfo.getPackageName();
+        }
+    }
+
+    protected static class ProjectIdColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
+        protected ProjectIdColumnInfo() {
+            super("Project Id");
+        }
+
+        @Nullable
+        @Override
+        protected String getDescription(YApiProjectConfigInfo element) {
+            return "YApi项目id";
+        }
+
+        @Override
+        public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
+            if (projectConfigInfo != null) {
+                projectConfigInfo.setProjectId(value);
+            }
+        }
+
+        @Nullable
+        @Override
+        public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
+            return projectConfigInfo == null ? "" : projectConfigInfo.getProjectId();
         }
     }
 

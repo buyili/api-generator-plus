@@ -3,12 +3,15 @@ package site.forgus.plugins.apigenerator.yapi.sdk;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.intellij.openapi.ui.Messages;
 import site.forgus.plugins.apigenerator.util.HttpUtil;
+import site.forgus.plugins.apigenerator.util.NotificationUtil;
 import site.forgus.plugins.apigenerator.yapi.model.*;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +47,13 @@ public class YApiSdk {
         Type type = new TypeToken<YApiResponse<YApiProject>>() {
         }.getType();
         YApiResponse<YApiProject> yApiResponse = gson.fromJson(responseStr, type);
+        System.out.println(responseStr);
+        if(yApiResponse.getErrcode() != 0){
+            String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
+                    serverUrl, token);
+            Messages.showErrorDialog(message, "多模块项目配置保存失败");
+//            NotificationUtil.errorNotify("Server Url 和 Token 不匹配; server url: [] token: []");
+        }
         return yApiResponse.getData();
     }
 

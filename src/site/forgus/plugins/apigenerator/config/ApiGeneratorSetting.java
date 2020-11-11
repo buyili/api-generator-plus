@@ -1,24 +1,26 @@
 package site.forgus.plugins.apigenerator.config;
 
-import com.intellij.execution.util.EnvVariablesTable;
-import com.intellij.execution.util.EnvironmentVariable;
+import com.google.gson.Gson;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.*;
-import com.intellij.ui.table.JBTable;
+import com.intellij.util.ui.FormBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigenerator.util.AssertUtils;
+import site.forgus.plugins.apigenerator.util.NotificationUtil;
+import site.forgus.plugins.apigenerator.yapi.model.YApiProject;
 import site.forgus.plugins.apigenerator.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.io.IOException;
-import java.util.Arrays;
+import java.text.MessageFormat;
+import java.util.List;
 
 public class ApiGeneratorSetting implements Configurable {
 
@@ -36,9 +38,10 @@ public class ApiGeneratorSetting implements Configurable {
     JBTextField defaultCatTextField;
     JBCheckBox autoCatCheckBox;
     JBTextField excludeFields;
+    ProjectConfigListTableWithButtons projectConfigListTable;
 
     public ApiGeneratorSetting(Project project) {
-        oldState = ServiceManager.getService(project,ApiGeneratorConfig.class);
+        oldState = ServiceManager.getService(project, ApiGeneratorConfig.class);
     }
 
     @Nls(capitalization = Nls.Capitalization.Title)
@@ -53,63 +56,87 @@ public class ApiGeneratorSetting implements Configurable {
         JBTabbedPane jbTabbedPane = new JBTabbedPane();
         GridBagLayout layout = new GridBagLayout();
         //normal setting
-        JBPanel normalPanel = new JBPanel(layout);
+//        JBPanel normalPanel = new JBPanel(layout);
 
-        normalPanel.add(buildLabel(layout, "Exclude Fields:"));
+//        normalPanel.add(buildLabel(layout, "Exclude Fields:"));
         excludeFields = new JBTextField(oldState.excludeFields);
-        layout.setConstraints(excludeFields, getValueConstraints());
-        normalPanel.add(excludeFields);
+//        layout.setConstraints(excludeFields, getValueConstraints());
+//        normalPanel.add(excludeFields);
 
-        normalPanel.add(buildLabel(layout, "Save Directory:"));
+//        normalPanel.add(buildLabel(layout, "Save Directory:"));
         dirPathTextField = buildTextField(layout, oldState.dirPath);
-        normalPanel.add(dirPathTextField);
+//        normalPanel.add(dirPathTextField);
 
-        normalPanel.add(buildLabel(layout, "Indent Style:"));
+//        normalPanel.add(buildLabel(layout, "Indent Style:"));
         prefixTextField = buildTextField(layout, oldState.prefix);
-        normalPanel.add(prefixTextField);
+//        normalPanel.add(prefixTextField);
 
         overwriteCheckBox = buildJBCheckBox(layout, "Overwrite exists docs", oldState.overwrite);
-        normalPanel.add(overwriteCheckBox);
+//        normalPanel.add(overwriteCheckBox);
 
         cnFileNameCheckBox = buildJBCheckBox(layout, "Extract filename from doc comments", oldState.cnFileName);
-        normalPanel.add(cnFileNameCheckBox);
+//        normalPanel.add(cnFileNameCheckBox);
 
-
-        jbTabbedPane.addTab("Api Setting", normalPanel);
+        JPanel normalJPanel = FormBuilder.createFormBuilder()
+                .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFields, 1, false)
+                .addLabeledComponent(new JBLabel("Save Directory:"), dirPathTextField, 1, false)
+                .addLabeledComponent(new JBLabel("Indent Style:"), prefixTextField, 1, false)
+                .addComponent(overwriteCheckBox)
+                .addComponent(cnFileNameCheckBox)
+                .getPanel();
+        jbTabbedPane.addTab("Api Setting", normalJPanel);
 
         //YApi setting
-        JBPanel yApiPanel = new JBPanel(layout);
+//        JBPanel yApiPanel = new JBPanel(layout);
 
-        yApiPanel.add(buildLabel(layout, "YApi server url:"));
+//        yApiPanel.add(buildLabel(layout, "YApi server url:"));
         yApiUrlTextField = buildTextField(layout, oldState.yApiServerUrl);
-        yApiPanel.add(yApiUrlTextField);
+//        yApiPanel.add(yApiUrlTextField);
 
-        yApiPanel.add(buildLabel(layout, "Project token:"));
+//        yApiPanel.add(buildLabel(layout, "Project token:"));
         tokenTextField = buildTextField(layout, oldState.projectToken);
-        yApiPanel.add(tokenTextField);
+//        yApiPanel.add(tokenTextField);
 
-        yApiPanel.add(buildLabel(layout, "Project id:"));
+//        yApiPanel.add(buildLabel(layout, "Project id:"));
         GridBagConstraints textConstraints = getValueConstraints();
         projectIdLabel = new JBLabel(oldState.projectId);
-        layout.setConstraints(projectIdLabel, textConstraints);
-        yApiPanel.add(projectIdLabel);
+//        layout.setConstraints(projectIdLabel, textConstraints);
+//        yApiPanel.add(projectIdLabel);
 
-        yApiPanel.add(buildLabel(layout, "Default save category:"));
+//        yApiPanel.add(buildLabel(layout, "Default save category:"));
         defaultCatTextField = buildTextField(layout, oldState.defaultCat);
-        yApiPanel.add(defaultCatTextField);
+//        yApiPanel.add(defaultCatTextField);
 
         autoCatCheckBox = buildJBCheckBox(layout, "Classify API automatically", oldState.autoCat);
-        yApiPanel.add(autoCatCheckBox);
+//        yApiPanel.add(autoCatCheckBox);
 
-        jbTabbedPane.addTab("YApi Setting", yApiPanel);
+        JPanel yApiJPanel = FormBuilder.createFormBuilder()
+                .addLabeledComponent(new JBLabel("YApi server url:"), yApiUrlTextField, 1, false)
+                .addLabeledComponent(new JBLabel("Project token:"), tokenTextField, 1, false)
+                .addLabeledComponent(new JBLabel("Project id:"), projectIdLabel, 1, false)
+                .addLabeledComponent(new JBLabel("Default save category:"), defaultCatTextField, 1, false)
+                .addComponent(autoCatCheckBox)
+                .getPanel();
+//        jbTabbedPane.addTab("YApi Setting", yApiPanel);
+        jbTabbedPane.addTab("YApi Setting", yApiJPanel);
 
         //YApi setting
-        JBPanel projectConfigPanel = new JBPanel(layout);
+        projectConfigListTable = new ProjectConfigListTableWithButtons();
+        projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
 
-        projectConfigPanel.add(new JBLabel("hello"));
-        ProjectConfigListTableWithButtons jbTable = new ProjectConfigListTableWithButtons();
-        projectConfigPanel.add(jbTable.getComponent());
-        jbTabbedPane.addTab("Project Config", projectConfigPanel);
+        JPanel panel = FormBuilder.createFormBuilder()
+                .addComponentFillVertically(projectConfigListTable.getComponent(), 0)
+                .getPanel();
+        jbTabbedPane.addTab("Project Config", panel);
+
+
+
+//        ProjectConfigListComponent projectConfigListComponent = new ProjectConfigListComponent();
+//
+//        JPanel panel1 = FormBuilder.createFormBuilder()
+//                .addComponentFillVertically(projectConfigListComponent, 0)
+//                .getPanel();
+//        jbTabbedPane.addTab("Project Config1", panel1);
         return jbTabbedPane;
     }
 
@@ -147,6 +174,11 @@ public class ApiGeneratorSetting implements Configurable {
         return textConstraints;
     }
 
+    public boolean compareProjectConfigInfoList(List<YApiProjectConfigInfo> var1, List<YApiProjectConfigInfo> var2) {
+        Gson gson = new Gson();
+        return gson.toJson(var1).equals(gson.toJson(var2));
+    }
+
     @Override
     public boolean isModified() {
         return !oldState.prefix.equals(prefixTextField.getText()) ||
@@ -158,7 +190,8 @@ public class ApiGeneratorSetting implements Configurable {
                 !oldState.defaultCat.equals(defaultCatTextField.getText()) ||
                 oldState.autoCat != autoCatCheckBox.isSelected() ||
                 !oldState.dirPath.equals(dirPathTextField.getText()) ||
-                !oldState.excludeFields.equals(excludeFields.getText());
+                !oldState.excludeFields.equals(excludeFields.getText()) ||
+                !compareProjectConfigInfoList(oldState.yApiProjectConfigInfoList, projectConfigListTable.getTableView().getItems());
     }
 
     @Override
@@ -176,7 +209,7 @@ public class ApiGeneratorSetting implements Configurable {
         oldState.overwrite = overwriteCheckBox.isSelected();
         oldState.yApiServerUrl = yApiUrlTextField.getText();
         oldState.projectToken = tokenTextField.getText();
-        if(AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(tokenTextField.getText())) {
+        if (AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(tokenTextField.getText())) {
             try {
                 oldState.projectId = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), tokenTextField.getText()).get_id().toString();
             } catch (IOException e) {
@@ -185,6 +218,49 @@ public class ApiGeneratorSetting implements Configurable {
         }
         oldState.defaultCat = defaultCatTextField.getText();
         oldState.autoCat = autoCatCheckBox.isSelected();
+        List<YApiProjectConfigInfo> items = projectConfigListTable.getTableView().getItems();
+        for (YApiProjectConfigInfo item : items) {
+            if (!AssertUtils.isEmpty(item.getToken())) {
+                try {
+                    YApiProject yApiProject = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), item.getToken());
+                    item.setProject(yApiProject);
+                    String projectId = yApiProject.get_id().toString();
+                    item.setProjectId(projectId);
+                } catch (IOException e) {
+//                    e.printStackTrace();
+                }
+            }
+        }
+        oldState.yApiProjectConfigInfoList = items;
     }
 
+    @Override
+    public void reset() {
+        excludeFields.setText(oldState.excludeFields);
+        dirPathTextField.setText(oldState.dirPath);
+        prefixTextField.setText(oldState.prefix);
+        cnFileNameCheckBox.setSelected(oldState.cnFileName);
+        overwriteCheckBox.setSelected(oldState.overwrite);
+        yApiUrlTextField.setText(oldState.yApiServerUrl);
+        tokenTextField.setText(oldState.projectToken);
+        defaultCatTextField.setText(oldState.defaultCat);
+        autoCatCheckBox.setSelected(oldState.autoCat);
+        projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
+    }
+
+    public static void main(String[] args) {
+        final JFrame frame = new JFrame("Test");
+        frame.setSize(300, 300);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        String[] hello = new String[]{"hel", "l"};
+        DefaultListModel<String> defaultListModel = JBList.createDefaultListModel(hello);
+        JBList<Object> objectJBList = new JBList<Object>(defaultListModel);
+        frame.getContentPane().add(objectJBList);
+
+//        final MultiColumnList list = new MultiColumnList("1", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+//        list.setFixedColumnsMode(5);
+//        frame.getContentPane().add(list);
+        frame.setVisible(true);
+    }
 }

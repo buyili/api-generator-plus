@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 
 public class NotificationUtil {
 
-    private static NotificationGroup notificationGroup = new NotificationGroup("Java2Json.NotificationGroup", NotificationDisplayType.BALLOON, true);
+    public static NotificationGroup notificationGroup = new NotificationGroup("Java2Json.NotificationGroup", NotificationDisplayType.BALLOON, true);
 
     public static void warnNotify(String message, Project project) {
         Notifications.Bus.notify(notificationGroup.createNotification(message, NotificationType.WARNING), project);
@@ -20,6 +20,10 @@ public class NotificationUtil {
 
     public static void errorNotify(String message, Project project) {
         Notifications.Bus.notify(notificationGroup.createNotification(message, NotificationType.ERROR), project);
+    }
+
+    public static void errorNotify(String message) {
+        Notifications.Bus.notify(notificationGroup.createNotification(message, NotificationType.ERROR));
     }
 
 }

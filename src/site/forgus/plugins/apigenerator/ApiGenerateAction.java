@@ -16,8 +16,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigenerator.config.ApiGeneratorConfig;
+import site.forgus.plugins.apigenerator.config.YApiProjectConfigInfo;
 import site.forgus.plugins.apigenerator.constant.TypeEnum;
 import site.forgus.plugins.apigenerator.constant.WebAnnotation;
 import site.forgus.plugins.apigenerator.normal.FieldInfo;
@@ -160,7 +160,7 @@ public class ApiGenerateAction extends AnAction {
         } catch (IOException e) {
             NotificationUtil.errorNotify(e.getMessage(), project);
         }
-        if(generateSuccess) {
+        if (generateSuccess) {
             NotificationUtil.infoNotify("generate api doc success.", project);
         }
     }
@@ -171,7 +171,7 @@ public class ApiGenerateAction extends AnAction {
             return;
         }
         boolean generateSuccess = generateDocForMethod(project, selectedMethod, dirPath);
-        if(generateSuccess) {
+        if (generateSuccess) {
             NotificationUtil.infoNotify("generate api doc success.", project);
         }
     }
@@ -183,11 +183,11 @@ public class ApiGenerateAction extends AnAction {
         }
         boolean generateSuccess = false;
         for (PsiMethod psiMethod : selectedClass.getMethods()) {
-            if(generateDocForMethod(project, psiMethod, dirPath)) {
+            if (generateDocForMethod(project, psiMethod, dirPath)) {
                 generateSuccess = true;
             }
         }
-        if(generateSuccess) {
+        if (generateSuccess) {
             NotificationUtil.infoNotify("generate api doc success.", project);
         }
     }
@@ -261,6 +261,12 @@ public class ApiGenerateAction extends AnAction {
         PsiAnnotation methodMapping = getMethodMapping(psiMethod);
         YApiInterface yApiInterface = new YApiInterface();
         yApiInterface.setToken(config.getState().projectToken);
+        yApiInterface.setPath(buildPath(classRequestMapping, methodMapping));
+        // 多模块项目，模块对应token等信息
+        YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(psiMethod);
+        yApiInterface.setToken(yApiProjectConfigInfo.getToken());
+        yApiInterface.setPath(yApiProjectConfigInfo.getBasePath().concat(yApiInterface.getPath()));
+
         RequestMethodEnum requestMethodEnum = getMethodFromAnnotation(methodMapping);
         yApiInterface.setMethod(requestMethodEnum.name());
         if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
@@ -273,11 +279,10 @@ public class ApiGenerateAction extends AnAction {
             }
         }
         yApiInterface.setReq_query(listYApiQueries(methodInfo.getRequestFields(), requestMethodEnum));
-        Map<String, YApiCat> catNameMap = getCatNameMap();
+        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         PsiDocComment classDesc = containingClass.getDocComment();
-        yApiInterface.setCatid(getCatId(catNameMap, classDesc));
+        yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
         yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getDesc());
-        yApiInterface.setPath(buildPath(classRequestMapping, methodMapping));
         if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
@@ -288,6 +293,8 @@ public class ApiGenerateAction extends AnAction {
         }
         yApiInterface.setReq_params(listYApiPathVariables(methodInfo.getRequestFields()));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc() : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
+
+
         return yApiInterface;
     }
 
@@ -340,11 +347,11 @@ public class ApiGenerateAction extends AnAction {
         for (FieldInfo fieldInfo : requestFields) {
             List<PsiAnnotation> annotations = fieldInfo.getAnnotations();
             PsiAnnotation pathVariable = getPathVariableAnnotation(annotations);
-            if(pathVariable == null) {
+            if (pathVariable == null) {
                 continue;
             }
             YApiPathVariable yApiPathVariable = new YApiPathVariable();
-            yApiPathVariable.setName(getPathVariableName(pathVariable,fieldInfo.getName()));
+            yApiPathVariable.setName(getPathVariableName(pathVariable, fieldInfo.getName()));
             yApiPathVariable.setDesc(fieldInfo.getDesc());
             yApiPathVariable.setExample(FieldUtil.getValue(fieldInfo.getPsiType()).toString());
             yApiPathVariables.add(yApiPathVariable);
@@ -352,7 +359,7 @@ public class ApiGenerateAction extends AnAction {
         return yApiPathVariables;
     }
 
-    private String getPathVariableName(PsiAnnotation pathVariable,String fieldName) {
+    private String getPathVariableName(PsiAnnotation pathVariable, String fieldName) {
         PsiNameValuePair[] psiNameValuePairs = pathVariable.getParameterList().getAttributes();
         if (psiNameValuePairs.length > 0) {
             for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
@@ -400,8 +407,8 @@ public class ApiGenerateAction extends AnAction {
         if (!path.startsWith(SLASH)) {
             p = SLASH + path;
         }
-        if(path.endsWith(SLASH)) {
-            p = p.substring(0,p.length()-1);
+        if (path.endsWith(SLASH)) {
+            p = p.substring(0, p.length() - 1);
         }
         return p;
     }
@@ -435,8 +442,36 @@ public class ApiGenerateAction extends AnAction {
         return yApiResponse.getData().get_id().toString();
     }
 
+    private String getCatId(Map<String, YApiCat> catNameMap, PsiDocComment classDesc, YApiProjectConfigInfo yApiProjectConfigInfo)
+            throws IOException {
+        String defaultCatName = getDefaultCatName();
+        String catName;
+        if (config.getState().autoCat) {
+            String classCatName = getClassCatName(classDesc);
+            catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
+        } else {
+            catName = defaultCatName;
+        }
+        YApiCat apiCat = catNameMap.get(catName);
+        if (apiCat != null) {
+            return apiCat.get_id().toString();
+        }
+        YApiResponse<YApiCat> yApiResponse = YApiSdk.addCategory(config.getState().yApiServerUrl,
+                yApiProjectConfigInfo.getToken(), yApiProjectConfigInfo.getProjectId(), catName);
+        return yApiResponse.getData().get_id().toString();
+    }
+
     private Map<String, YApiCat> getCatNameMap() throws IOException {
         List<YApiCat> yApiCats = YApiSdk.listCategories(config.getState().yApiServerUrl, config.getState().projectToken);
+        Map<String, YApiCat> catNameMap = new HashMap<>();
+        for (YApiCat cat : yApiCats) {
+            catNameMap.put(cat.getName(), cat);
+        }
+        return catNameMap;
+    }
+
+    private Map<String, YApiCat> getCatNameMap(YApiProjectConfigInfo yApiProjectConfigInfo) throws IOException {
+        List<YApiCat> yApiCats = YApiSdk.listCategories(config.getState().yApiServerUrl, yApiProjectConfigInfo.getToken());
         Map<String, YApiCat> catNameMap = new HashMap<>();
         for (YApiCat cat : yApiCats) {
             catNameMap.put(cat.getName(), cat);
@@ -620,10 +655,10 @@ public class ApiGenerateAction extends AnAction {
         String fileName = psiClass.getName();
         File apiDoc = new File(dirPath + SLASH + fileName + ".md");
         boolean notExist = apiDoc.createNewFile();
-        if(!notExist) {
-            if(!config.getState().overwrite) {
+        if (!notExist) {
+            if (!config.getState().overwrite) {
                 int choose = Messages.showOkCancelDialog(fileName + ".md already exists,do you want to overwrite it?", "Overwrite Warning!", "Yes", "No", Messages.getWarningIcon());
-                if(Messages.CANCEL == choose) {
+                if (Messages.CANCEL == choose) {
                     return false;
                 }
             }
@@ -671,8 +706,8 @@ public class ApiGenerateAction extends AnAction {
         String fileName = getFileName(methodInfo);
         File apiDoc = new File(dirPath + SLASH + fileName + ".md");
         boolean notExist = apiDoc.createNewFile();
-        if(!notExist) {
-            if(!config.getState().overwrite) {
+        if (!notExist) {
+            if (!config.getState().overwrite) {
                 int choose = Messages.showOkCancelDialog(fileName + ".md already exists,do you want to overwrite it?", "Overwrite Warning!", "Yes", "No", Messages.getWarningIcon());
                 if (Messages.CANCEL == choose) {
                     return false;
@@ -812,5 +847,30 @@ public class ApiGenerateAction extends AnAction {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public YApiProjectConfigInfo getProjectConfigInfo(PsiMethod psiMethod) {
+        PsiClass containingClass = psiMethod.getContainingClass();
+        String qualifiedName = containingClass.getQualifiedName();
+        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+            String packageName = yApiProjectConfigInfo.getPackageName();
+            if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
+                if(AssertUtils.isEmpty(yApiProjectConfigInfo.getToken())){
+                    yApiProjectConfigInfo.setToken(config.getState().projectToken);
+                    yApiProjectConfigInfo.setToken(config.getState().projectId);
+                }
+                assert AssertUtils.isNotEmpty(yApiProjectConfigInfo.getToken())
+                        && AssertUtils.isNotEmpty(yApiProjectConfigInfo.getProjectId());
+                if(AssertUtils.isEmpty(yApiProjectConfigInfo.getBasePath())){
+                    yApiProjectConfigInfo.setBasePath("");
+                }
+                return yApiProjectConfigInfo;
+            }
+        }
+        YApiProjectConfigInfo yApiProjectConfigInfo = new YApiProjectConfigInfo();
+        yApiProjectConfigInfo.setToken(config.getState().projectToken);
+        yApiProjectConfigInfo.setProjectId(config.getState().projectId);
+        yApiProjectConfigInfo.setBasePath("");
+        return yApiProjectConfigInfo;
     }
 }

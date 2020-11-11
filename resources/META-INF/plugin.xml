@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>site.forgus.plugins.api-generator</id>
+    <id>site.forgus.plugins.api-generator2</id>
     <name>Api Generator2</name>
     <version>2020.09.10</version>
     <vendor email="wenbin1876@gmail.com">孤峰</vendor>
@@ -131,7 +131,7 @@
     <actions>
         <!-- Add your actions here -->
         <action id="api-generator.ID" class="site.forgus.plugins.apigenerator.ApiGenerateAction"
-                text="Generate Api"
+                text="Generate Api2"
                 description="Generate api for target code.">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
