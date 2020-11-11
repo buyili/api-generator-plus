@@ -124,10 +124,11 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <projectConfigurable instance="site.forgus.plugins.apigenerator.config.ApiGeneratorSetting"/>
+        <!--        <projectConfigurable instance="site.forgus.plugins.apigenerator.config.ApiGeneratorSetting"/>-->
         <projectService serviceImplementation="site.forgus.plugins.apigenerator.config.ApiGeneratorConfig"/>
 
         <projectConfigurable instance="site.forgus.plugins.apigenerator.setting.GroupSettingConfigurable">
+            <configurable instance="site.forgus.plugins.apigenerator.config.ApiGeneratorSetting"/>
             <configurable instance="site.forgus.plugins.apigenerator.setting.CURLSettingConfigurable"/>
         </projectConfigurable>
         <projectService serviceImplementation="site.forgus.plugins.apigenerator.setting.CURLSettingState"/>

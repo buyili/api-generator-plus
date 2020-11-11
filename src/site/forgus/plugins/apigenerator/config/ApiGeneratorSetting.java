@@ -6,6 +6,7 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.AddEditDeleteListPanel;
 import com.intellij.ui.components.*;
 import com.intellij.util.ui.FormBuilder;
 import org.apache.commons.lang.StringUtils;
@@ -20,6 +21,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
 
 public class ApiGeneratorSetting implements Configurable {
@@ -253,10 +255,25 @@ public class ApiGeneratorSetting implements Configurable {
         frame.setSize(300, 300);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
+        JBMenu jbMenu = new JBMenu();
+        AddEditDeleteListPanel helo = new AddEditDeleteListPanel<String>("hello", Arrays.asList("helo")) {
+            @Nullable
+            @Override
+            protected String findItemToAdd() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            protected String editSelectedItem(String item) {
+                return null;
+            }
+        };
+
         String[] hello = new String[]{"hel", "l"};
         DefaultListModel<String> defaultListModel = JBList.createDefaultListModel(hello);
         JBList<Object> objectJBList = new JBList<Object>(defaultListModel);
-        frame.getContentPane().add(objectJBList);
+        frame.getContentPane().add(helo);
 
 //        final MultiColumnList list = new MultiColumnList("1", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
 //        list.setFixedColumnsMode(5);

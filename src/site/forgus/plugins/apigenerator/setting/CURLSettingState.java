@@ -6,6 +6,10 @@ import com.intellij.openapi.components.State;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import site.forgus.plugins.apigenerator.curl.model.CURLModelInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author lmx 2020/11/11 18:01
@@ -14,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
 public class CURLSettingState implements PersistentStateComponent<CURLSettingState> {
 
     public String ip = "";
+
+    public List<CURLModelInfo> modelInfoList = new ArrayList<>();
 
     @Nullable
     @Override
