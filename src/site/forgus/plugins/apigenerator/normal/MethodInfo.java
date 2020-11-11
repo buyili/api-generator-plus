@@ -9,7 +9,9 @@ import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigenerator.constant.CUrlClientType;
 import site.forgus.plugins.apigenerator.util.DesUtil;
+import site.forgus.plugins.apigenerator.util.FieldUtil;
 
 import java.io.Serializable;
 import java.util.*;
@@ -92,5 +94,26 @@ public class MethodInfo implements Serializable {
             return desc.replace("\n", "");
         }
         return "";
+    }
+
+    public String getCurlRequestBody(CUrlClientType cUrlClientType){
+        List<String> strings = generateKeyValue(this.requestFields);
+        StringBuffer stringBuffer = new StringBuffer(" -d '");
+        for (String string : strings) {
+            stringBuffer.append(string).append(cUrlClientType.getSymbolAnd());
+        }
+        stringBuffer.append("'");
+        return stringBuffer.toString();
+    }
+
+    private List<String> generateKeyValue(List<FieldInfo> fieldInfoList){
+        ArrayList<String> strings = new ArrayList<>();
+        for (FieldInfo requestField : fieldInfoList) {
+            strings.add(requestField.getName() + "=" + FieldUtil.getValue(requestField.getPsiType()));
+            if(requestField.hasChildren()){
+                strings.addAll(generateKeyValue(requestField.getChildren()));
+            }
+        }
+        return strings;
     }
 }

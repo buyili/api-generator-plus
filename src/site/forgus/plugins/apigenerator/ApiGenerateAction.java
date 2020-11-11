@@ -288,8 +288,13 @@ public class ApiGenerateAction extends AnAction {
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         } else {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.form()));
-            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-            yApiInterface.setRes_body("");
+//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
+//            yApiInterface.setRes_body("");
+        }
+        if (containResponseBodyAnnotation(psiMethod.getAnnotations())
+                || containRestControllerAnnotation(containingClass.getAnnotations())) {
+//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
+            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
         yApiInterface.setReq_params(listYApiPathVariables(methodInfo.getRequestFields()));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc() : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
@@ -328,6 +333,15 @@ public class ApiGenerateAction extends AnAction {
     private boolean containResponseBodyAnnotation(PsiAnnotation[] annotations) {
         for (PsiAnnotation annotation : annotations) {
             if (annotation.getText().contains(WebAnnotation.ResponseBody)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containRestControllerAnnotation(PsiAnnotation[] annotations) {
+        for (PsiAnnotation annotation : annotations) {
+            if (annotation.getText().contains(WebAnnotation.RestController)) {
                 return true;
             }
         }
@@ -855,13 +869,13 @@ public class ApiGenerateAction extends AnAction {
         for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
             String packageName = yApiProjectConfigInfo.getPackageName();
             if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
-                if(AssertUtils.isEmpty(yApiProjectConfigInfo.getToken())){
+                if (AssertUtils.isEmpty(yApiProjectConfigInfo.getToken())) {
                     yApiProjectConfigInfo.setToken(config.getState().projectToken);
                     yApiProjectConfigInfo.setToken(config.getState().projectId);
                 }
                 assert AssertUtils.isNotEmpty(yApiProjectConfigInfo.getToken())
                         && AssertUtils.isNotEmpty(yApiProjectConfigInfo.getProjectId());
-                if(AssertUtils.isEmpty(yApiProjectConfigInfo.getBasePath())){
+                if (AssertUtils.isEmpty(yApiProjectConfigInfo.getBasePath())) {
                     yApiProjectConfigInfo.setBasePath("");
                 }
                 return yApiProjectConfigInfo;

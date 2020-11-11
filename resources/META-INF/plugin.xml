@@ -135,6 +135,14 @@
                 description="Generate api for target code.">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
+        <action id="site.forgus.plugins.apigenerator.CopyAsCurlCMDAction"
+                class="site.forgus.plugins.apigenerator.CopyAsCurlCMDAction" text="Copy as cURL (cmd)">
+            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
+        </action>
+        <action id="site.forgus.plugins.apigenerator.CopyAsCurlBashAction"
+                class="site.forgus.plugins.apigenerator.CopyAsCurlBashAction" text="Copy as cURL (bash)">
+            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
+        </action>
     </actions>
 
     <depends>com.intellij.modules.java</depends>
