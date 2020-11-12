@@ -47,7 +47,7 @@
       用法：<br>
       <ul><li>将光标定位到方法区域或者类名，鼠标右键单击"Generate Api Plus".</li></ul><br>
       自定义配置项：<br>
-      Preferences —> Other Settings —> Api Generator2 Setting<br><br>
+      Preferences —> Other Settings —> Generate Api Plus Setting<br><br>
       <table border="1">
         <tr>
           <th align="left">配置项</th>

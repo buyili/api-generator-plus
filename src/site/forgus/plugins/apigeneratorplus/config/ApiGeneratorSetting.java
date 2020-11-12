@@ -45,7 +45,7 @@ public class ApiGeneratorSetting implements Configurable {
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName() {
-        return "Api Generator2 Setting";
+        return "Generate Api Plus Setting";
     }
 
     @Nullable
