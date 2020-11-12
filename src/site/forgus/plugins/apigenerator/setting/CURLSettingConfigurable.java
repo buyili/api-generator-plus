@@ -1,5 +1,7 @@
 package site.forgus.plugins.apigenerator.setting;
 
+import com.google.gson.Gson;
+import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
@@ -9,12 +11,14 @@ import com.intellij.ui.AddEditDeleteListPanel;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.ListTableModel;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigenerator.curl.model.CURLModelInfo;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author lmx 2020/11/11 17:55
@@ -24,6 +28,7 @@ public class CURLSettingConfigurable implements Configurable {
 
     CURLSettingState oldState;
     JBTextField ipTextField;
+    CURLSettingListTableWithButtons curlSettingListTableWithButtons;
 
     public CURLSettingConfigurable(Project project) {
         oldState = ServiceManager.getService(project, CURLSettingState.class);
@@ -39,6 +44,10 @@ public class CURLSettingConfigurable implements Configurable {
     public JComponent createComponent() {
         ipTextField = new JBTextField();
         ipTextField.setText(oldState.ip);
+
+        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
+        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
+
         AddEditDeleteListPanel helo = new AddEditDeleteListPanel<CURLModelInfo>("hello", oldState.modelInfoList) {
             @Nullable
             @Override
@@ -71,6 +80,7 @@ public class CURLSettingConfigurable implements Configurable {
         };
         JPanel jPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("ip address:"), ipTextField, 1, false)
+                .addComponent(curlSettingListTableWithButtons.getComponent())
                 .addComponent(helo)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
@@ -79,11 +89,102 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public boolean isModified() {
-        return false;
+        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+        Gson gson = new Gson();
+        return !gson.toJson(oldState.modelInfoList).equals(gson.toJson(items));
     }
 
     @Override
     public void apply() throws ConfigurationException {
+        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+        oldState.modelInfoList = items;
 
     }
+
+    protected class CURLSettingListTableWithButtons extends ListTableWithButtons<CURLModelInfo> {
+
+        @Override
+        protected ListTableModel createListModel() {
+            return new ListTableModel(new ModuleNameColumnInfo(), new PortColumnInfo());
+        }
+
+        @Override
+        protected CURLModelInfo createElement() {
+            return new CURLModelInfo();
+        }
+
+        @Override
+        protected boolean isEmpty(CURLModelInfo element) {
+            return false;
+        }
+
+        @Override
+        protected CURLModelInfo cloneElement(CURLModelInfo variable) {
+            return variable.clone();
+        }
+
+        @Override
+        protected boolean canDeleteElement(CURLModelInfo selection) {
+            return true;
+        }
+
+        protected class ModuleNameColumnInfo extends ElementsColumnInfoBase<CURLModelInfo>{
+
+            protected ModuleNameColumnInfo() {
+                super("Module Name");
+            }
+
+            @Nullable
+            @Override
+            protected String getDescription(CURLModelInfo element) {
+                return "Module Name";
+            }
+
+            @Nullable
+            @Override
+            public String valueOf(CURLModelInfo curlModelInfo) {
+                return curlModelInfo.getModuleName();
+            }
+
+            @Override
+            public boolean isCellEditable(CURLModelInfo curlModelInfo) {
+                return true;
+            }
+
+            @Override
+            public void setValue(CURLModelInfo curlModelInfo, String value) {
+                curlModelInfo.setModuleName(value);
+            }
+        }
+
+        class PortColumnInfo extends ElementsColumnInfoBase<CURLModelInfo>{
+            public PortColumnInfo() {
+                super("Port");
+            }
+
+            @Nullable
+            @Override
+            protected String getDescription(CURLModelInfo element) {
+                return "Port";
+            }
+
+            @Nullable
+            @Override
+            public String valueOf(CURLModelInfo curlModelInfo) {
+                return curlModelInfo.getPort();
+            }
+
+            @Override
+            public boolean isCellEditable(CURLModelInfo curlModelInfo) {
+                return true;
+            }
+
+            @Override
+            public void setValue(CURLModelInfo curlModelInfo, String value) {
+                curlModelInfo.setPort(value);
+            }
+        }
+    }
+
+
 }

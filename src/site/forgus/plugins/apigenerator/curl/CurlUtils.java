@@ -1,17 +1,28 @@
 package site.forgus.plugins.apigenerator.curl;
 
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.ide.CopyPasteManager;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiMethod;
+import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ui.TextTransferable;
 import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigenerator.constant.CUrlClientType;
 import site.forgus.plugins.apigenerator.constant.WebAnnotation;
+import site.forgus.plugins.apigenerator.curl.model.CURLModelInfo;
 import site.forgus.plugins.apigenerator.normal.MethodInfo;
+import site.forgus.plugins.apigenerator.setting.CURLSettingState;
 import site.forgus.plugins.apigenerator.util.NotificationUtil;
 
 import java.net.Inet4Address;
@@ -27,6 +38,44 @@ import java.util.Enumeration;
  */
 
 public class CurlUtils {
+
+    private CURLSettingState curlSettingState;
+
+    private String moduleName;
+
+    public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
+        Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
+        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+        Project project = actionEvent.getProject();
+        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+
+        curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+
+        Document document = editor.getDocument();
+        FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
+        VirtualFile virtualFile = fileDocumentManager.getFile(document);
+        ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
+        if (virtualFile != null) {
+            Module module = projectFileIndex.getModuleForFile(virtualFile);
+            moduleName = module != null ? module.getName() : "";
+
+//            VirtualFile moduleContentRoot = projectFileIndex.getContentRootForFile(virtualFile);
+//            boolean isLibraryFile = projectFileIndex.isLibraryClassFile(virtualFile);
+//            boolean isInLibraryClasses = projectFileIndex.isInLibraryClasses(virtualFile);
+//            boolean isInLibrarySource = projectFileIndex.isInLibrarySource(virtualFile);
+//            Messages.showInfoMessage("Module: " + moduleName + "\n" +
+//                            "Module content root: " + moduleContentRoot + "\n" +
+//                            "Is library file: " + isLibraryFile + "\n" +
+//                            "Is in library classes: " + isInLibraryClasses +
+//                            ", Is in library source: " + isInLibrarySource,
+//                    "Main File Info for" + virtualFile.getName());
+        }
+        ModuleManager moduleManager = ModuleManager.getInstance(project);
+        Module[] modules = moduleManager.getModules();
+        System.out.println(modules);
+        copyAsCUrl(project, referenceAt, CUrlClientType.BASH);
+    }
 
     public void copyAsCUrl(Project project, PsiElement referenceAt, CUrlClientType cUrlClientType) {
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
@@ -44,6 +93,15 @@ public class CurlUtils {
 //                NotificationUtil.errorNotify(e.getMessage(), project);
 //            }
         }
+    }
+
+    private String getPort(String moduleName){
+        for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
+            if(curlModelInfo.getModuleName().equals(moduleName)){
+                return curlModelInfo.getPort();
+            }
+        }
+        return "";
     }
 
     private boolean haveControllerAnnotation(PsiClass psiClass) {
@@ -96,15 +154,8 @@ public class CurlUtils {
         return null;
     }
 
-    @SneakyThrows
-    public String getLocalIP(){
-        InetAddress inet = InetAddress.getLocalHost();
-        System.out.println("本机的ip=" + inet.getHostAddress());
-        return inet.getHostAddress();
-    }
-
     public String getBaseApi(){
         String localIP = getRealIP();
-        return "http://" + localIP;
+        return "http://" + localIP + ":" + getPort(moduleName);
     }
 }
