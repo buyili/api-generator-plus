@@ -136,17 +136,20 @@
 
     <actions>
         <!-- Add your actions here -->
+        <group id="CopyAsCURLMenu" text="Copy as cURL" popup="true">
+            <action id="site.forgus.plugins.apigenerator.CopyAsCurlCMDAction"
+                    class="site.forgus.plugins.apigenerator.CopyAsCurlCMDAction" text="Copy as cURL (cmd)">
+            </action>
+            <action id="site.forgus.plugins.apigenerator.CopyAsCurlBashAction"
+                    class="site.forgus.plugins.apigenerator.CopyAsCurlBashAction" text="Copy as cURL (bash)">
+            </action>
+            <action class="site.forgus.plugins.apigenerator.GenerateModuleNamesAction" text="Generate Project Modules">
+            </action>
+            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
+        </group>
         <action id="api-generator.ID" class="site.forgus.plugins.apigenerator.ApiGenerateAction"
                 text="Generate Api2"
                 description="Generate api for target code.">
-            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
-        </action>
-        <action id="site.forgus.plugins.apigenerator.CopyAsCurlCMDAction"
-                class="site.forgus.plugins.apigenerator.CopyAsCurlCMDAction" text="Copy as cURL (cmd)">
-            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
-        </action>
-        <action id="site.forgus.plugins.apigenerator.CopyAsCurlBashAction"
-                class="site.forgus.plugins.apigenerator.CopyAsCurlBashAction" text="Copy as cURL (bash)">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
         <action id="site.forgus.plugins.apigenerator.CopyIPAction" class="site.forgus.plugins.apigenerator.CopyIPAction"

@@ -3,6 +3,7 @@ package site.forgus.plugins.apigenerator.setting;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
+import com.intellij.openapi.module.Module;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +21,10 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
     public String ip = "";
 
     public List<CURLModelInfo> modelInfoList = new ArrayList<>();
+
+    public List<Module> modules;
+
+    public List<String> moduleNames;
 
     @Nullable
     @Override
