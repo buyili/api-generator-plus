@@ -85,7 +85,7 @@ public class CurlUtils {
             StringBuffer stringBuffer = new StringBuffer("curl ");
             stringBuffer.append(methodInfo.getCurlRequestBody(cUrlClientType));
             stringBuffer.append(" " + getBaseApi());
-            stringBuffer.append(" -H \"X-Auth-Token: 7d2661b6-4258-4e80-9ea2-761f9d5cd3c2\"");
+//            stringBuffer.append(" -H \"X-Auth-Token: 7d2661b6-4258-4e80-9ea2-761f9d5cd3c2\"");
             System.out.println(stringBuffer.toString());
             NotificationUtil.infoNotify("已复制到剪切板", stringBuffer.toString(), project);
             CopyPasteManager.getInstance().setContents(new TextTransferable(stringBuffer.toString()));

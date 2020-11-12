@@ -12,8 +12,10 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.ListTableModel;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigenerator.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigenerator.util.StringUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -110,7 +112,9 @@ public class CURLSettingConfigurable implements Configurable {
 
         @Override
         protected CURLModelInfo createElement() {
-            return new CURLModelInfo();
+            CURLModelInfo curlModelInfo = new CURLModelInfo();
+            curlModelInfo.setModuleName(StringUtil.getName());
+            return curlModelInfo;
         }
 
         @Override
