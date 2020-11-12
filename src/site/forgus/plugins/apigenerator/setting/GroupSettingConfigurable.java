@@ -14,7 +14,7 @@ import javax.swing.*;
 public class GroupSettingConfigurable implements Configurable {
     @Override
     public @NlsContexts.ConfigurableName String getDisplayName() {
-        return "Test Group";
+        return "Api Generator2";
     }
 
     @Nullable

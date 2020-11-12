@@ -96,7 +96,7 @@ public class MethodInfo implements Serializable {
         return "";
     }
 
-    public String getCurlRequestBody(CUrlClientType cUrlClientType){
+    public String getCurlRequestBody(CUrlClientType cUrlClientType) {
         List<String> strings = generateKeyValue(this.requestFields);
         StringBuffer stringBuffer = new StringBuffer(" -d '");
         for (String string : strings) {
@@ -106,12 +106,13 @@ public class MethodInfo implements Serializable {
         return stringBuffer.toString();
     }
 
-    private List<String> generateKeyValue(List<FieldInfo> fieldInfoList){
+    private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
-            strings.add(requestField.getName() + "=" + FieldUtil.getValue(requestField.getPsiType()));
-            if(requestField.hasChildren()){
+            if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(requestField.getChildren()));
+            } else {
+                strings.add(requestField.getName() + "=" + FieldUtil.getValue(requestField.getPsiType()));
             }
         }
         return strings;

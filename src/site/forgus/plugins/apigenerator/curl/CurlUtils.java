@@ -17,6 +17,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ui.TextTransferable;
 import lombok.SneakyThrows;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigenerator.constant.CUrlClientType;
 import site.forgus.plugins.apigenerator.constant.WebAnnotation;
@@ -41,8 +42,6 @@ public class CurlUtils {
 
     private CURLSettingState curlSettingState;
 
-    private String moduleName;
-
     public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
         Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
         PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
@@ -52,10 +51,28 @@ public class CurlUtils {
 
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
+        String moduleName = getModuleName(editor, project);
+        String port = getPort(moduleName);
+        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+        if (selectedMethod != null) {
+            MethodInfo methodInfo = new MethodInfo(selectedMethod);
+            StringBuffer stringBuffer = new StringBuffer("curl ");
+            stringBuffer.append(methodInfo.getCurlRequestBody(cUrlClientType));
+            stringBuffer.append(" " + getBaseApi(port));
+//            stringBuffer.append(" -H \"X-Auth-Token: 7d2661b6-4258-4e80-9ea2-761f9d5cd3c2\"");
+            System.out.println(stringBuffer.toString());
+            NotificationUtil.infoNotify("已复制到剪切板", stringBuffer.toString(), project);
+            CopyPasteManager.getInstance().setContents(new TextTransferable(stringBuffer.toString()));
+        }
+    }
+
+    private String getModuleName(Editor editor, Project project) {
         Document document = editor.getDocument();
         FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
         VirtualFile virtualFile = fileDocumentManager.getFile(document);
         ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
+
+        String moduleName = null;
         if (virtualFile != null) {
             Module module = projectFileIndex.getModuleForFile(virtualFile);
             moduleName = module != null ? module.getName() : "";
@@ -71,33 +88,15 @@ public class CurlUtils {
 //                            ", Is in library source: " + isInLibrarySource,
 //                    "Main File Info for" + virtualFile.getName());
         }
-        ModuleManager moduleManager = ModuleManager.getInstance(project);
-        Module[] modules = moduleManager.getModules();
-        System.out.println(modules);
-        copyAsCUrl(project, referenceAt, CUrlClientType.BASH);
+        return moduleName;
     }
 
-    public void copyAsCUrl(Project project, PsiElement referenceAt, CUrlClientType cUrlClientType) {
-        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
-        if (selectedMethod != null) {
-//            try {
-            MethodInfo methodInfo = new MethodInfo(selectedMethod);
-            StringBuffer stringBuffer = new StringBuffer("curl ");
-            stringBuffer.append(methodInfo.getCurlRequestBody(cUrlClientType));
-            stringBuffer.append(" " + getBaseApi());
-//            stringBuffer.append(" -H \"X-Auth-Token: 7d2661b6-4258-4e80-9ea2-761f9d5cd3c2\"");
-            System.out.println(stringBuffer.toString());
-            NotificationUtil.infoNotify("已复制到剪切板", stringBuffer.toString(), project);
-            CopyPasteManager.getInstance().setContents(new TextTransferable(stringBuffer.toString()));
-//            } catch (IOException e) {
-//                NotificationUtil.errorNotify(e.getMessage(), project);
-//            }
+    private String getPort(String moduleName) {
+        if (StringUtils.isEmpty(moduleName)) {
+            return "";
         }
-    }
-
-    private String getPort(String moduleName){
         for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
-            if(curlModelInfo.getModuleName().equals(moduleName)){
+            if (curlModelInfo.getModuleName().equals(moduleName)) {
                 return curlModelInfo.getPort();
             }
         }
@@ -154,8 +153,8 @@ public class CurlUtils {
         return null;
     }
 
-    public String getBaseApi(){
+    public String getBaseApi(String port) {
         String localIP = getRealIP();
-        return "http://" + localIP + ":" + getPort(moduleName);
+        return "http://" + localIP + ":" + port;
     }
 }

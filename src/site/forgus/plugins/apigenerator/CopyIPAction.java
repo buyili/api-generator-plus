@@ -23,17 +23,8 @@ import site.forgus.plugins.apigenerator.util.NotificationUtil;
 public class CopyIPAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
-        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
-        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
         Project project = actionEvent.getProject();
-        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
-        if (selectedClass == null) {
-            NotificationUtil.errorNotify("this operate only support in class file", project);
-            return;
-        }
-        CurlUtils curlUtils = new CurlUtils();
-        String baseApi = curlUtils.getBaseApi();
+        String baseApi = CurlUtils.getRealIP();
         NotificationUtil.infoNotify("已复制到剪切板", baseApi, project);
         CopyPasteManager.getInstance().setContents(new TextTransferable(baseApi));
     }
