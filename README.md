@@ -14,7 +14,7 @@
 Preferences → Plugins → Marketplace → 搜索“Api Generator2” → 安装该插件 → 重启IDE
 ### 开始使用
 #### 上传REST接口
-选择一个Controller类，将光标定位到方法区（方法名或者方法注释）或Controller类上，点击鼠标右键，在弹出的菜单项里选择“Generate Api”单击，文档瞬间已经自动生成并托管到YApi平台！   
+选择一个Controller类，将光标定位到方法区（方法名或者方法注释）或Controller类上，点击鼠标右键，在弹出的菜单项里选择“Generate Api Plus”单击，文档瞬间已经自动生成并托管到YApi平台！   
 （PS：首次使用会弹框提示输入YApi部署的url和项目token，填写一次自动保存）
 #### 生成dubbo接口文档
 操作方式同上，插件会自动识别出这是一个普通接口，插件会将文档以markdown的形式输出，默认保存在当前项目的target目录下。（保存路径可更改，见下文介绍）
