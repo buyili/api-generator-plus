@@ -7,6 +7,7 @@ public interface WebAnnotation {
     String RequestMapping = "RequestMapping";
     String RequestParam = "RequestParam";
     String GetMapping = "GetMapping";
+    String PostMapping = "PostMapping";
     String PutMapping = "PutMapping";
     String DeleteMapping = "DeleteMapping";
     String PatchMapping = "PatchMapping";

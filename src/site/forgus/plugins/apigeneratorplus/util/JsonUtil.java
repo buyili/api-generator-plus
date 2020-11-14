@@ -29,6 +29,17 @@ public class JsonUtil {
         }
         return gson.toJson(stringObjectMap);
     }
+    public static String buildRawJson(FieldInfo fieldInfo) {
+        Gson gson = new Gson();
+        if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
+            return FieldUtil.getValue(fieldInfo.getPsiType()).toString();
+        }
+        Map<String, Object> stringObjectMap = getStringObjectMap(fieldInfo.getChildren());
+        if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
+            return gson.toJson(Collections.singletonList(stringObjectMap));
+        }
+        return gson.toJson(stringObjectMap);
+    }
 
     private static String buildJson5(String prettyJson, List<String> fieldDesc) {
         String[] split = prettyJson.split("\n");

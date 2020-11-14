@@ -98,7 +98,7 @@ public class GenerateModuleNamesAction extends AnAction {
         VirtualFile canonicalFile = moduleFile.getCanonicalFile();
         String canonicalPath = moduleFile.getCanonicalPath();
         @SystemIndependent String moduleFilePath = module.getModuleFilePath();
-        return "";
+        return "8080";
     }
 
     /**

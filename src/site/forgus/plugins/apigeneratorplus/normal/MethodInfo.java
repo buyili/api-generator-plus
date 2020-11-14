@@ -1,19 +1,20 @@
 package site.forgus.plugins.apigeneratorplus.normal;
 
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiParameter;
-import com.intellij.psi.PsiType;
+import com.intellij.psi.*;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
+import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
+import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
+import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import java.io.Serializable;
+import java.net.URLEncoder;
 import java.util.*;
 
 @Data
@@ -96,14 +97,52 @@ public class MethodInfo implements Serializable {
         return "";
     }
 
-    public String getCurlRequestBody(CUrlClientType cUrlClientType) {
-        List<String> strings = generateKeyValue(this.requestFields);
-        StringBuffer stringBuffer = new StringBuffer(" -d '");
-        for (String string : strings) {
-            stringBuffer.append(string).append(cUrlClientType.getSymbolAnd());
+    public String getCurlRequestBody(PsiMethod psiMethod, CUrlClientType cUrlClientType) {
+        StringUtil.showPsiMethod(psiMethod);
+        if (containRequestBodyAnnotation(psiMethod)) {
+            for (FieldInfo requestField : this.requestFields) {
+                if (containRequestBodyAnnotation((PsiAnnotation[]) requestField.getAnnotations().toArray())) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(" -H 'Content-Type: application/json;charset=UTF-8'");
+                    stringBuilder.append(" --data-binary '");
+                    String s = JsonUtil.buildRawJson(requestField);
+//                    if(cUrlClientType.equals(CUrlClientType.CMD)){
+//                        s = s.replace("\"", "^\\^\"");
+//                        s = s.replace("{", "^{");
+//                        s = s.replace("}", "^}");
+//                        System.out.println(s );
+//                    }
+                    stringBuilder.append(s)
+                            .append("'");
+                    return stringBuilder.toString();
+                }
+            }
+        } else {
+            List<String> strings = generateKeyValue(this.requestFields);
+            StringBuilder stringBuilder = new StringBuilder("");
+            stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
+            stringBuilder.append(" --data-raw '");
+            for (String string : strings) {
+//                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                stringBuilder.append(string).append("&");
+            }
+            stringBuilder.append("'");
+            return stringBuilder.toString();
         }
-        stringBuffer.append("'");
-        return stringBuffer.toString();
+        return "";
+    }
+
+    public String getCurlRequestParams(PsiMethod psiMethod, CUrlClientType cUrlClientType) {
+        StringUtil.showPsiMethod(psiMethod);
+        List<String> strings = generateKeyValue(this.requestFields);
+        StringBuilder stringBuilder = new StringBuilder("?");
+        for (String string : strings) {
+//            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+            stringBuilder.append(string).append("&");
+        }
+        String str = stringBuilder.toString();
+//        str = str.replaceAll("%", "^%");
+        return str;
     }
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
@@ -112,9 +151,35 @@ public class MethodInfo implements Serializable {
             if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(requestField.getChildren()));
             } else {
-                strings.add(requestField.getName() + "=" + FieldUtil.getValue(requestField.getPsiType()));
+                Object value = FieldUtil.getValue(requestField.getPsiType());
+                String strVal = "";
+                if(null != value){
+                    strVal = URLEncoder.encode(value.toString());
+                }
+                strings.add(requestField.getName() + "=" + strVal);
             }
         }
         return strings;
+    }
+
+    private boolean containRequestBodyAnnotation(PsiAnnotation[] annotations) {
+        for (PsiAnnotation annotation : annotations) {
+            if (annotation.getText().contains(WebAnnotation.RequestBody)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containRequestBodyAnnotation(PsiMethod psiMethod) {
+        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
+            return true;
+        }
+        for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
+            if (parameter.getText().contains(WebAnnotation.RequestBody)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
