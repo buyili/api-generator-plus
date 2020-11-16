@@ -11,7 +11,7 @@ public class FieldUtil {
 
     public static final Map<String, Object> normalTypes = new HashMap<>();
 
-    public static final List<String> iterableTypes = Arrays.asList("List", "Set", "Collection");
+    public static final List<String> iterableTypes = Arrays.asList("List", "ArrayList", "Set", "Collection");
     /**
      * 泛型列表
      */
@@ -72,7 +72,13 @@ public class FieldUtil {
         if (iterableTypes.contains(typeName)) {
             return true;
         }
-        return typeName.startsWith("List<") || typeName.startsWith("Set<") || typeName.startsWith("Collection<");
+        for (String iterableType : iterableTypes) {
+            if (typeName.startsWith(iterableType + "<")) {
+                return true;
+            }
+        }
+        return false;
+//        return typeName.startsWith("List<") || typeName.startsWith("Set<") || typeName.startsWith("Collection<");
     }
 
     public static boolean isIterableType(PsiType psiType) {

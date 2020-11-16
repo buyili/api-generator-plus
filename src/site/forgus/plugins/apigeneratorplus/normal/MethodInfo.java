@@ -141,6 +141,7 @@ public class MethodInfo implements Serializable {
             stringBuilder.append(string).append("&");
         }
         String str = stringBuilder.toString();
+        str = str.substring(0, str.length() - 1);
 //        str = str.replaceAll("%", "^%");
         return str;
     }
@@ -153,7 +154,7 @@ public class MethodInfo implements Serializable {
             } else {
                 Object value = FieldUtil.getValue(requestField.getPsiType());
                 String strVal = "";
-                if(null != value){
+                if (null != value) {
                     strVal = URLEncoder.encode(value.toString());
                 }
                 strings.add(requestField.getName() + "=" + strVal);
