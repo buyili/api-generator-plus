@@ -101,7 +101,7 @@ public class MethodInfo implements Serializable {
         StringUtil.showPsiMethod(psiMethod);
         if (containRequestBodyAnnotation(psiMethod)) {
             for (FieldInfo requestField : this.requestFields) {
-                if (containRequestBodyAnnotation((PsiAnnotation[]) requestField.getAnnotations().toArray())) {
+                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
                     StringBuilder stringBuilder = new StringBuilder();
                     stringBuilder.append(" -H 'Content-Type: application/json;charset=UTF-8'");
                     stringBuilder.append(" --data-binary '");

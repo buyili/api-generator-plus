@@ -36,6 +36,9 @@ public class StringUtil {
         System.out.println("PsiParameter parameter----------------");
         for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
             System.out.println(parameter.getText());
+            for (PsiAnnotation annotation : parameter.getAnnotations()) {
+                System.out.println("annotation text:                " + annotation.getText());
+            }
         }
         System.out.println("PsiParameter annotation----------------end");
     }
