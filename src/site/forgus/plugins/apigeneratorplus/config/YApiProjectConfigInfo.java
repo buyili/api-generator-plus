@@ -7,13 +7,13 @@ import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 @Data
 public class YApiProjectConfigInfo implements Cloneable {
 
-    private String packageName;
+    private String packageName = "";
 
-    private String token;
+    private String token = "";
 
-    private String projectId;
+    private String projectId = "";
 
-    private String basePath;
+    private String basePath = "";
 
     private YApiProject project;
 
