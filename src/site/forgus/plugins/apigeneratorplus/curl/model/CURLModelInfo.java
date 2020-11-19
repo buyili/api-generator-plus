@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CURLModelInfo implements Cloneable{
 
-    private String id = String.valueOf(System.currentTimeMillis());
+    private String id = String.valueOf(System.nanoTime());
 
     private String moduleName = "";
 

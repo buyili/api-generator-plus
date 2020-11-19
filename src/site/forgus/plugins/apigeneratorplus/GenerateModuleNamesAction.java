@@ -45,7 +45,7 @@ public class GenerateModuleNamesAction extends AnAction {
         List<CURLModelInfo> list = new ArrayList<>();
         for (Module module : modules) {
             tempModuleNames.add(module.getName());
-            list.add(new CURLModelInfo(String.valueOf(System.currentTimeMillis()), module.getName(), findPort(module),
+            list.add(new CURLModelInfo(String.valueOf(System.nanoTime()), module.getName(), findPort(module),
                     Collections.emptyList()));
         }
         state.moduleNames = tempModuleNames;

@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Set;
 
 
-@State(name = "ApiGeneratorConfig2")
+@State(name = "ApiGeneratorConfig2",
+        storages = {@Storage("ApiGeneratorPlusPlugin.xml")}
+)
 public class ApiGeneratorConfig implements PersistentStateComponent<ApiGeneratorConfig> {
 
     public Set<String> excludeFieldNames = new HashSet<>();
@@ -29,7 +31,6 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
 
 
     public List<YApiProjectConfigInfo> yApiProjectConfigInfoList = new ArrayList<>();
-
 
 
     @Nullable

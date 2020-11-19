@@ -2,6 +2,7 @@ package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.module.Module;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,9 @@ import java.util.List;
 /**
  * @author lmx 2020/11/11 18:01
  */
-@State(name = "site.forgus.plugins.apigenerator.setting.CURLSettingState")
+@State(name = "site.forgus.plugins.apigenerator.setting.CURLSettingState",
+        storages = {@Storage("ApiGeneratorPlusPlugin.xml")}
+)
 public class CURLSettingState implements PersistentStateComponent<CURLSettingState> {
 
     public String ip = "";
