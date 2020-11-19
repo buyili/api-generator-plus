@@ -351,6 +351,9 @@ public class CurlUtils {
     }
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
+        if (CollectionUtils.isEmpty(fieldInfoList)) {
+            return Collections.emptyList();
+        }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
             if (requestField.hasChildren()) {
@@ -358,10 +361,10 @@ public class CurlUtils {
             } else {
                 Object value = FieldUtil.getValue(requestField.getPsiType());
                 String strVal = "";
-                if (null != value) {
+                if (null != value && !"".equals(String.valueOf(value))) {
                     strVal = URLEncoder.encode(value.toString());
+                    strings.add(requestField.getName() + "=" + strVal);
                 }
-                strings.add(requestField.getName() + "=" + strVal);
             }
         }
         return strings;
@@ -373,11 +376,16 @@ public class CurlUtils {
         String excludeField = curlSettingState.filterFieldInfo.excludeField;
         List<FieldInfo> children = fieldInfo.getChildren();
         if (StringUtils.isNotEmpty(canonicalClassName)
-                && fieldInfo.getPsiType().getCanonicalText().equals(canonicalClassName)) {
+                && fieldInfo.getPsiType().getCanonicalText().startsWith(canonicalClassName)) {
             if (StringUtils.isNotEmpty(includeFiled)) {
                 children.removeIf(child -> !includeFiled.contains(child.getName()));
             } else if (StringUtils.isNotEmpty(excludeField)) {
-                children.removeIf(child -> includeFiled.contains(child.getName()));
+                children.removeIf(child -> excludeField.contains(child.getName()));
+            }
+            if (curlSettingState.filterFieldInfo.excludeChildren) {
+                for (FieldInfo child : children) {
+                    child.setChildren(Collections.emptyList());
+                }
             }
         }
         return children;

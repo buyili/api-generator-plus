@@ -14,6 +14,7 @@ import com.intellij.openapi.ui.Splitter;
 import com.intellij.openapi.updateSettings.impl.PluginDownloader;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.ui.*;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.*;
@@ -48,6 +49,7 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextField canonicalClassNameTextFields;
     JBTextField includeFiledTextFields;
     JBTextField excludeFieldTextFields;
+    JBCheckBox excludeChildrenCheckBox;
     MyHeaderListTableWithButton myHeaderListTableWithButton;
 
     public CURLSettingConfigurable(Project project) {
@@ -68,6 +70,7 @@ public class CURLSettingConfigurable implements Configurable {
         canonicalClassNameTextFields = new JBTextField(oldState.filterFieldInfo.canonicalClassName);
         includeFiledTextFields = new JBTextField(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields = new JBTextField(oldState.filterFieldInfo.excludeField);
+        excludeChildrenCheckBox = new JBCheckBox("Exclude Children Field", oldState.filterFieldInfo.excludeChildren);
 
 //        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
 //        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
@@ -81,6 +84,7 @@ public class CURLSettingConfigurable implements Configurable {
                 .addLabeledComponent(new JBLabel("Canonical Class Name"), canonicalClassNameTextFields, 1, false)
                 .addLabeledComponent(new JBLabel("Include Fields"), includeFiledTextFields, 1, false)
                 .addLabeledComponent(new JBLabel("Exclude Fields"), excludeFieldTextFields, 1, false)
+                .addComponent(excludeChildrenCheckBox)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
         return jPanel;
@@ -95,7 +99,9 @@ public class CURLSettingConfigurable implements Configurable {
 //        }
         if (!oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
                 || !oldState.filterFieldInfo.includeFiled.equals(includeFiledTextFields.getText())
-                || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())) {
+                || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())
+                || oldState.filterFieldInfo.excludeChildren != excludeChildrenCheckBox.isSelected()
+        ) {
             return true;
         }
 
@@ -128,6 +134,7 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
         oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
         oldState.filterFieldInfo.excludeField = excludeFieldTextFields.getText();
+        oldState.filterFieldInfo.excludeChildren = excludeChildrenCheckBox.isSelected();
 
         oldState.modelInfoList = myOrderPanel.getEntries();
     }

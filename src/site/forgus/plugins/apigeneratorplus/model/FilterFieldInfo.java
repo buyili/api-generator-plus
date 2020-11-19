@@ -18,6 +18,8 @@ public class FilterFieldInfo {
 
     public String excludeField = "";
 
+    public boolean excludeChildren = false;
+
     public Set<String> getIncludeFiledSet(){
         HashSet<String> strings = new HashSet<>();
         if (!StringUtils.isEmpty(includeFiled)) {
