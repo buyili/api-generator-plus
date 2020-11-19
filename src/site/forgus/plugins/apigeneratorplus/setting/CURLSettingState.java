@@ -21,13 +21,24 @@ import java.util.List;
 )
 public class CURLSettingState implements PersistentStateComponent<CURLSettingState> {
 
+    public static final String ARRAY_FORMAT = "repeat";
+
     public String ip = "";
 
     public List<CURLModelInfo> modelInfoList = new ArrayList<>();
 
     public List<Module> modules;
 
-    public List<String> moduleNames;
+    /**
+     * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'indices' })
+     * // 'a[0]=b&a[1]=c'
+     * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'brackets' })
+     * // 'a[]=b&a[]=c'
+     * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'repeat' })
+     * // 'a=b&a=c'
+     * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'comma' })
+     */
+    public String arrayFormat = ARRAY_FORMAT;
 
     public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
 

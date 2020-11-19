@@ -42,14 +42,11 @@ public class GenerateModuleNamesAction extends AnAction {
         Module[] modules = ModuleManager.getInstance(project).getModules();
 
 
-        ArrayList<String> tempModuleNames = new ArrayList<>();
         List<CURLModelInfo> list = new ArrayList<>();
         for (Module module : modules) {
-            tempModuleNames.add(module.getName());
             list.add(new CURLModelInfo(String.valueOf(System.nanoTime()), module.getName(), findPort(module),
                     Collections.emptyList()));
         }
-        state.moduleNames = tempModuleNames;
         state.modelInfoList = list;
         Gson gson = new Gson();
         String message = MessageFormat.format("Generate project modules success! modules: [{0}]", gson.toJson(list));

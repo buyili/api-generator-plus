@@ -49,6 +49,7 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextField canonicalClassNameTextFields;
     JBTextField includeFiledTextFields;
     JBTextField excludeFieldTextFields;
+    JBTextField arrayFormatTextFields;
     JBCheckBox excludeChildrenCheckBox;
     MyHeaderListTableWithButton myHeaderListTableWithButton;
 
@@ -70,6 +71,7 @@ public class CURLSettingConfigurable implements Configurable {
         canonicalClassNameTextFields = new JBTextField(oldState.filterFieldInfo.canonicalClassName);
         includeFiledTextFields = new JBTextField(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields = new JBTextField(oldState.filterFieldInfo.excludeField);
+        arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
         excludeChildrenCheckBox = new JBCheckBox("Exclude Children Field", oldState.filterFieldInfo.excludeChildren);
 
 //        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
@@ -84,6 +86,8 @@ public class CURLSettingConfigurable implements Configurable {
                 .addLabeledComponent(new JBLabel("Canonical Class Name"), canonicalClassNameTextFields, 1, false)
                 .addLabeledComponent(new JBLabel("Include Fields"), includeFiledTextFields, 1, false)
                 .addLabeledComponent(new JBLabel("Exclude Fields"), excludeFieldTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Array Format"), arrayFormatTextFields, 1, false)
+                .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addComponent(excludeChildrenCheckBox)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
@@ -100,6 +104,7 @@ public class CURLSettingConfigurable implements Configurable {
         if (!oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
                 || !oldState.filterFieldInfo.includeFiled.equals(includeFiledTextFields.getText())
                 || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())
+                || !oldState.arrayFormat.equals(arrayFormatTextFields.getText())
                 || oldState.filterFieldInfo.excludeChildren != excludeChildrenCheckBox.isSelected()
         ) {
             return true;
@@ -134,6 +139,7 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
         oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
         oldState.filterFieldInfo.excludeField = excludeFieldTextFields.getText();
+        oldState.arrayFormat = arrayFormatTextFields.getText();
         oldState.filterFieldInfo.excludeChildren = excludeChildrenCheckBox.isSelected();
 
         oldState.modelInfoList = myOrderPanel.getEntries();
@@ -144,6 +150,7 @@ public class CURLSettingConfigurable implements Configurable {
         canonicalClassNameTextFields.setText(oldState.filterFieldInfo.canonicalClassName);
         includeFiledTextFields.setText(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields.setText(oldState.filterFieldInfo.excludeField);
+        arrayFormatTextFields.setText(oldState.arrayFormat);
 
         myOrderPanel.clear();
         myOrderPanel.addAll(oldState.modelInfoList);

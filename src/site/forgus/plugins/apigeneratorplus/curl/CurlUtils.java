@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
@@ -359,36 +360,48 @@ public class CurlUtils {
             if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(filterChildrenFiled(requestField)));
             } else {
-                Object value = FieldUtil.getValue(requestField.getPsiType());
-                String strVal = "";
-                if (null != value && !"".equals(String.valueOf(value))) {
-                    strVal = URLEncoder.encode(value.toString());
-                    strings.add(requestField.getName() + "=" + strVal);
-                }
+                String value = FieldUtil.getValueForCurl(requestField.getName(), requestField.getPsiType(), curlSettingState);
+                strings.add(value);
+//                String strVal = "";
+//                if (null != value && !"".equals(String.valueOf(value))) {
+//                    strVal = URLEncoder.encode(value.toString());
+//                    strings.add(requestField.getName() + "=" + strVal);
+//                }
             }
         }
         return strings;
     }
 
     public List<FieldInfo> filterChildrenFiled(FieldInfo fieldInfo) {
-        String canonicalClassName = curlSettingState.filterFieldInfo.canonicalClassName;
-        String includeFiled = curlSettingState.filterFieldInfo.includeFiled;
-        String excludeField = curlSettingState.filterFieldInfo.excludeField;
+        FilterFieldInfo filterFieldInfo = curlSettingState.filterFieldInfo;
+        List<String> canonicalClassNameList = filterFieldInfo.getCanonicalClassNameList();
+        List<String> includeFiledList = filterFieldInfo.getIncludeFiledList();
         List<FieldInfo> children = fieldInfo.getChildren();
-        if (StringUtils.isNotEmpty(canonicalClassName)
-                && fieldInfo.getPsiType().getCanonicalText().startsWith(canonicalClassName)) {
-            if (StringUtils.isNotEmpty(includeFiled)) {
-                children.removeIf(child -> !includeFiled.contains(child.getName()));
-            } else if (StringUtils.isNotEmpty(excludeField)) {
-                children.removeIf(child -> excludeField.contains(child.getName()));
+        List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
+        int index = getIndexOnCanoncalClassNameList(fieldInfo.getPsiType().getCanonicalText(), canonicalClassNameList);
+        if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
+
+            if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
+                children.removeIf(child -> !includeFiledList.get(index).contains(child.getName()));
+            } else if (excludeFiledList.size() > index && StringUtils.isNotEmpty(excludeFiledList.get(index))) {
+                children.removeIf(child -> excludeFiledList.get(index).contains(child.getName()));
             }
-            if (curlSettingState.filterFieldInfo.excludeChildren) {
+            if (filterFieldInfo.excludeChildren) {
                 for (FieldInfo child : children) {
                     child.setChildren(Collections.emptyList());
                 }
             }
         }
         return children;
+    }
+
+    public int getIndexOnCanoncalClassNameList(String canonicalClassName, List<String> set) {
+        for (String s : set) {
+            if (canonicalClassName.startsWith(s)) {
+                return set.indexOf(s);
+            }
+        }
+        return -1;
     }
 
     private boolean containRequestBodyAnnotation(PsiAnnotation[] annotations) {

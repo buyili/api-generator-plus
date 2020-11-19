@@ -4,6 +4,9 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
+import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
 
 import java.util.*;
 
@@ -61,6 +64,39 @@ public class FieldUtil {
         }
         Object value = normalTypes.get(psiType.getPresentableText());
         return value == null ? "" : value;
+    }
+
+    /**
+     * copy as curl时，上传格式为application/x-www-form-urlencoded。
+     *
+     * @param psiType
+     * @return
+     */
+    public static String getValueForCurl(String keyName, PsiType psiType, CURLSettingState state) {
+        if (isIterableType(psiType)) {
+            PsiType type = PsiUtil.extractIterableTypeParameter(psiType, false);
+            if (type == null) {
+                return keyName + "=[]";
+            }
+            if (isNormalType(type)) {
+                Object obj = normalTypes.get(type.getPresentableText());
+                if (obj == null) {
+                    return null;
+                }
+                String arrayFormat = StringUtils.isNotEmpty(state.arrayFormat) ? state.arrayFormat : CURLSettingState.ARRAY_FORMAT;
+                if (ArrayFormatEnum.indices.name().equals(arrayFormat)) {
+                    return keyName + "[0]=" + obj.toString() + "&" + keyName + "[1]=" + obj.toString();
+                } else if (ArrayFormatEnum.brackets.name().equals(arrayFormat)) {
+                    return keyName + "[]=" + obj.toString() + "&" + keyName + "[]=" + obj.toString();
+                } else if (ArrayFormatEnum.repeat.name().equals(arrayFormat)) {
+                    return keyName + "=" + obj.toString() + "&" + keyName + "=" + obj.toString();
+                } else if (ArrayFormatEnum.comma.name().equals(arrayFormat)) {
+                    return keyName + "=" + obj.toString() + "," + obj.toString();
+                }
+            }
+        }
+        Object value = normalTypes.get(psiType.getPresentableText());
+        return value == null ? "" : keyName + "=" + value.toString();
     }
 
 
