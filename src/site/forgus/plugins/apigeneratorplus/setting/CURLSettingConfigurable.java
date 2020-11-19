@@ -45,6 +45,9 @@ public class CURLSettingConfigurable implements Configurable {
     MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
+    JBTextField canonicalClassNameTextFields;
+    JBTextField includeFiledTextFields;
+    JBTextField excludeFieldTextFields;
     MyHeaderListTableWithButton myHeaderListTableWithButton;
 
     public CURLSettingConfigurable(Project project) {
@@ -62,6 +65,10 @@ public class CURLSettingConfigurable implements Configurable {
         ipTextField = new JBTextField();
         ipTextField.setText(oldState.ip);
 
+        canonicalClassNameTextFields = new JBTextField(oldState.filterFieldInfo.canonicalClassName);
+        includeFiledTextFields = new JBTextField(oldState.filterFieldInfo.includeFiled);
+        excludeFieldTextFields = new JBTextField(oldState.filterFieldInfo.excludeField);
+
 //        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
 //        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
 
@@ -71,6 +78,9 @@ public class CURLSettingConfigurable implements Configurable {
         JPanel jPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Ip Address:"), ipTextField, 1, false)
 //                .addComponent(curlSettingListTableWithButtons.getComponent())
+                .addLabeledComponent(new JBLabel("Canonical Class Name"), canonicalClassNameTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Include Fields"), includeFiledTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Exclude Fields"), excludeFieldTextFields, 1, false)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
         return jPanel;
@@ -83,6 +93,12 @@ public class CURLSettingConfigurable implements Configurable {
 //        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
 //            return true;
 //        }
+        if (!oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
+                || !oldState.filterFieldInfo.includeFiled.equals(includeFiledTextFields.getText())
+                || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())) {
+            return true;
+        }
+
         if (selectedInfo != null) {
             List<CURLModelInfo> entries = myOrderPanel.getEntries();
             for (CURLModelInfo entry : entries) {
@@ -109,8 +125,21 @@ public class CURLSettingConfigurable implements Configurable {
     public void apply() throws ConfigurationException {
 //        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
 //        oldState.modelInfoList = items;
+        oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
+        oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
+        oldState.filterFieldInfo.excludeField = excludeFieldTextFields.getText();
 
         oldState.modelInfoList = myOrderPanel.getEntries();
+    }
+
+    @Override
+    public void reset() {
+        canonicalClassNameTextFields.setText(oldState.filterFieldInfo.canonicalClassName);
+        includeFiledTextFields.setText(oldState.filterFieldInfo.includeFiled);
+        excludeFieldTextFields.setText(oldState.filterFieldInfo.excludeField);
+
+        myOrderPanel.clear();
+        myOrderPanel.addAll(oldState.modelInfoList);
     }
 
     protected static class CURLSettingListTableWithButtons extends ListTableWithButtons<CURLModelInfo> {
@@ -244,6 +273,7 @@ public class CURLSettingConfigurable implements Configurable {
             moduleNameTextField = new JBTextField();
             portTextField = new JBTextField();
             myHeaderListTableWithButton = new MyHeaderListTableWithButton();
+
             myDescriptionPanel = FormBuilder.createFormBuilder()
                     .addLabeledComponent(new JBLabel("Module Name"), moduleNameTextField, 1, false)
                     .addLabeledComponent(new JBLabel("Port"), portTextField, 1, false)

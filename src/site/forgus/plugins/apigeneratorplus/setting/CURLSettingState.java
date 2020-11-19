@@ -7,6 +7,7 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
     public List<Module> modules;
 
     public List<String> moduleNames;
+
+    public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
 
     @Nullable
     @Override

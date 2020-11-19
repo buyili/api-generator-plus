@@ -25,18 +25,13 @@ import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
 import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
+import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Objects;
+import java.net.*;
+import java.util.*;
 
 /**
  * @author lmx 2020/11/11 15:49
@@ -75,12 +70,12 @@ public class CurlUtils {
                     .append(buildPath(selectedMethod));
             if (isGetMethod(selectedMethod.getAnnotations())) {
                 // Get 请求参数
-                stringBuilder.append(methodInfo.getCurlRequestParams(selectedMethod, cUrlClientType));
+                stringBuilder.append(getCurlRequestParams(selectedMethod, methodInfo, cUrlClientType));
                 stringBuilder.append("'");
             } else {
                 // 非Get请求参数
                 stringBuilder.append("'");
-                stringBuilder.append(methodInfo.getCurlRequestBody(selectedMethod, cUrlClientType));
+                stringBuilder.append(getCurlRequestBody(selectedMethod, methodInfo, cUrlClientType));
             }
 
             // 添加header
@@ -303,26 +298,110 @@ public class CurlUtils {
         return "http://" + localIP + ":" + port;
     }
 
-    public String getCurlRequestBody(CUrlClientType cUrlClientType, MethodInfo methodInfo) {
+
+    public String getCurlRequestBody(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
+        StringUtil.showPsiMethod(psiMethod);
+        List<FieldInfo> requestFields = methodInfo.getRequestFields();
+        if (containRequestBodyAnnotation(psiMethod)) {
+            for (FieldInfo requestField : requestFields) {
+                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(" -H 'Content-Type: application/json;charset=UTF-8'");
+                    stringBuilder.append(" --data-binary '");
+                    String s = JsonUtil.buildRawJson(requestField);
+//                    if(cUrlClientType.equals(CUrlClientType.CMD)){
+//                        s = s.replace("\"", "^\\^\"");
+//                        s = s.replace("{", "^{");
+//                        s = s.replace("}", "^}");
+//                        System.out.println(s );
+//                    }
+                    stringBuilder.append(s)
+                            .append("'");
+                    return stringBuilder.toString();
+                }
+            }
+        } else {
+            List<String> strings = generateKeyValue(requestFields);
+            StringBuilder stringBuilder = new StringBuilder("");
+            stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
+            stringBuilder.append(" --data-raw '");
+            for (String string : strings) {
+//                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                stringBuilder.append(string).append("&");
+            }
+            stringBuilder.append("'");
+            return stringBuilder.toString();
+        }
+        return "";
+    }
+
+    public String getCurlRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
+        StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         List<String> strings = generateKeyValue(requestFields);
-        StringBuffer stringBuffer = new StringBuffer(" -d '");
+        StringBuilder stringBuilder = new StringBuilder("?");
         for (String string : strings) {
-            stringBuffer.append(string).append(cUrlClientType.getSymbolAnd());
+//            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+            stringBuilder.append(string).append("&");
         }
-        stringBuffer.append("'");
-        return stringBuffer.toString();
+        String str = stringBuilder.toString();
+        str = str.substring(0, str.length() - 1);
+//        str = str.replaceAll("%", "^%");
+        return str;
     }
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
             if (requestField.hasChildren()) {
-                strings.addAll(generateKeyValue(requestField.getChildren()));
+                strings.addAll(generateKeyValue(filterChildrenFiled(requestField)));
             } else {
-                strings.add(requestField.getName() + "=" + FieldUtil.getValue(requestField.getPsiType()));
+                Object value = FieldUtil.getValue(requestField.getPsiType());
+                String strVal = "";
+                if (null != value) {
+                    strVal = URLEncoder.encode(value.toString());
+                }
+                strings.add(requestField.getName() + "=" + strVal);
             }
         }
         return strings;
     }
+
+    public List<FieldInfo> filterChildrenFiled(FieldInfo fieldInfo) {
+        String canonicalClassName = curlSettingState.filterFieldInfo.canonicalClassName;
+        String includeFiled = curlSettingState.filterFieldInfo.includeFiled;
+        String excludeField = curlSettingState.filterFieldInfo.excludeField;
+        List<FieldInfo> children = fieldInfo.getChildren();
+        if (StringUtils.isNotEmpty(canonicalClassName)
+                && fieldInfo.getPsiType().getCanonicalText().equals(canonicalClassName)) {
+            if (StringUtils.isNotEmpty(includeFiled)) {
+                children.removeIf(child -> !includeFiled.contains(child.getName()));
+            } else if (StringUtils.isNotEmpty(excludeField)) {
+                children.removeIf(child -> includeFiled.contains(child.getName()));
+            }
+        }
+        return children;
+    }
+
+    private boolean containRequestBodyAnnotation(PsiAnnotation[] annotations) {
+        for (PsiAnnotation annotation : annotations) {
+            if (annotation.getText().contains(WebAnnotation.RequestBody)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean containRequestBodyAnnotation(PsiMethod psiMethod) {
+        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
+            return true;
+        }
+        for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
+            if (parameter.getText().contains(WebAnnotation.RequestBody)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

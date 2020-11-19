@@ -38,6 +38,7 @@ public class ApiGeneratorSetting implements Configurable {
     JBTextField defaultCatTextField;
     JBCheckBox autoCatCheckBox;
     JBTextField excludeFields;
+
     ProjectConfigListTableWithButtons projectConfigListTable;
 
     public ApiGeneratorSetting(Project project) {
