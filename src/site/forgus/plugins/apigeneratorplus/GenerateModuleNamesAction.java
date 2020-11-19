@@ -37,6 +37,7 @@ public class GenerateModuleNamesAction extends AnAction {
 //        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
         Project project = actionEvent.getProject();
 //        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+        assert project != null;
         CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
         Module[] modules = ModuleManager.getInstance(project).getModules();
 
@@ -151,5 +152,7 @@ public class GenerateModuleNamesAction extends AnAction {
         }
         return null;
     }
+
+
 
 }
