@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author lmx 2020/11/11 22:53
  **/
@@ -13,9 +16,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CURLModelInfo implements Cloneable{
 
+    private String id = String.valueOf(System.currentTimeMillis());
+
     private String moduleName = "";
 
     private String port = "";
+
+    private List<String[]> headers = Collections.emptyList();
 
     @Override
     public CURLModelInfo clone() {

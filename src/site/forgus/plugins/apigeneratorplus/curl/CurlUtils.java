@@ -15,6 +15,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ui.TextTransferable;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
@@ -56,13 +57,16 @@ public class CurlUtils {
 
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
-        String moduleName = getModuleName(editor, project);
-        String port = getPort(moduleName);
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
         if (selectedMethod != null) {
-            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
-            boolean postMethod = isPostMethod(selectedMethod);
+//            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
+//            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
+            String moduleName = getModuleName(editor, project);
+            CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
+
+            assert curlModelInfo != null;
+            String port = curlModelInfo.getPort();
             StringBuilder stringBuilder = new StringBuilder("curl");
 
             // 访问接口
@@ -79,13 +83,22 @@ public class CurlUtils {
                 stringBuilder.append(methodInfo.getCurlRequestBody(selectedMethod, cUrlClientType));
             }
 
+            // 添加header
+            List<String[]> headers = curlModelInfo.getHeaders();
+            if (CollectionUtils.isNotEmpty(headers)) {
+                for (String[] header : headers) {
+                    stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
+
+                }
+            }
+
             String curlStr = stringBuilder.toString();
             if (CUrlClientType.CMD.equals(cUrlClientType)) {
                 curlStr = curlStr.replaceAll("'", "\"");
             }
             System.out.println(curlStr);
-            NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
             CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
+            NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
         }
     }
 
@@ -186,6 +199,17 @@ public class CurlUtils {
             }
         }
         return "";
+    }
+
+    private CURLModelInfo getCurlModelInfo(String moduleName) {
+        if (StringUtils.isNotEmpty(moduleName)) {
+            for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
+                if (curlModelInfo.getModuleName().equals(moduleName)) {
+                    return curlModelInfo;
+                }
+            }
+        }
+        return null;
     }
 
     private boolean annotationContain(PsiAnnotation[] annotations, String str) {

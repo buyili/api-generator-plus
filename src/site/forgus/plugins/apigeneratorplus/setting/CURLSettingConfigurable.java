@@ -1,6 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.google.gson.Gson;
+import com.intellij.execution.ExecutionBundle;
 import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManagerMain;
@@ -25,7 +26,9 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,8 +42,10 @@ public class CURLSettingConfigurable implements Configurable {
     CURLSettingListTableWithButtons curlSettingListTableWithButtons;
 
     private CURLModelInfo selectedInfo;
+    MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
+    MyHeaderListTableWithButton myHeaderListTableWithButton;
 
     public CURLSettingConfigurable(Project project) {
         oldState = ServiceManager.getService(project, CURLSettingState.class);
@@ -57,74 +62,61 @@ public class CURLSettingConfigurable implements Configurable {
         ipTextField = new JBTextField();
         ipTextField.setText(oldState.ip);
 
-        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
-        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
+//        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
+//        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
 
-        MyOrderPanel myOrderPanel = new MyOrderPanel();
+        myOrderPanel = new MyOrderPanel();
         myOrderPanel.addAll(oldState.modelInfoList);
 
-        AddEditDeleteListPanel helo = new AddEditDeleteListPanel<CURLModelInfo>("hello", oldState.modelInfoList) {
-            @Nullable
-            @Override
-            protected CURLModelInfo findItemToAdd() {
-                return null;
-            }
-
-            @Nullable
-            @Override
-            protected CURLModelInfo editSelectedItem(CURLModelInfo item) {
-                return null;
-            }
-
-            @Override
-            protected void addElement(@Nullable CURLModelInfo itemToAdd) {
-                CURLModelInfo curlModelInfo = new CURLModelInfo();
-                super.addElement(curlModelInfo);
-            }
-
-            @Override
-            protected ListCellRenderer getListCellRenderer() {
-                ListCellRenderer<CURLModelInfo> listCellRenderer = new ListCellRenderer<CURLModelInfo>() {
-                    @Override
-                    public Component getListCellRendererComponent(JList<? extends CURLModelInfo> list, CURLModelInfo value, int index, boolean isSelected, boolean cellHasFocus) {
-                        return new JBLabel(value.getModuleName());
-                    }
-                };
-                return listCellRenderer;
-            }
-        };
         JPanel jPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("ip address:"), ipTextField, 1, false)
-                .addComponent(curlSettingListTableWithButtons.getComponent())
-                .addComponent(myOrderPanel)
+                .addLabeledComponent(new JBLabel("Ip Address:"), ipTextField, 1, false)
+//                .addComponent(curlSettingListTableWithButtons.getComponent())
+                .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
         return jPanel;
     }
 
     @Override
     public boolean isModified() {
-        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
         Gson gson = new Gson();
-        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
-            return true;
-        }
+//        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+//        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
+//            return true;
+//        }
         if (selectedInfo != null) {
-            if (!selectedInfo.getModuleName().equals(moduleNameTextField.getText())
-                    || !selectedInfo.getPort().equals(portTextField.getText())) {
-                return true;
+            List<CURLModelInfo> entries = myOrderPanel.getEntries();
+            for (CURLModelInfo entry : entries) {
+                if (entry.getId().equals(selectedInfo.getId())) {
+                    int i = entries.indexOf(entry);
+                    selectedInfo.setModuleName(moduleNameTextField.getText());
+                    selectedInfo.setPort(portTextField.getText());
+                    List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
+                    selectedInfo.setHeaders(items);
+                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedInfo, i, myOrderPanel.getEntryColumn());
+                    break;
+                }
             }
+        }
+        List<CURLModelInfo> entries = myOrderPanel.getEntries();
+        List<CURLModelInfo> modelInfoList = oldState.modelInfoList;
+        if (!gson.toJson(modelInfoList).equals(gson.toJson(entries))) {
+            return true;
         }
         return false;
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
-        oldState.modelInfoList = items;
+//        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+//        oldState.modelInfoList = items;
 
+        oldState.modelInfoList = myOrderPanel.getEntries();
     }
 
-    protected class CURLSettingListTableWithButtons extends ListTableWithButtons<CURLModelInfo> {
+    protected static class CURLSettingListTableWithButtons extends ListTableWithButtons<CURLModelInfo> {
+        public CURLSettingListTableWithButtons() {
+            getTableView().getEmptyText().setText(ExecutionBundle.message("empty.text.no.variables"));
+        }
 
         @Override
         protected ListTableModel createListModel() {
@@ -214,6 +206,10 @@ public class CURLSettingConfigurable implements Configurable {
     protected class MyOrderPanel extends OrderPanel<CURLModelInfo> {
 
 
+        private final ToolbarDecorator myDecorator;
+        private final CommonActionsPanel myActionsPanel;
+        JPanel myDescriptionPanel;
+
         protected MyOrderPanel() {
             super(CURLModelInfo.class);
             JTable entryTable = getEntryTable();
@@ -237,23 +233,88 @@ public class CURLSettingConfigurable implements Configurable {
                     if (selectedRow != -1) {
                         selectedInfo = getValueAt(selectedRow);
                         moduleNameTextField.setText(selectedInfo.getModuleName());
+                        portTextField.setText(selectedInfo.getPort());
+                        myHeaderListTableWithButton.setValues(selectedInfo.getHeaders());
+                        myDescriptionPanel.setVisible(true);
+                        myDescriptionPanel.updateUI();
                     }
                 }
             });
             setCheckboxColumnName("");
             moduleNameTextField = new JBTextField();
             portTextField = new JBTextField();
-            JPanel myDescriptionPanel = FormBuilder.createFormBuilder()
-                    .addLabeledComponent(new JBLabel("module name"), moduleNameTextField, 1, false)
-                    .addLabeledComponent(new JBLabel("port"), portTextField, 1, false)
+            myHeaderListTableWithButton = new MyHeaderListTableWithButton();
+            myDescriptionPanel = FormBuilder.createFormBuilder()
+                    .addLabeledComponent(new JBLabel("Module Name"), moduleNameTextField, 1, false)
+                    .addLabeledComponent(new JBLabel("Port"), portTextField, 1, false)
+                    .addLabeledComponent(new JBLabel("Headers"), myHeaderListTableWithButton.getComponent(), 1, true)
+                    .addComponentFillVertically(new JPanel(), 0)
                     .getPanel();
+            myDescriptionPanel.setVisible(false);
 //            myDescriptionPanel.setPreferredSize(new JBDimension(600, 400));
             removeAll();
 
+            myDecorator = createToolbarDecorator();
+            myDecorator.setAddAction(createAddAction()).setRemoveAction(createRemoveAction());
+            myActionsPanel = myDecorator.getActionsPanel();
+
             Splitter splitter = new OnePixelSplitter(false);
-            splitter.setFirstComponent(wrapWithPane(entryTable, 1, 0));
+            splitter.setFirstComponent(wrapWithPane(myDecorator.createPanel(), 1, 0));
             splitter.setSecondComponent(wrapWithPane(myDescriptionPanel, 0, 1));
             add(splitter, BorderLayout.CENTER);
+        }
+
+
+        protected ToolbarDecorator createToolbarDecorator() {
+            return ToolbarDecorator.createDecorator(getEntryTable());
+        }
+
+        @Nullable
+        protected AnActionButtonRunnable createRemoveAction() {
+            return button -> removeSelected();
+        }
+
+        @Nullable
+        protected AnActionButtonRunnable createAddAction() {
+            return button -> addNewElement(createElement());
+        }
+
+        protected CURLModelInfo createElement() {
+            CURLModelInfo curlModelInfo = new CURLModelInfo();
+            curlModelInfo.setId(String.valueOf(System.currentTimeMillis()));
+            curlModelInfo.setModuleName(StringUtil.getName());
+            return curlModelInfo;
+        }
+
+        protected void addNewElement(CURLModelInfo newElement) {
+            add(newElement);
+            int index = getEntries().size() - 1;
+            getEntryTable().setRowSelectionInterval(index, index);
+        }
+
+        protected void removeSelected() {
+            JTable entryTable = getEntryTable();
+            int[] selectedRows = entryTable.getSelectedRows();
+            if (selectedRows.length == 0) {
+                return;
+            }
+            int selectedIndex = entryTable.getSelectedRow();
+            List<CURLModelInfo> entries = getEntries();
+            CURLModelInfo selectRemoveInfo = entries.get(selectedIndex);
+            remove(selectRemoveInfo);
+//            removeItem(selectRemoveInfo);
+
+            entries = getEntries();
+            int pre = selectedIndex - 1;
+            if (pre >= 0) {
+                entryTable.setRowSelectionInterval(pre, pre);
+            } else if (selectedIndex < entries.size()) {
+                entryTable.setRowSelectionInterval(selectedIndex, selectedIndex);
+            } else {
+                myDescriptionPanel.setVisible(false);
+//                myDescriptionPanel.removeAll();
+                myDescriptionPanel.updateUI();
+            }
         }
 
         @NotNull
@@ -279,16 +340,107 @@ public class CURLSettingConfigurable implements Configurable {
         }
 
         @Override
+        protected int getEntryColumn() {
+            return super.getEntryColumn();
+        }
+
+        @Override
         public void setChecked(CURLModelInfo entry, boolean checked) {
             System.out.println("--------");
         }
 
         public void addAll(List<CURLModelInfo> orderEntries) {
             for (CURLModelInfo orderEntry : orderEntries) {
-                add(orderEntry);
+                add(orderEntry.clone());
             }
         }
     }
 
+    protected class MyHeaderListTableWithButton extends ListTableWithButtons<String[]> {
+
+        @Override
+        protected ListTableModel createListModel() {
+            return new ListTableModel(new KeyColumnInfo(), new ValueColumnInfo());
+        }
+
+        @Override
+        protected String[] createElement() {
+            return new String[2];
+        }
+
+        @Override
+        protected boolean isEmpty(String[] element) {
+            return element[0] == null || "".equals(element[0]);
+        }
+
+        @Override
+        protected String[] cloneElement(String[] variable) {
+            return variable.clone();
+        }
+
+        @Override
+        protected boolean canDeleteElement(String[] selection) {
+            return true;
+        }
+
+
+        protected class KeyColumnInfo extends ElementsColumnInfoBase<String[]> {
+
+            protected KeyColumnInfo() {
+                super("KEY");
+            }
+
+            @Nullable
+            @Override
+            protected String getDescription(String[] element) {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public String valueOf(String[] strings) {
+                return strings[0];
+            }
+
+            @Override
+            public void setValue(String[] strings, String value) {
+                strings[0] = value;
+            }
+
+            @Override
+            public boolean isCellEditable(String[] strings) {
+                return true;
+            }
+        }
+
+        protected class ValueColumnInfo extends ElementsColumnInfoBase<String[]> {
+
+            protected ValueColumnInfo() {
+                super("VALUE");
+            }
+
+            @Nullable
+            @Override
+            protected String getDescription(String[] element) {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public String valueOf(String[] strings) {
+                return strings[1];
+            }
+
+            @Override
+            public void setValue(String[] strings, String value) {
+                strings[1] = value;
+            }
+
+            @Override
+            public boolean isCellEditable(String[] strings) {
+                return true;
+            }
+        }
+    }
 
 }

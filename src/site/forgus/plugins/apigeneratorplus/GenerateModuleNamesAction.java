@@ -23,10 +23,7 @@ import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author lmx 2020/11/11 14:19
@@ -48,7 +45,8 @@ public class GenerateModuleNamesAction extends AnAction {
         List<CURLModelInfo> list = new ArrayList<>();
         for (Module module : modules) {
             tempModuleNames.add(module.getName());
-            list.add(new CURLModelInfo(module.getName(), findPort(module)));
+            list.add(new CURLModelInfo(String.valueOf(System.currentTimeMillis()), module.getName(), findPort(module),
+                    Collections.emptyList()));
         }
         state.moduleNames = tempModuleNames;
         state.modelInfoList = list;
@@ -105,6 +103,7 @@ public class GenerateModuleNamesAction extends AnAction {
      * 从Map中获取配置的值
      * 传的key支持两种形式, 一种是单独的,如user.path.key
      * 一种是获取数组中的某一个,如 user.path.key[0]
+     *
      * @param key
      * @return
      */
@@ -117,7 +116,7 @@ public class GenerateModuleNamesAction extends AnAction {
         } else {
             // 直接取一个配置项的情况, user
             Object res = properties.get(key);
-            return res == null ? defaultValue :  res;
+            return res == null ? defaultValue : res;
         }
         // 下面肯定是取多个的情况
         String finalValue = null;
