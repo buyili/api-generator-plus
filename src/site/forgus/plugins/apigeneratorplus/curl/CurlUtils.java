@@ -310,12 +310,9 @@ public class CurlUtils {
                     stringBuilder.append(" -H 'Content-Type: application/json;charset=UTF-8'");
                     stringBuilder.append(" --data-binary '");
                     String s = JsonUtil.buildRawJson(requestField);
-//                    if(cUrlClientType.equals(CUrlClientType.CMD)){
-//                        s = s.replace("\"", "^\\^\"");
-//                        s = s.replace("{", "^{");
-//                        s = s.replace("}", "^}");
-//                        System.out.println(s );
-//                    }
+                    if (cUrlClientType.equals(CUrlClientType.CMD)) {
+                        s = s.replace("\"", "\\\"");
+                    }
                     stringBuilder.append(s)
                             .append("'");
                     return stringBuilder.toString();
