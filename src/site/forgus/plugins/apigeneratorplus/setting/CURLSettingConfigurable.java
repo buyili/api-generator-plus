@@ -3,15 +3,12 @@ package site.forgus.plugins.apigeneratorplus.setting;
 import com.google.gson.Gson;
 import com.intellij.execution.ExecutionBundle;
 import com.intellij.execution.util.ListTableWithButtons;
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManagerMain;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.OnePixelDivider;
 import com.intellij.openapi.ui.Splitter;
-import com.intellij.openapi.updateSettings.impl.PluginDownloader;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.ui.*;
 import com.intellij.ui.components.JBCheckBox;
@@ -27,9 +24,6 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,7 +33,7 @@ import java.util.List;
 public class CURLSettingConfigurable implements Configurable {
 
     CURLSettingState oldState;
-    JBTextField ipTextField;
+    JBTextField baseApiTextField;
     CURLSettingListTableWithButtons curlSettingListTableWithButtons;
 
     private CURLModelInfo selectedInfo;
@@ -65,14 +59,14 @@ public class CURLSettingConfigurable implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        ipTextField = new JBTextField();
-        ipTextField.setText(oldState.ip);
+        baseApiTextField = new JBTextField();
+        baseApiTextField.setText(oldState.baseApi);
 
         canonicalClassNameTextFields = new JBTextField(oldState.filterFieldInfo.canonicalClassName);
         includeFiledTextFields = new JBTextField(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields = new JBTextField(oldState.filterFieldInfo.excludeField);
         arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
-        excludeChildrenCheckBox = new JBCheckBox("Exclude Children Field", oldState.filterFieldInfo.excludeChildren);
+        excludeChildrenCheckBox = new JBCheckBox("", oldState.filterFieldInfo.excludeChildren);
 
 //        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
 //        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
@@ -81,14 +75,14 @@ public class CURLSettingConfigurable implements Configurable {
         myOrderPanel.addAll(oldState.modelInfoList);
 
         JPanel jPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("Ip Address:"), ipTextField, 1, false)
+                .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 1, false)
 //                .addComponent(curlSettingListTableWithButtons.getComponent())
-                .addLabeledComponent(new JBLabel("Canonical Class Name"), canonicalClassNameTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Include Fields"), includeFiledTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Exclude Fields"), excludeFieldTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Array Format"), arrayFormatTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatTextFields, 1, false)
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
-                .addComponent(excludeChildrenCheckBox)
+                .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
         return jPanel;
@@ -101,7 +95,8 @@ public class CURLSettingConfigurable implements Configurable {
 //        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
 //            return true;
 //        }
-        if (!oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
+        if (!oldState.baseApi.equals(baseApiTextField.getText())
+                || !oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
                 || !oldState.filterFieldInfo.includeFiled.equals(includeFiledTextFields.getText())
                 || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())
                 || !oldState.arrayFormat.equals(arrayFormatTextFields.getText())
@@ -136,6 +131,7 @@ public class CURLSettingConfigurable implements Configurable {
     public void apply() throws ConfigurationException {
 //        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
 //        oldState.modelInfoList = items;
+        oldState.baseApi = baseApiTextField.getText();
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
         oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
         oldState.filterFieldInfo.excludeField = excludeFieldTextFields.getText();
@@ -147,6 +143,7 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public void reset() {
+        baseApiTextField.setText(oldState.baseApi);
         canonicalClassNameTextFields.setText(oldState.filterFieldInfo.canonicalClassName);
         includeFiledTextFields.setText(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields.setText(oldState.filterFieldInfo.excludeField);

@@ -23,7 +23,7 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
 
     public static final String ARRAY_FORMAT = "repeat";
 
-    public String ip = "";
+    public String baseApi = "";
 
     public List<CURLModelInfo> modelInfoList = new ArrayList<>();
 

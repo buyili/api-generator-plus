@@ -71,12 +71,12 @@ public class CurlUtils {
                     .append(buildPath(selectedMethod));
             if (isGetMethod(selectedMethod.getAnnotations())) {
                 // Get 请求参数
-                stringBuilder.append(getCurlRequestParams(selectedMethod, methodInfo, cUrlClientType));
+                stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
                 stringBuilder.append("'");
             } else {
                 // 非Get请求参数
                 stringBuilder.append("'");
-                stringBuilder.append(getCurlRequestBody(selectedMethod, methodInfo, cUrlClientType));
+                stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
             }
 
             // 添加header
@@ -170,17 +170,6 @@ public class CurlUtils {
         if (virtualFile != null) {
             Module module = projectFileIndex.getModuleForFile(virtualFile);
             moduleName = module != null ? module.getName() : "";
-
-//            VirtualFile moduleContentRoot = projectFileIndex.getContentRootForFile(virtualFile);
-//            boolean isLibraryFile = projectFileIndex.isLibraryClassFile(virtualFile);
-//            boolean isInLibraryClasses = projectFileIndex.isInLibraryClasses(virtualFile);
-//            boolean isInLibrarySource = projectFileIndex.isInLibrarySource(virtualFile);
-//            Messages.showInfoMessage("Module: " + moduleName + "\n" +
-//                            "Module content root: " + moduleContentRoot + "\n" +
-//                            "Is library file: " + isLibraryFile + "\n" +
-//                            "Is in library classes: " + isInLibraryClasses +
-//                            ", Is in library source: " + isInLibrarySource,
-//                    "Main File Info for" + virtualFile.getName());
         }
         return moduleName;
     }
@@ -295,12 +284,15 @@ public class CurlUtils {
     }
 
     public String getBaseApi(String port) {
+        if (StringUtils.isNotEmpty(curlSettingState.baseApi)) {
+            return curlSettingState.baseApi;
+        }
         String localIP = getRealIP();
         return "http://" + localIP + ":" + port;
     }
 
 
-    public String getCurlRequestBody(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
+    public String getRequestBody(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         if (containRequestBodyAnnotation(psiMethod)) {
@@ -333,7 +325,7 @@ public class CurlUtils {
         return "";
     }
 
-    public String getCurlRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
+    public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         List<String> strings = generateKeyValue(requestFields);
@@ -375,7 +367,7 @@ public class CurlUtils {
         List<String> includeFiledList = filterFieldInfo.getIncludeFiledList();
         List<FieldInfo> children = fieldInfo.getChildren();
         List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
-        int index = getIndexOnCanoncalClassNameList(fieldInfo.getPsiType().getCanonicalText(), canonicalClassNameList);
+        int index = getIndexOnCanonicalClassNameList(fieldInfo.getPsiType().getCanonicalText(), canonicalClassNameList);
         if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
             if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
@@ -392,7 +384,7 @@ public class CurlUtils {
         return children;
     }
 
-    public int getIndexOnCanoncalClassNameList(String canonicalClassName, List<String> set) {
+    public int getIndexOnCanonicalClassNameList(String canonicalClassName, List<String> set) {
         for (String s : set) {
             if (canonicalClassName.startsWith(s)) {
                 return set.indexOf(s);
