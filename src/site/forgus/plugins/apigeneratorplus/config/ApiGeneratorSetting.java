@@ -222,12 +222,14 @@ public class ApiGeneratorSetting implements Configurable {
         oldState.autoCat = autoCatCheckBox.isSelected();
         List<YApiProjectConfigInfo> items = projectConfigListTable.getTableView().getItems();
         for (YApiProjectConfigInfo item : items) {
-            if (!AssertUtils.isEmpty(item.getToken())) {
+            if (AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(item.getToken())) {
                 try {
                     YApiProject yApiProject = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), item.getToken());
-                    item.setProject(yApiProject);
-                    String projectId = yApiProject.get_id().toString();
-                    item.setProjectId(projectId);
+                    if (null != yApiProject) {
+                        item.setProject(yApiProject);
+                        String projectId = yApiProject.get_id().toString();
+                        item.setProjectId(projectId);
+                    }
                 } catch (IOException e) {
 //                    e.printStackTrace();
                 }

@@ -47,13 +47,13 @@ public class YApiSdk {
         }.getType();
         YApiResponse<YApiProject> yApiResponse = gson.fromJson(responseStr, type);
         System.out.println(responseStr);
-        if(yApiResponse.getErrcode() != 0){
+        if (yApiResponse != null && yApiResponse.getErrcode() != 0) {
             String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
                     serverUrl, token);
             Messages.showErrorDialog(message, "多模块项目配置保存失败");
-//            NotificationUtil.errorNotify("Server Url 和 Token 不匹配; server url: [] token: []");
+            return yApiResponse.getData();
         }
-        return yApiResponse.getData();
+        return null;
     }
 
     /**

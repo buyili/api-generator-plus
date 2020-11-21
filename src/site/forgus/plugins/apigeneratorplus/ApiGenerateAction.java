@@ -109,7 +109,7 @@ public class ApiGenerateAction extends AnAction {
         }
         if (StringUtils.isEmpty(config.getState().projectId)) {
             YApiProject projectInfo = YApiSdk.getProjectInfo(config.getState().yApiServerUrl, config.getState().projectToken);
-            String projectId = projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
+            String projectId = projectInfo != null && projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
             if (StringUtils.isEmpty(projectId)) {
                 NotificationUtil.warnNotify("Project id can not be empty.", project);
                 return;
@@ -214,7 +214,7 @@ public class ApiGenerateAction extends AnAction {
         }
         if (StringUtils.isEmpty(config.getState().projectId)) {
             YApiProject projectInfo = YApiSdk.getProjectInfo(config.getState().yApiServerUrl, config.getState().projectToken);
-            String projectId = projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
+            String projectId = projectInfo != null && projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
             if (StringUtils.isEmpty(projectId)) {
                 NotificationUtil.warnNotify("Project id can not be empty.", project);
                 return;
