@@ -39,6 +39,9 @@ public class ApiGeneratorSetting implements Configurable {
     JBCheckBox autoCatCheckBox;
     JBTextField excludeFields;
 
+
+    JBCheckBox isMultiModuleCheckBox;
+    JBCheckBox isUseDefaultTokenCheckBox;
     ProjectConfigListTableWithButtons projectConfigListTable;
 
     public ApiGeneratorSetting(Project project) {
@@ -124,13 +127,18 @@ public class ApiGeneratorSetting implements Configurable {
         jbTabbedPane.addTab("YApi Setting", yApiJPanel);
 
         //YApi setting
+        isMultiModuleCheckBox = new JBCheckBox("", oldState.isMultiModule);
+        isUseDefaultTokenCheckBox = new JBCheckBox("", oldState.isUseDefaultToken);
         projectConfigListTable = new ProjectConfigListTableWithButtons();
         projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
 
         JPanel panel = FormBuilder.createFormBuilder()
+                .addLabeledComponent(new JBLabel("Is Multiple Module Project"), isMultiModuleCheckBox, 1, false)
+                .addLabeledComponent(new JBLabel("Is Use Default Token"), isUseDefaultTokenCheckBox, 1, false)
+                .addVerticalGap(4)
                 .addComponentFillVertically(projectConfigListTable.getComponent(), 0)
                 .getPanel();
-        jbTabbedPane.addTab("Project Config", panel);
+        jbTabbedPane.addTab("Multiple Module Project Config", panel);
 
 
 //        ProjectConfigListComponent projectConfigListComponent = new ProjectConfigListComponent();
@@ -193,6 +201,8 @@ public class ApiGeneratorSetting implements Configurable {
                 oldState.autoCat != autoCatCheckBox.isSelected() ||
                 !oldState.dirPath.equals(dirPathTextField.getText()) ||
                 !oldState.excludeFields.equals(excludeFields.getText()) ||
+                oldState.isMultiModule != isMultiModuleCheckBox.isSelected() ||
+                oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected() ||
                 !compareProjectConfigInfoList(oldState.yApiProjectConfigInfoList, projectConfigListTable.getTableView().getItems());
     }
 
@@ -220,6 +230,9 @@ public class ApiGeneratorSetting implements Configurable {
         }
         oldState.defaultCat = defaultCatTextField.getText();
         oldState.autoCat = autoCatCheckBox.isSelected();
+
+        oldState.isMultiModule = isMultiModuleCheckBox.isSelected();
+        oldState.isUseDefaultToken = isUseDefaultTokenCheckBox.isSelected();
         List<YApiProjectConfigInfo> items = projectConfigListTable.getTableView().getItems();
         for (YApiProjectConfigInfo item : items) {
             if (AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(item.getToken())) {
@@ -249,6 +262,8 @@ public class ApiGeneratorSetting implements Configurable {
         tokenTextField.setText(oldState.projectToken);
         defaultCatTextField.setText(oldState.defaultCat);
         autoCatCheckBox.setSelected(oldState.autoCat);
+        isMultiModuleCheckBox.setSelected(oldState.isMultiModule);
+        isUseDefaultTokenCheckBox.setSelected(oldState.isUseDefaultToken);
         projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
     }
 

@@ -13,6 +13,8 @@ import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
+import lombok.SneakyThrows;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -20,6 +22,7 @@ import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
 import site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.util.*;
@@ -39,34 +42,38 @@ public class ApiGenerateAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent actionEvent) {
-        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
-        if (editor == null) {
-            return;
+        try {
+            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
+            if (editor == null) {
+                return;
+            }
+            PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+            if (psiFile == null) {
+                return;
+            }
+            Project project = editor.getProject();
+            if (project == null) {
+                return;
+            }
+            config = ServiceManager.getService(project, ApiGeneratorConfig.class);
+            PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+            PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+            if (selectedClass == null) {
+                NotificationUtil.errorNotify("this operate only support in class file", project);
+                return;
+            }
+            if (selectedClass.isInterface()) {
+                generateMarkdownForInterface(project, referenceAt, selectedClass);
+                return;
+            }
+            if (haveControllerAnnotation(selectedClass)) {
+                uploadApiToYApi(project, referenceAt, selectedClass);
+                return;
+            }
+            generateMarkdownForClass(project, selectedClass);
+        } catch (BizException e) {
+            System.out.println(e.getMessage());
         }
-        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-        if (psiFile == null) {
-            return;
-        }
-        Project project = editor.getProject();
-        if (project == null) {
-            return;
-        }
-        config = ServiceManager.getService(project, ApiGeneratorConfig.class);
-        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
-        if (selectedClass == null) {
-            NotificationUtil.errorNotify("this operate only support in class file", project);
-            return;
-        }
-        if (selectedClass.isInterface()) {
-            generateMarkdownForInterface(project, referenceAt, selectedClass);
-            return;
-        }
-        if (haveControllerAnnotation(selectedClass)) {
-            uploadApiToYApi(project, referenceAt, selectedClass);
-            return;
-        }
-        generateMarkdownForClass(project, selectedClass);
     }
 
     private void uploadApiToYApi(Project project, PsiElement referenceAt, PsiClass selectedClass) {
@@ -862,28 +869,73 @@ public class ApiGenerateAction extends AnAction {
         return null;
     }
 
+    @SneakyThrows
     public YApiProjectConfigInfo getProjectConfigInfo(PsiMethod psiMethod) {
         PsiClass containingClass = psiMethod.getContainingClass();
         String qualifiedName = containingClass.getQualifiedName();
-        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
-            String packageName = yApiProjectConfigInfo.getPackageName();
-            if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
-                if (AssertUtils.isEmpty(yApiProjectConfigInfo.getToken())) {
-                    yApiProjectConfigInfo.setToken(config.getState().projectToken);
-                    yApiProjectConfigInfo.setToken(config.getState().projectId);
+        YApiProjectConfigInfo selectedConfig = null;
+        if (config.isMultiModule) {
+            for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+                String packageName = yApiProjectConfigInfo.getPackageName();
+                if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
+                    selectedConfig = yApiProjectConfigInfo.clone();
                 }
-                assert AssertUtils.isNotEmpty(yApiProjectConfigInfo.getToken())
-                        && AssertUtils.isNotEmpty(yApiProjectConfigInfo.getProjectId());
-                if (AssertUtils.isEmpty(yApiProjectConfigInfo.getBasePath())) {
-                    yApiProjectConfigInfo.setBasePath("");
+            }
+            // 选择包名对应的YApi项目
+            if (selectedConfig == null) {
+                int isUseModuleOrDefault = Messages.showYesNoCancelDialog("该模块未配置YApi项目token，是否选择配置过token的模块？" +
+                                "\nYes：选择模块项目；" +
+                                "\nNo：直接使用配置的默认YApi项目；" +
+                                "\n如果不想每次都提醒，可以在设置里·取消勾选· Is multiple module；或者配置包名和对应的token",
+                        "提示", Messages.getQuestionIcon());
+                if (isUseModuleOrDefault == Messages.YES) {
+                    List<String> packageNames = new ArrayList<>();
+                    for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
+                        if (StringUtils.isNotEmpty(yApiProjectConfigInfo.getPackageName())) {
+                            packageNames.add(yApiProjectConfigInfo.getPackageName());
+                        }
+                    }
+                    if (CollectionUtils.isNotEmpty(packageNames)) {
+                        int selectModuleIdx = Messages.showDialog("请选择YApi项目", "提示", packageNames.toArray(new String[0]),
+                                0, Messages.getQuestionIcon());
+                        if (selectModuleIdx == -1) {
+                            throw new BizException("cancel generator api");
+                        }
+                        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
+                            if (yApiProjectConfigInfo.getPackageName().equals(packageNames.get(selectModuleIdx))) {
+                                selectedConfig = yApiProjectConfigInfo.clone();
+                            }
+                        }
+                    }
+                } else if (isUseModuleOrDefault == Messages.CANCEL) {
+                    throw new BizException("cancel generator api");
                 }
-                return yApiProjectConfigInfo;
+            }
+            if (selectedConfig != null) {
+                if (AssertUtils.isEmpty(selectedConfig.getToken())) {
+                    if (!config.isUseDefaultToken) {
+                        int resultIdx = Messages.showOkCancelDialog("匹配到的包名没有配置YApi token;是否使用默认YApi token?" +
+                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token",
+                                "提示", "Ok", "Cancel", Messages.getQuestionIcon());
+                        if (Messages.CANCEL == resultIdx) {
+                            throw new BizException("cancel generator api");
+                        }
+                    }
+                    selectedConfig.setToken(config.getState().projectToken);
+                    selectedConfig.setProjectId(config.getState().projectId);
+                }
+                assert AssertUtils.isNotEmpty(selectedConfig.getToken())
+                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId());
+                if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
+                    selectedConfig.setBasePath("");
+                }
+                return selectedConfig;
             }
         }
-        YApiProjectConfigInfo yApiProjectConfigInfo = new YApiProjectConfigInfo();
-        yApiProjectConfigInfo.setToken(config.getState().projectToken);
-        yApiProjectConfigInfo.setProjectId(config.getState().projectId);
-        yApiProjectConfigInfo.setBasePath("");
-        return yApiProjectConfigInfo;
+        selectedConfig = new YApiProjectConfigInfo();
+        selectedConfig.setToken(config.getState().projectToken);
+        selectedConfig.setProjectId(config.getState().projectId);
+        selectedConfig.setBasePath("");
+        return selectedConfig;
     }
 }

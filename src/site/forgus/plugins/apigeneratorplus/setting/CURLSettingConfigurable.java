@@ -83,6 +83,7 @@ public class CURLSettingConfigurable implements Configurable {
                 .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatTextFields, 1, false)
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)
+                .addVerticalGap(4)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
         return jPanel;

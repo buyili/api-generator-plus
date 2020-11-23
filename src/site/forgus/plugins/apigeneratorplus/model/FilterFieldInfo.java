@@ -17,7 +17,7 @@ public class FilterFieldInfo {
 
     public String excludeField = "";
 
-    public boolean excludeChildren = false;
+    public boolean excludeChildren = true;
 
     public List<String> getCanonicalClassNameList() {
         return split(canonicalClassName);

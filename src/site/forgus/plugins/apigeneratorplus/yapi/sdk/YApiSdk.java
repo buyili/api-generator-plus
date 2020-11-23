@@ -7,6 +7,7 @@ import com.intellij.openapi.ui.Messages;
 import site.forgus.plugins.apigeneratorplus.util.HttpUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
@@ -39,6 +40,7 @@ public class YApiSdk {
      * @return
      * @throws IOException
      */
+    @Nullable
     public static YApiProject getProjectInfo(String serverUrl, String token) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("token", token);
@@ -51,9 +53,9 @@ public class YApiSdk {
             String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
                     serverUrl, token);
             Messages.showErrorDialog(message, "多模块项目配置保存失败");
-            return yApiResponse.getData();
+            return null;
         }
-        return null;
+        return yApiResponse.getData();
     }
 
     /**

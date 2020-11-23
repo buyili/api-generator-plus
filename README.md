@@ -40,6 +40,9 @@ YApi server url|YApi部署服务器地址|内网部署的yapi平台的域名，�
 Project token|项目token|接口对应的yapi项目的token
 Default save category|默认保存分类|插件生成的yapi文档保存位置，默认api_generator
 Classify API automatically|是否自动分类|勾选该选项后，生成文档时插件将从controller类注释里抽取模块名，并在yapi上自动创建对应分类保存接口
+多模块配置|-|-
+Is Multiple Module Project|是否是多模块项目|勾选该选项后，插件会根据包名查找对应的token
+Is Use Default Token|是否使用默认token|Is Multiple Module Project选项被勾选后生效；勾选该选项后，插件根据包名没有找到对应的token时，使用默认token。未勾选该选项时，插件会弹出提示框
 
 
 # Copy as cUrl

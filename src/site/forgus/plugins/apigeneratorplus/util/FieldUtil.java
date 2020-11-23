@@ -83,7 +83,7 @@ public class FieldUtil {
                 if (obj == null) {
                     return null;
                 }
-                String arrayFormat = StringUtils.isNotEmpty(state.arrayFormat) ? state.arrayFormat : CURLSettingState.ARRAY_FORMAT;
+                String arrayFormat = StringUtils.isNotEmpty(state.arrayFormat) ? state.arrayFormat : ArrayFormatEnum.repeat.name();
                 if (ArrayFormatEnum.indices.name().equals(arrayFormat)) {
                     return keyName + "[0]=" + obj.toString() + "&" + keyName + "[1]=" + obj.toString();
                 } else if (ArrayFormatEnum.brackets.name().equals(arrayFormat)) {

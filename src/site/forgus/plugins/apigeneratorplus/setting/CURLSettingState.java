@@ -7,6 +7,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 
@@ -20,8 +21,6 @@ import java.util.List;
         storages = {@Storage("ApiGeneratorPlusPlugin.xml")}
 )
 public class CURLSettingState implements PersistentStateComponent<CURLSettingState> {
-
-    public static final String ARRAY_FORMAT = "repeat";
 
     public String baseApi = "";
 
@@ -38,7 +37,7 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
      * // 'a=b&a=c'
      * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'comma' })
      */
-    public String arrayFormat = ARRAY_FORMAT;
+    public String arrayFormat = ArrayFormatEnum.repeat.name();
 
     public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
 
