@@ -2,10 +2,10 @@
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
     <version>2020.11.19</version>
-    <vendor email="xxx@gmail.com">xxx</vendor>
+    <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
-      <em>Api开发利器，接口文档自动生成</em><br><br>
+      <em>Api开发利器，接口文档自动生成（在插件Api Generator基础上修改而来，增加多模块项目支持）; 模仿Chrome浏览器Copy as cURL功能，自动生成curl命令，可直接在cmd/bash运行，也可导入postman</em><br><br>
       Features：<br>
       <ul>
       <li>Javadoc-based analysis,no additional annotations.</li>

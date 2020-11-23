@@ -40,8 +40,6 @@ YApi server url|YApi部署服务器地址|内网部署的yapi平台的域名，�
 Project token|项目token|接口对应的yapi项目的token
 Default save category|默认保存分类|插件生成的yapi文档保存位置，默认api_generator
 Classify API automatically|是否自动分类|勾选该选项后，生成文档时插件将从controller类注释里抽取模块名，并在yapi上自动创建对应分类保存接口
-## 详细文档
-更多详细介绍请移步wiki
 
 
 # Copy as cUrl
@@ -93,7 +91,7 @@ qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'comma' })
 ```
 
 ### Exclude Children Field
-是否包含Canonical Class Name中指定的类的字段的参数
+是否包含Canonical Class Name中指定的类的字段的子字段
 如：
 ```$xslt
 public class A{
