@@ -22,6 +22,7 @@ import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
 import site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
+import site.forgus.plugins.apigeneratorplus.curl.Assert;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
@@ -924,8 +925,8 @@ public class ApiGenerateAction extends AnAction {
                     selectedConfig.setToken(config.getState().projectToken);
                     selectedConfig.setProjectId(config.getState().projectId);
                 }
-                assert AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId());
+                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
+                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "token 和 projectId 为空");
                 if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
                     selectedConfig.setBasePath("");
                 }

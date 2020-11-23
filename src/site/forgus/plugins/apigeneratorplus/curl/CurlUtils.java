@@ -22,14 +22,12 @@ import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
-import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
-import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
-import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
-import site.forgus.plugins.apigeneratorplus.util.StringUtil;
+import site.forgus.plugins.apigeneratorplus.util.*;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
 import java.net.*;
@@ -46,56 +44,60 @@ public class CurlUtils {
     private static final String SLASH = "/";
 
     public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
-        Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
-        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-        Project project = actionEvent.getProject();
-        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        try {
+            Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
+            PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+            Project project = actionEvent.getProject();
+            PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+            PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
 
-        curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+            curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
-        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
-        if (selectedMethod != null) {
-//            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
-//            boolean postMethod = isPostMethod(selectedMethod);
-            MethodInfo methodInfo = new MethodInfo(selectedMethod);
-            String moduleName = getModuleName(editor, project);
-            CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
+            PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+            if (selectedMethod != null) {
+    //            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
+    //            boolean postMethod = isPostMethod(selectedMethod);
+                MethodInfo methodInfo = new MethodInfo(selectedMethod);
+                String moduleName = getModuleName(editor, project);
+                CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
 
-            assert curlModelInfo != null;
-            String port = StringUtils.isEmpty(curlModelInfo.getPort()) ? getChooseOrInputPort() : curlModelInfo.getPort();
-            StringBuilder stringBuilder = new StringBuilder("curl");
+                Assert.notNull(curlModelInfo);
+                String port = StringUtils.isEmpty(curlModelInfo.getPort()) ? getChooseOrInputPort() : curlModelInfo.getPort();
+                StringBuilder stringBuilder = new StringBuilder("curl");
 
-            // 访问接口
-            stringBuilder.append(" '")
-                    .append(getBaseApi(port))
-                    .append(buildPath(selectedMethod));
-            if (isGetMethod(selectedMethod.getAnnotations())) {
-                // Get 请求参数
-                stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
-                stringBuilder.append("'");
-            } else {
-                // 非Get请求参数
-                stringBuilder.append("'");
-                stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
-            }
-
-            // 添加header
-            List<String[]> headers = curlModelInfo.getHeaders();
-            if (CollectionUtils.isNotEmpty(headers)) {
-                for (String[] header : headers) {
-                    stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
-
+                // 访问接口
+                stringBuilder.append(" '")
+                        .append(getBaseApi(port))
+                        .append(buildPath(selectedMethod));
+                if (isGetMethod(selectedMethod.getAnnotations())) {
+                    // Get 请求参数
+                    stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
+                    stringBuilder.append("'");
+                } else {
+                    // 非Get请求参数
+                    stringBuilder.append("'");
+                    stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
                 }
-            }
 
-            String curlStr = stringBuilder.toString();
-            if (CUrlClientType.CMD.equals(cUrlClientType)) {
-                curlStr = curlStr.replaceAll("'", "\"");
+                // 添加header
+                List<String[]> headers = curlModelInfo.getHeaders();
+                if (CollectionUtils.isNotEmpty(headers)) {
+                    for (String[] header : headers) {
+                        stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
+
+                    }
+                }
+
+                String curlStr = stringBuilder.toString();
+                if (CUrlClientType.CMD.equals(cUrlClientType)) {
+                    curlStr = curlStr.replaceAll("'", "\"");
+                }
+                System.out.println(curlStr);
+                CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
+                NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
             }
-            System.out.println(curlStr);
-            CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
-            NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
+        } catch (BizException | IllegalArgumentException e) {
+            e.printStackTrace();
         }
     }
 
@@ -207,7 +209,7 @@ public class CurlUtils {
         }
         String[] modelWithPort = strings.toArray(new String[0]);
         String s = Messages.showEditableChooseDialog("请选择或输入端口", "提示", null, modelWithPort, "8080", null);
-        assert s != null;
+        Assert.notNull(s, "cancel copy as curl");
         String[] split = s.split(":");
         if (split.length > 0) {
             return split[0];

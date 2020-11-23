@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.SystemIndependent;
 import org.yaml.snakeyaml.Yaml;
+import site.forgus.plugins.apigeneratorplus.curl.Assert;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
@@ -33,31 +34,35 @@ public class GenerateModuleNamesAction extends AnAction {
     @SneakyThrows
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
-        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
+        try {
+            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
 //        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-        Project project = actionEvent.getProject();
+            Project project = actionEvent.getProject();
 //        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
-        assert project != null;
-        CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
-        Module[] modules = ModuleManager.getInstance(project).getModules();
+            Assert.notNull(project);
+            CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
+            Module[] modules = ModuleManager.getInstance(project).getModules();
 
 
-        Gson gson = new Gson();
-        String oldJson = gson.toJson(state.modelInfoList);
+            Gson gson = new Gson();
+            String oldJson = gson.toJson(state.modelInfoList);
 
-        List<CURLModelInfo> list = new ArrayList<>();
-        for (Module module : modules) {
-            list.add(new CURLModelInfo(String.valueOf(System.nanoTime()), module.getName(), findPort(module),
-                    Collections.emptyList()));
+            List<CURLModelInfo> list = new ArrayList<>();
+            for (Module module : modules) {
+                list.add(new CURLModelInfo(String.valueOf(System.nanoTime()), module.getName(), findPort(module),
+                        Collections.emptyList()));
+            }
+            for (CURLModelInfo info : state.modelInfoList) {
+                list.removeIf(curlModelInfo -> info.getModuleName().equals(curlModelInfo.getModuleName()));
+            }
+
+            state.modelInfoList.addAll(list);
+            String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+                    oldJson, gson.toJson(list));
+            NotificationUtil.infoNotify(message, project);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        for (CURLModelInfo info : state.modelInfoList) {
-            list.removeIf(curlModelInfo -> info.getModuleName().equals(curlModelInfo.getModuleName()));
-        }
-
-        state.modelInfoList.addAll(list);
-        String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
-                oldJson, gson.toJson(list));
-        NotificationUtil.infoNotify(message, project);
     }
 
     private String findPort(Module module) {
