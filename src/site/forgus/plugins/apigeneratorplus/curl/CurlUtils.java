@@ -96,7 +96,7 @@ public class CurlUtils {
                 CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
                 NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
             }
-        } catch (BizException | IllegalArgumentException e) {
+        } catch (BizException e) {
             e.printStackTrace();
         }
     }

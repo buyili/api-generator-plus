@@ -1,5 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
+
 import javax.annotation.Nullable;
 
 /**
@@ -10,7 +12,7 @@ public class Assert {
 
     public static void isTrue(boolean expression, String message) {
         if (!expression) {
-            throw new IllegalArgumentException(message);
+            throw new BizException(message);
         }
     }
 
@@ -20,7 +22,7 @@ public class Assert {
 
     public static void isNull(@Nullable Object object, String message) {
         if (object != null) {
-            throw new IllegalArgumentException(message);
+            throw new BizException(message);
         }
     }
 
@@ -30,7 +32,7 @@ public class Assert {
 
     public static void notNull(@Nullable Object object, String message) {
         if (object == null) {
-            throw new IllegalArgumentException(message);
+            throw new BizException(message);
         }
     }
 
