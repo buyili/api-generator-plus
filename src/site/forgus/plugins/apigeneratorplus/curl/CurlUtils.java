@@ -11,6 +11,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -62,7 +63,7 @@ public class CurlUtils {
             CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
 
             assert curlModelInfo != null;
-            String port = curlModelInfo.getPort();
+            String port = StringUtils.isEmpty(curlModelInfo.getPort()) ? getChooseOrInputPort() : curlModelInfo.getPort();
             StringBuilder stringBuilder = new StringBuilder("curl");
 
             // 访问接口
@@ -195,6 +196,23 @@ public class CurlUtils {
             }
         }
         return null;
+    }
+
+    private String getChooseOrInputPort() {
+        List<String> strings = new ArrayList<>();
+        for (CURLModelInfo info : curlSettingState.modelInfoList) {
+            if (StringUtils.isNotEmpty(info.getPort())) {
+                strings.add(info.getPort() + ":" + info.getModuleName());
+            }
+        }
+        String[] modelWithPort = strings.toArray(new String[0]);
+        String s = Messages.showEditableChooseDialog("请选择或输入端口", "提示", null, modelWithPort, "8080", null);
+        assert s != null;
+        String[] split = s.split(":");
+        if (split.length > 0) {
+            return split[0];
+        }
+        return "";
     }
 
     private boolean annotationContain(PsiAnnotation[] annotations, String str) {

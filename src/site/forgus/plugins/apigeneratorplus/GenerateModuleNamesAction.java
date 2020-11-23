@@ -42,14 +42,21 @@ public class GenerateModuleNamesAction extends AnAction {
         Module[] modules = ModuleManager.getInstance(project).getModules();
 
 
+        Gson gson = new Gson();
+        String oldJson = gson.toJson(state.modelInfoList);
+
         List<CURLModelInfo> list = new ArrayList<>();
         for (Module module : modules) {
             list.add(new CURLModelInfo(String.valueOf(System.nanoTime()), module.getName(), findPort(module),
                     Collections.emptyList()));
         }
-        state.modelInfoList = list;
-        Gson gson = new Gson();
-        String message = MessageFormat.format("Generate project modules success! modules: [{0}]", gson.toJson(list));
+        for (CURLModelInfo info : state.modelInfoList) {
+            list.removeIf(curlModelInfo -> info.getModuleName().equals(curlModelInfo.getModuleName()));
+        }
+
+        state.modelInfoList.addAll(list);
+        String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+                oldJson, gson.toJson(list));
         NotificationUtil.infoNotify(message, project);
     }
 
@@ -88,13 +95,7 @@ public class GenerateModuleNamesAction extends AnAction {
             System.out.println(configFilePath);
 //            e.printStackTrace();
         }
-
-
-        String name = moduleFile.getName();
-        VirtualFile canonicalFile = moduleFile.getCanonicalFile();
-        String canonicalPath = moduleFile.getCanonicalPath();
-        @SystemIndependent String moduleFilePath = module.getModuleFilePath();
-        return "8080";
+        return "";
     }
 
     /**
@@ -149,7 +150,6 @@ public class GenerateModuleNamesAction extends AnAction {
         }
         return null;
     }
-
 
 
 }

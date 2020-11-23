@@ -30,11 +30,13 @@ public class StringUtil {
         System.out.println(psiMethod.getName());
         System.out.println("PsiAnnotation annotation----------------");
         for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+            //结果示例 @RequestMapping(value = "/test", method = RequestMethod.GET)
             System.out.println(annotation.getText());
         }
         System.out.println("PsiAnnotation annotation----------------end");
         System.out.println("PsiParameter parameter----------------");
         for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
+            //结果示例： QueryDto queryDto
             System.out.println(parameter.getText());
             for (PsiAnnotation annotation : parameter.getAnnotations()) {
                 System.out.println("annotation text:                " + annotation.getText());
