@@ -176,12 +176,18 @@
 
     <actions>
         <!-- Add your actions here -->
-        <group id="CopyAsCURLMenu" text="Copy as cURL" popup="true">
+        <group id="CopyAsCURLMenu" text="Copy as CURL" popup="true">
+            <action id="site.forgus.plugins.apigeneratorplus.CopyIPAction"
+                    class="site.forgus.plugins.apigeneratorplus.CopyIPAction"
+                    text="Copy Current IP">
+            </action>
+            <action id="CopyAsFetchAction" class="site.forgus.plugins.apigeneratorplus.CopyAsFetchAction"
+                    text="Copy as Fetch"/>
             <action id="site.forgus.plugins.apigeneratorplus.CopyAsCurlCMDAction"
-                    class="site.forgus.plugins.apigeneratorplus.CopyAsCurlCMDAction" text="Copy as cURL (cmd)">
+                    class="site.forgus.plugins.apigeneratorplus.CopyAsCurlCMDAction" text="Copy as CURL (Cmd)">
             </action>
             <action id="site.forgus.plugins.apigeneratorplus.CopyAsCurlBashAction"
-                    class="site.forgus.plugins.apigeneratorplus.CopyAsCurlBashAction" text="Copy as cURL (bash)">
+                    class="site.forgus.plugins.apigeneratorplus.CopyAsCurlBashAction" text="Copy as CURL (Bash)">
             </action>
             <action class="site.forgus.plugins.apigeneratorplus.GenerateModuleNamesAction"
                     text="Generate Project Modules">
@@ -191,11 +197,6 @@
         <action class="site.forgus.plugins.apigeneratorplus.ApiGenerateAction"
                 text="Generate Api Plus"
                 description="Generate Api for target code.">
-            <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
-        </action>
-        <action id="site.forgus.plugins.apigeneratorplus.CopyIPAction"
-                class="site.forgus.plugins.apigeneratorplus.CopyIPAction"
-                text="Copy IP">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
     </actions>
