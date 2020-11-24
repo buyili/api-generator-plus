@@ -14,12 +14,13 @@ import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
  */
 
 public class CopyIPAction extends AnAction {
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         Project project = actionEvent.getProject();
         String baseApi = CurlUtils.getRealIP();
-        NotificationUtil.infoNotify("已复制到剪切板", baseApi, project);
         CopyPasteManager.getInstance().setContents(new TextTransferable(baseApi));
+        NotificationUtil.infoNotify("当前系统ip：", baseApi, project);
     }
 
 }
