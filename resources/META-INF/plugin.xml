@@ -109,6 +109,15 @@
           </tr>
         </table>
         <br>
+        <h1>Copy as cURL</h1>
+        Features：<br>
+        <ul>
+          <li>right-click generator curl command</li>
+        </ul>
+        特性：<br>
+        <ul>
+          <li>Generate the curl command with a key from the interface method, which can be executed on CMD /bash. Headers can be customized</li>
+        </ul>
         <em>Compatible IDE versions:</em><br>
         2019.1.4+ <br><br>
         <p>

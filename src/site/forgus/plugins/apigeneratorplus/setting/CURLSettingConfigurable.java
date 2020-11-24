@@ -9,7 +9,6 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.OnePixelDivider;
 import com.intellij.openapi.ui.Splitter;
-import com.intellij.openapi.util.NlsContexts;
 import com.intellij.ui.*;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
@@ -34,7 +33,6 @@ public class CURLSettingConfigurable implements Configurable {
 
     CURLSettingState oldState;
     JBTextField baseApiTextField;
-    CURLSettingListTableWithButtons curlSettingListTableWithButtons;
 
     private CURLModelInfo selectedInfo;
     MyOrderPanel myOrderPanel;
@@ -52,7 +50,7 @@ public class CURLSettingConfigurable implements Configurable {
     }
 
     @Override
-    public @NlsContexts.ConfigurableName String getDisplayName() {
+    public String getDisplayName() {
         return "Copy as cURL";
     }
 
@@ -152,96 +150,6 @@ public class CURLSettingConfigurable implements Configurable {
 
         myOrderPanel.clear();
         myOrderPanel.addAll(oldState.modelInfoList);
-    }
-
-    protected static class CURLSettingListTableWithButtons extends ListTableWithButtons<CURLModelInfo> {
-        public CURLSettingListTableWithButtons() {
-            getTableView().getEmptyText().setText(ExecutionBundle.message("empty.text.no.variables"));
-        }
-
-        @Override
-        protected ListTableModel createListModel() {
-            return new ListTableModel(new ModuleNameColumnInfo(), new PortColumnInfo());
-        }
-
-        @Override
-        protected CURLModelInfo createElement() {
-            CURLModelInfo curlModelInfo = new CURLModelInfo();
-            curlModelInfo.setModuleName(StringUtil.getName());
-            return curlModelInfo;
-        }
-
-        @Override
-        protected boolean isEmpty(CURLModelInfo element) {
-            return false;
-        }
-
-        @Override
-        protected CURLModelInfo cloneElement(CURLModelInfo variable) {
-            return variable.clone();
-        }
-
-        @Override
-        protected boolean canDeleteElement(CURLModelInfo selection) {
-            return true;
-        }
-
-        protected class ModuleNameColumnInfo extends ElementsColumnInfoBase<CURLModelInfo> {
-
-            protected ModuleNameColumnInfo() {
-                super("Module Name");
-            }
-
-            @Nullable
-            @Override
-            protected String getDescription(CURLModelInfo element) {
-                return "Module Name";
-            }
-
-            @Nullable
-            @Override
-            public String valueOf(CURLModelInfo curlModelInfo) {
-                return curlModelInfo.getModuleName();
-            }
-
-            @Override
-            public boolean isCellEditable(CURLModelInfo curlModelInfo) {
-                return true;
-            }
-
-            @Override
-            public void setValue(CURLModelInfo curlModelInfo, String value) {
-                curlModelInfo.setModuleName(value);
-            }
-        }
-
-        class PortColumnInfo extends ElementsColumnInfoBase<CURLModelInfo> {
-            public PortColumnInfo() {
-                super("Port");
-            }
-
-            @Nullable
-            @Override
-            protected String getDescription(CURLModelInfo element) {
-                return "Port";
-            }
-
-            @Nullable
-            @Override
-            public String valueOf(CURLModelInfo curlModelInfo) {
-                return curlModelInfo.getPort();
-            }
-
-            @Override
-            public boolean isCellEditable(CURLModelInfo curlModelInfo) {
-                return true;
-            }
-
-            @Override
-            public void setValue(CURLModelInfo curlModelInfo, String value) {
-                curlModelInfo.setPort(value);
-            }
-        }
     }
 
     protected class MyOrderPanel extends OrderPanel<CURLModelInfo> {

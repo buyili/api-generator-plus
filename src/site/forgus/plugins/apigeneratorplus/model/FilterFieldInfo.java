@@ -1,7 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.model;
 
+import lombok.Data;
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.xtend.lib.annotations.Data;
 
 import java.util.*;
 

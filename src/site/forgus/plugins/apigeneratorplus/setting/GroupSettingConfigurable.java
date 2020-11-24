@@ -2,7 +2,6 @@ package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.util.NlsContexts;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -13,7 +12,7 @@ import javax.swing.*;
 
 public class GroupSettingConfigurable implements Configurable {
     @Override
-    public @NlsContexts.ConfigurableName String getDisplayName() {
+    public String getDisplayName() {
         return "Api Generator Plus";
     }
 
