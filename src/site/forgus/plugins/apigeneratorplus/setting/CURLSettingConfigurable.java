@@ -10,8 +10,9 @@ import com.intellij.openapi.ui.OnePixelDivider;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
-import com.intellij.util.ui.*;
-import org.apache.commons.collections.CollectionUtils;
+import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.ListTableModel;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -70,15 +71,13 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public String getDisplayName() {
-        return "Copy as cURL";
+        return "Copy as CURL";
     }
 
     @Nullable
     @Override
     public JComponent createComponent() {
-        baseApiTextField = new JBTextField();
-        baseApiTextField.setText(oldState.baseApi);
-
+        baseApiTextField = new JBTextField(oldState.baseApi);
         canonicalClassNameTextFields = new JBTextArea(oldState.filterFieldInfo.canonicalClassName, 5, 0);
         includeFiledTextFields = new JBTextArea(oldState.filterFieldInfo.includeFiled, 5, 0);
         excludeFieldTextFields = new JBTextArea(oldState.filterFieldInfo.excludeField, 5, 0);
@@ -97,34 +96,36 @@ public class CURLSettingConfigurable implements Configurable {
 
         JBTabbedPane jbTabbedPane = new JBTabbedPane();
 
-        JPanel jPanel1 = new JPanel();
-        jPanel1.add(new JBLabel("Module and Port"));
-        jPanel1.add(findModuleAndPortBtn);
+        JPanel modulePortLabelPanel = new JPanel();
+        modulePortLabelPanel.add(new JBLabel("Module and Port"));
+        modulePortLabelPanel.add(findModuleAndPortBtn);
         FlowLayout mgr = new FlowLayout();
         mgr.setAlignment(FlowLayout.LEFT);
-        jPanel1.setLayout(mgr);
+        modulePortLabelPanel.setLayout(mgr);
         JPanel jPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 31, false)
+                .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 1, false)
                 .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatTextFields, 1, false)
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)
-                .addVerticalGap(4)
+                .addVerticalGap(16)
                 .addSeparator()
-                .addComponent(jPanel1, 0)
+                .addComponent(modulePortLabelPanel, 0)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
-        jbTabbedPane.add("Copy as cURL", jPanel);
+        jbTabbedPane.add("Copy as cURL", ScrollPaneFactory.createScrollPane(jPanel));
 
         JPanel fetchPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("credentials:"), credentialsTextField, 1, false)
-                .addTooltip("请求的 credentials，如 omit、same-origin 或者 include。为了在当前域名内自动发送 cookie ， 必须提供这个选项， 从 Chrome 50 开始， 这个属性也可以接受 FederatedCredential 实例或是一个 PasswordCredential 实例。")
+                .addTooltip("请求的 credentials，如 omit、same-origin 或者 include。为了在当前域名内自动发送 cookie ， 必须提供这个选项， ")
+                .addTooltip("从 Chrome 50 开始， 这个属性也可以接受 FederatedCredential 实例或是一个 PasswordCredential 实例。")
                 .addLabeledComponent(new JBLabel("cache:"), cacheTextField, 1, false)
                 .addTooltip("请求的 cache 模式: default、 no-store、 reload 、 no-cache 、 force-cache 或者 only-if-cached 。")
                 .addLabeledComponent(new JBLabel("redirect:"), redirectTextField, 1, false)
-                .addTooltip("可用的 redirect 模式: follow (自动重定向), error (如果产生重定向将自动终止并且抛出一个错误）, 或者 manual (手动处理重定向). 在Chrome中默认使用follow（Chrome 47之前的默认值是manual）。")
+                .addTooltip("可用的 redirect 模式: follow (自动重定向), error (如果产生重定向将自动终止并且抛出一个错误）, 或者 manual (手动处理重定向). ")
+                .addTooltip("在Chrome中默认使用follow（Chrome 47之前的默认值是manual）。")
                 .addLabeledComponent(new JBLabel("referrer:"), referrerTextField, 1, false)
                 .addTooltip("一个 USVString 可以是 no-referrer、client或一个 URL。默认是 client。")
                 .addLabeledComponent(new JBLabel("referrerPolicy:"), referrerPolicyTextField, 1, false)
@@ -188,8 +189,6 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public void apply() throws ConfigurationException {
-//        List<CURLModuleInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
-//        oldState.modelInfoList = items;
         oldState.baseApi = baseApiTextField.getText();
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
         oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
