@@ -200,24 +200,28 @@ public class CurlUtils {
         Project project = actionEvent.getProject();
         Assert.notNull(project);
         CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
+        findModuleAndPort(project, state);
+    }
+
+    public static void findModuleAndPort(Project project, CURLSettingState state) {
         Module[] modules = ModuleManager.getInstance(project).getModules();
+        if (modules.length > 0) {
+            String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
 
-        Gson gson = new Gson();
-        String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
+            List<CURLModuleInfo> list = new ArrayList<>();
+            for (Module module : modules) {
+                list.add(new CURLModuleInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
+                        Collections.emptyList()));
+            }
+            for (CURLModuleInfo info : state.moduleInfoList) {
+                list.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
+            }
 
-        List<CURLModuleInfo> list = new ArrayList<>();
-        for (Module module : modules) {
-            list.add(new CURLModuleInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
-                    Collections.emptyList()));
+            state.moduleInfoList.addAll(list);
+            String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+                    oldJson, JsonUtil.gson.toJson(list));
+            NotificationUtil.infoNotify(message, project);
         }
-        for (CURLModuleInfo info : state.moduleInfoList) {
-            list.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
-        }
-
-        state.moduleInfoList.addAll(list);
-        String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
-                oldJson, gson.toJson(list));
-        NotificationUtil.infoNotify(message, project);
     }
 
     private String buildPath(PsiMethod psiMethod) {
