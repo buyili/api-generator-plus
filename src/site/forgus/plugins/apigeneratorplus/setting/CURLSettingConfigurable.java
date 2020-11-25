@@ -100,9 +100,6 @@ public class CURLSettingConfigurable implements Configurable {
 
         JBTabbedPane jbTabbedPane = new JBTabbedPane();
 
-        FlowLayout flowLayout = new FlowLayout();
-        flowLayout.addLayoutComponent("hfawe", findModuleAndPortBtn);
-
         JPanel jPanel1 = new JPanel();
         jPanel1.add(new JBLabel("Module and Port"));
         jPanel1.add(findModuleAndPortBtn);
