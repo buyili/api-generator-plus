@@ -85,9 +85,6 @@ public class CURLSettingConfigurable implements Configurable {
         arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
         excludeChildrenCheckBox = new JBCheckBox("", oldState.filterFieldInfo.excludeChildren);
 
-//        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
-//        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
-
         myOrderPanel = new MyOrderPanel();
         myOrderPanel.addAll(oldState.moduleInfoList);
 
