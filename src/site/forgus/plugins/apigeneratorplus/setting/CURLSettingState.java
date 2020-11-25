@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.FetchConfig;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 
 import java.util.ArrayList;
@@ -40,6 +41,8 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
     public String arrayFormat = ArrayFormatEnum.repeat.name();
 
     public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
+
+    public FetchConfig fetchConfig = new FetchConfig();
 
     @Nullable
     @Override

@@ -12,6 +12,7 @@ import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.*;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.*;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +46,14 @@ public class CURLSettingConfigurable implements Configurable {
     JBCheckBox excludeChildrenCheckBox;
     MyHeaderListTableWithButton myHeaderListTableWithButton;
 
+
+    JBTextField credentialsTextField;
+    JBTextField cacheTextField;
+    JBTextField redirectTextField;
+    JBTextField referrerTextField;
+    JBTextField referrerPolicyTextField;
+    JBTextField integrityTextField;
+
     public CURLSettingConfigurable(Project project) {
         oldState = ServiceManager.getService(project, CURLSettingState.class);
     }
@@ -72,9 +81,18 @@ public class CURLSettingConfigurable implements Configurable {
         myOrderPanel = new MyOrderPanel();
         myOrderPanel.addAll(oldState.modelInfoList);
 
+        credentialsTextField = new JBTextField(oldState.fetchConfig.credentials);
+        cacheTextField = new JBTextField(oldState.fetchConfig.cache);
+        redirectTextField = new JBTextField(oldState.fetchConfig.redirect);
+        referrerTextField = new JBTextField(oldState.fetchConfig.referrer);
+        referrerPolicyTextField = new JBTextField(oldState.fetchConfig.referrerPolicy);
+        integrityTextField = new JBTextField(oldState.fetchConfig.integrity);
+
+
+        JBTabbedPane jbTabbedPane = new JBTabbedPane();
+
         JPanel jPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 1, false)
-//                .addComponent(curlSettingListTableWithButtons.getComponent())
                 .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, false)
                 .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, false)
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, false)
@@ -82,9 +100,28 @@ public class CURLSettingConfigurable implements Configurable {
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)
                 .addVerticalGap(4)
-                .addComponentFillVertically(myOrderPanel, 0)
+                .addLabeledComponentFillVertically("Module and Port", myOrderPanel)
                 .getPanel();
-        return jPanel;
+        jbTabbedPane.add("Copy as cURL", jPanel);
+
+        JPanel fetchPanel = FormBuilder.createFormBuilder()
+                .addLabeledComponent(new JBLabel("credentials:"), credentialsTextField, 1, false)
+                .addTooltip("请求的 credentials，如 omit、same-origin 或者 include。为了在当前域名内自动发送 cookie ， 必须提供这个选项， 从 Chrome 50 开始， 这个属性也可以接受 FederatedCredential 实例或是一个 PasswordCredential 实例。")
+                .addLabeledComponent(new JBLabel("cache:"), cacheTextField, 1, false)
+                .addTooltip("请求的 cache 模式: default、 no-store、 reload 、 no-cache 、 force-cache 或者 only-if-cached 。")
+                .addLabeledComponent(new JBLabel("redirect:"), redirectTextField, 1, false)
+                .addTooltip("可用的 redirect 模式: follow (自动重定向), error (如果产生重定向将自动终止并且抛出一个错误）, 或者 manual (手动处理重定向). 在Chrome中默认使用follow（Chrome 47之前的默认值是manual）。")
+                .addLabeledComponent(new JBLabel("referrer:"), referrerTextField, 1, false)
+                .addTooltip("一个 USVString 可以是 no-referrer、client或一个 URL。默认是 client。")
+                .addLabeledComponent(new JBLabel("referrerPolicy:"), referrerPolicyTextField, 1, false)
+                .addTooltip("no-referrer、 no-referrer-when-downgrade、 origin、origin-when-cross-origin、 unsafe-url 。")
+                .addLabeledComponent(new JBLabel("integrity:"), integrityTextField)
+                .addTooltip("包括请求的  subresource integrity 值 （ 例如： sha256-BpfBw7ivV8q2jLiT13fxDYAe2tJllusRSZ273h2nFSE=）。")
+                .addVerticalGap(4)
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
+        jbTabbedPane.add("Copy as fetch", fetchPanel);
+        return jbTabbedPane;
     }
 
     @Override
@@ -100,6 +137,15 @@ public class CURLSettingConfigurable implements Configurable {
                 || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())
                 || !oldState.arrayFormat.equals(arrayFormatTextFields.getText())
                 || oldState.filterFieldInfo.excludeChildren != excludeChildrenCheckBox.isSelected()
+        ) {
+            return true;
+        }
+        if (!oldState.fetchConfig.credentials.equals(credentialsTextField.getText())
+                || !oldState.fetchConfig.cache.equals(cacheTextField.getText())
+                || !oldState.fetchConfig.redirect.equals(redirectTextField.getText())
+                || !oldState.fetchConfig.referrer.equals(referrerTextField.getText())
+                || !oldState.fetchConfig.referrerPolicy.equals(referrerPolicyTextField.getText())
+                || !oldState.fetchConfig.integrity.equals(integrityTextField.getText())
         ) {
             return true;
         }
@@ -137,6 +183,14 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.arrayFormat = arrayFormatTextFields.getText();
         oldState.filterFieldInfo.excludeChildren = excludeChildrenCheckBox.isSelected();
 
+
+        oldState.fetchConfig.credentials = credentialsTextField.getText();
+        oldState.fetchConfig.cache = cacheTextField.getText();
+        oldState.fetchConfig.redirect = redirectTextField.getText();
+        oldState.fetchConfig.referrer = referrerTextField.getText();
+        oldState.fetchConfig.referrerPolicy = referrerPolicyTextField.getText();
+        oldState.fetchConfig.integrity = integrityTextField.getText();
+
         oldState.modelInfoList = myOrderPanel.getEntries();
     }
 
@@ -147,6 +201,14 @@ public class CURLSettingConfigurable implements Configurable {
         includeFiledTextFields.setText(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields.setText(oldState.filterFieldInfo.excludeField);
         arrayFormatTextFields.setText(oldState.arrayFormat);
+        excludeChildrenCheckBox.setSelected(oldState.filterFieldInfo.excludeChildren);
+
+        credentialsTextField.setText(oldState.fetchConfig.credentials);
+        cacheTextField.setText(oldState.fetchConfig.cache);
+        redirectTextField.setText(oldState.fetchConfig.redirect);
+        referrerTextField.setText(oldState.fetchConfig.referrer);
+        referrerPolicyTextField.setText(oldState.fetchConfig.referrerPolicy);
+        integrityTextField.setText(oldState.fetchConfig.integrity);
 
         myOrderPanel.clear();
         myOrderPanel.addAll(oldState.modelInfoList);
