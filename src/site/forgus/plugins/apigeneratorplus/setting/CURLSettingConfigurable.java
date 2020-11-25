@@ -1,7 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.google.gson.Gson;
-import com.intellij.execution.ExecutionBundle;
 import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
@@ -17,7 +16,7 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import javax.swing.*;
@@ -35,7 +34,7 @@ public class CURLSettingConfigurable implements Configurable {
     CURLSettingState oldState;
     JBTextField baseApiTextField;
 
-    private CURLModelInfo selectedInfo;
+    private CURLModuleInfo selectedModuleInfo;
     MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
@@ -79,7 +78,7 @@ public class CURLSettingConfigurable implements Configurable {
 //        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
 
         myOrderPanel = new MyOrderPanel();
-        myOrderPanel.addAll(oldState.modelInfoList);
+        myOrderPanel.addAll(oldState.moduleInfoList);
 
         credentialsTextField = new JBTextField(oldState.fetchConfig.credentials);
         cacheTextField = new JBTextField(oldState.fetchConfig.cache);
@@ -127,7 +126,7 @@ public class CURLSettingConfigurable implements Configurable {
     @Override
     public boolean isModified() {
         Gson gson = new Gson();
-//        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+//        List<CURLModuleInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
 //        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
 //            return true;
 //        }
@@ -150,22 +149,22 @@ public class CURLSettingConfigurable implements Configurable {
             return true;
         }
 
-        if (selectedInfo != null) {
-            List<CURLModelInfo> entries = myOrderPanel.getEntries();
-            for (CURLModelInfo entry : entries) {
-                if (entry.getId().equals(selectedInfo.getId())) {
+        if (selectedModuleInfo != null) {
+            List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+            for (CURLModuleInfo entry : entries) {
+                if (entry.getId().equals(selectedModuleInfo.getId())) {
                     int i = entries.indexOf(entry);
-                    selectedInfo.setModuleName(moduleNameTextField.getText());
-                    selectedInfo.setPort(portTextField.getText());
+                    selectedModuleInfo.setModuleName(moduleNameTextField.getText());
+                    selectedModuleInfo.setPort(portTextField.getText());
                     List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
-                    selectedInfo.setHeaders(items);
-                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedInfo, i, myOrderPanel.getEntryColumn());
+                    selectedModuleInfo.setHeaders(items);
+                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedModuleInfo, i, myOrderPanel.getEntryColumn());
                     break;
                 }
             }
         }
-        List<CURLModelInfo> entries = myOrderPanel.getEntries();
-        List<CURLModelInfo> modelInfoList = oldState.modelInfoList;
+        List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+        List<CURLModuleInfo> modelInfoList = oldState.moduleInfoList;
         if (!gson.toJson(modelInfoList).equals(gson.toJson(entries))) {
             return true;
         }
@@ -174,7 +173,7 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public void apply() throws ConfigurationException {
-//        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+//        List<CURLModuleInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
 //        oldState.modelInfoList = items;
         oldState.baseApi = baseApiTextField.getText();
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
@@ -191,7 +190,7 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.fetchConfig.referrerPolicy = referrerPolicyTextField.getText();
         oldState.fetchConfig.integrity = integrityTextField.getText();
 
-        oldState.modelInfoList = myOrderPanel.getEntries();
+        oldState.moduleInfoList = myOrderPanel.getEntries();
     }
 
     @Override
@@ -211,10 +210,10 @@ public class CURLSettingConfigurable implements Configurable {
         integrityTextField.setText(oldState.fetchConfig.integrity);
 
         myOrderPanel.clear();
-        myOrderPanel.addAll(oldState.modelInfoList);
+        myOrderPanel.addAll(oldState.moduleInfoList);
     }
 
-    protected class MyOrderPanel extends OrderPanel<CURLModelInfo> {
+    protected class MyOrderPanel extends OrderPanel<CURLModuleInfo> {
 
 
         private final ToolbarDecorator myDecorator;
@@ -222,18 +221,18 @@ public class CURLSettingConfigurable implements Configurable {
         JPanel myDescriptionPanel;
 
         protected MyOrderPanel() {
-            super(CURLModelInfo.class);
+            super(CURLModuleInfo.class);
             JTable entryTable = getEntryTable();
             entryTable.setTableHeader(null);
-            entryTable.setDefaultRenderer(CURLModelInfo.class, new ColoredTableCellRenderer() {
+            entryTable.setDefaultRenderer(CURLModuleInfo.class, new ColoredTableCellRenderer() {
                 @Override
                 protected void customizeCellRenderer(JTable table, @Nullable Object value,
                                                      boolean selected,
                                                      boolean hasFocus, int row, int column) {
                     setBorder(null);
                     if (value != null) {
-                        CURLModelInfo curlModelInfo = (CURLModelInfo) value;
-                        append(curlModelInfo.getModuleName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+                        CURLModuleInfo curlModuleInfo = (CURLModuleInfo) value;
+                        append(curlModuleInfo.getModuleName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
                     }
                 }
             });
@@ -242,10 +241,10 @@ public class CURLSettingConfigurable implements Configurable {
                 public void valueChanged(ListSelectionEvent e) {
                     int selectedRow = entryTable.getSelectedRow();
                     if (selectedRow != -1) {
-                        selectedInfo = getValueAt(selectedRow);
-                        moduleNameTextField.setText(selectedInfo.getModuleName());
-                        portTextField.setText(selectedInfo.getPort());
-                        myHeaderListTableWithButton.setValues(selectedInfo.getHeaders());
+                        selectedModuleInfo = getValueAt(selectedRow);
+                        moduleNameTextField.setText(selectedModuleInfo.getModuleName());
+                        portTextField.setText(selectedModuleInfo.getPort());
+                        myHeaderListTableWithButton.setValues(selectedModuleInfo.getHeaders());
                         myDescriptionPanel.setVisible(true);
                         myDescriptionPanel.updateUI();
                     }
@@ -291,14 +290,14 @@ public class CURLSettingConfigurable implements Configurable {
             return button -> addNewElement(createElement());
         }
 
-        protected CURLModelInfo createElement() {
-            CURLModelInfo curlModelInfo = new CURLModelInfo();
-            curlModelInfo.setId(String.valueOf(System.currentTimeMillis()));
-            curlModelInfo.setModuleName(StringUtil.getName());
-            return curlModelInfo;
+        protected CURLModuleInfo createElement() {
+            CURLModuleInfo curlModuleInfo = new CURLModuleInfo();
+            curlModuleInfo.setId(String.valueOf(System.currentTimeMillis()));
+            curlModuleInfo.setModuleName(StringUtil.getName());
+            return curlModuleInfo;
         }
 
-        protected void addNewElement(CURLModelInfo newElement) {
+        protected void addNewElement(CURLModuleInfo newElement) {
             add(newElement);
             int index = getEntries().size() - 1;
             getEntryTable().setRowSelectionInterval(index, index);
@@ -311,8 +310,8 @@ public class CURLSettingConfigurable implements Configurable {
                 return;
             }
             int selectedIndex = entryTable.getSelectedRow();
-            List<CURLModelInfo> entries = getEntries();
-            CURLModelInfo selectRemoveInfo = entries.get(selectedIndex);
+            List<CURLModuleInfo> entries = getEntries();
+            CURLModuleInfo selectRemoveInfo = entries.get(selectedIndex);
             remove(selectRemoveInfo);
 //            removeItem(selectRemoveInfo);
 
@@ -342,13 +341,13 @@ public class CURLSettingConfigurable implements Configurable {
         }
 
         @Override
-        public boolean isCheckable(CURLModelInfo entry) {
+        public boolean isCheckable(CURLModuleInfo entry) {
             return true;
         }
 
         @Override
-        public boolean isChecked(CURLModelInfo entry) {
-            return selectedInfo != null && selectedInfo.getModuleName().equals(entry.getModuleName());
+        public boolean isChecked(CURLModuleInfo entry) {
+            return selectedModuleInfo != null && selectedModuleInfo.getModuleName().equals(entry.getModuleName());
         }
 
         @Override
@@ -357,12 +356,12 @@ public class CURLSettingConfigurable implements Configurable {
         }
 
         @Override
-        public void setChecked(CURLModelInfo entry, boolean checked) {
+        public void setChecked(CURLModuleInfo entry, boolean checked) {
             System.out.println("--------");
         }
 
-        public void addAll(List<CURLModelInfo> orderEntries) {
-            for (CURLModelInfo orderEntry : orderEntries) {
+        public void addAll(List<CURLModuleInfo> orderEntries) {
+            for (CURLModuleInfo orderEntry : orderEntries) {
                 add(orderEntry.clone());
             }
         }

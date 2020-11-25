@@ -8,7 +8,7 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
-import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchConfig;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 
@@ -25,7 +25,7 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
 
     public String baseApi = "";
 
-    public List<CURLModelInfo> modelInfoList = new ArrayList<>();
+    public List<CURLModuleInfo> moduleInfoList = new ArrayList<>();
 
     public List<Module> modules;
 

@@ -17,7 +17,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CURLModelInfo implements Cloneable {
+public class CURLModuleInfo implements Cloneable {
 
     private String id = String.valueOf(System.nanoTime());
 
@@ -28,9 +28,9 @@ public class CURLModelInfo implements Cloneable {
     private List<String[]> headers = Collections.emptyList();
 
     @Override
-    public CURLModelInfo clone() {
+    public CURLModuleInfo clone() {
         try {
-            return (CURLModelInfo) super.clone();
+            return (CURLModuleInfo) super.clone();
         } catch (CloneNotSupportedException e) {
             return null;
         }

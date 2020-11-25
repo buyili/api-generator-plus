@@ -26,7 +26,7 @@ import org.jetbrains.annotations.SystemIndependent;
 import org.yaml.snakeyaml.Yaml;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
-import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
@@ -70,7 +70,7 @@ public class CurlUtils {
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
-        if (CollectionUtils.isEmpty(curlSettingState.modelInfoList)) {
+        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
             findModuleAndPort(actionEvent);
         }
 
@@ -80,10 +80,10 @@ public class CurlUtils {
             //            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
-            CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
+            CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
 
-            Assert.notNull(curlModelInfo);
-            String port = StringUtils.isEmpty(curlModelInfo.getPort()) ? getChooseOrInputPort() : curlModelInfo.getPort();
+            Assert.notNull(curlModuleInfo);
+            String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
 
             FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
             FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
@@ -103,7 +103,7 @@ public class CurlUtils {
             Assert.notNull(methodMapping, "not specific annotation for mapping web requests ");
             initOptions.setMethod(getMethodFromAnnotation(methodMapping).name());
             // 添加header
-            initOptions.setHeaders(curlModelInfo.getHeadersAsMap());
+            initOptions.setHeaders(curlModuleInfo.getHeadersAsMap());
 
             if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
                 initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
@@ -147,7 +147,7 @@ public class CurlUtils {
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
-        if (CollectionUtils.isEmpty(curlSettingState.modelInfoList)) {
+        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
             findModuleAndPort(actionEvent);
         }
 
@@ -157,10 +157,10 @@ public class CurlUtils {
             //            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
-            CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
+            CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
 
-            Assert.notNull(curlModelInfo);
-            String port = StringUtils.isEmpty(curlModelInfo.getPort()) ? getChooseOrInputPort() : curlModelInfo.getPort();
+            Assert.notNull(curlModuleInfo);
+            String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
             StringBuilder stringBuilder = new StringBuilder("curl");
 
             // 访问接口
@@ -178,7 +178,7 @@ public class CurlUtils {
             }
 
             // 添加header
-            List<String[]> headers = curlModelInfo.getHeaders();
+            List<String[]> headers = curlModuleInfo.getHeaders();
             if (CollectionUtils.isNotEmpty(headers)) {
                 for (String[] header : headers) {
                     stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
@@ -203,18 +203,18 @@ public class CurlUtils {
         Module[] modules = ModuleManager.getInstance(project).getModules();
 
         Gson gson = new Gson();
-        String oldJson = JsonUtil.gson.toJson(state.modelInfoList);
+        String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
 
-        List<CURLModelInfo> list = new ArrayList<>();
+        List<CURLModuleInfo> list = new ArrayList<>();
         for (Module module : modules) {
-            list.add(new CURLModelInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
+            list.add(new CURLModuleInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
                     Collections.emptyList()));
         }
-        for (CURLModelInfo info : state.modelInfoList) {
-            list.removeIf(curlModelInfo -> info.getModuleName().equals(curlModelInfo.getModuleName()));
+        for (CURLModuleInfo info : state.moduleInfoList) {
+            list.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
         }
 
-        state.modelInfoList.addAll(list);
+        state.moduleInfoList.addAll(list);
         String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
                 oldJson, gson.toJson(list));
         NotificationUtil.infoNotify(message, project);
@@ -344,19 +344,19 @@ public class CurlUtils {
         if (StringUtils.isEmpty(moduleName)) {
             return "";
         }
-        for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
-            if (curlModelInfo.getModuleName().equals(moduleName)) {
-                return curlModelInfo.getPort();
+        for (CURLModuleInfo curlModuleInfo : curlSettingState.moduleInfoList) {
+            if (curlModuleInfo.getModuleName().equals(moduleName)) {
+                return curlModuleInfo.getPort();
             }
         }
         return "";
     }
 
-    private CURLModelInfo getCurlModelInfo(String moduleName) {
+    private CURLModuleInfo getCurlModelInfo(String moduleName) {
         if (StringUtils.isNotEmpty(moduleName)) {
-            for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
-                if (curlModelInfo.getModuleName().equals(moduleName)) {
-                    return curlModelInfo;
+            for (CURLModuleInfo curlModuleInfo : curlSettingState.moduleInfoList) {
+                if (curlModuleInfo.getModuleName().equals(moduleName)) {
+                    return curlModuleInfo;
                 }
             }
         }
@@ -365,7 +365,7 @@ public class CurlUtils {
 
     private String getChooseOrInputPort() {
         List<String> strings = new ArrayList<>();
-        for (CURLModelInfo info : curlSettingState.modelInfoList) {
+        for (CURLModuleInfo info : curlSettingState.moduleInfoList) {
             if (StringUtils.isNotEmpty(info.getPort())) {
                 strings.add(info.getPort() + ":" + info.getModuleName());
             }
