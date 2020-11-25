@@ -1,5 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
@@ -8,10 +9,12 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.ide.CopyPasteManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -19,18 +22,27 @@ import com.intellij.util.ui.TextTransferable;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.SystemIndependent;
+import org.yaml.snakeyaml.Yaml;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
-import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
-import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
-import site.forgus.plugins.apigeneratorplus.util.*;
+import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
+import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
+import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
+import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
-import java.net.*;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -43,61 +55,172 @@ public class CurlUtils {
 
     private static final String SLASH = "/";
 
-    public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
-        try {
-            Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
-            PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-            Project project = actionEvent.getProject();
-            PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
-            PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+    public void copyAsFetch(@NotNull AnActionEvent actionEvent) {
+        Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
+        Assert.notNull(editor);
 
-            curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+        Assert.notNull(psiFile);
 
-            PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
-            if (selectedMethod != null) {
-    //            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
-    //            boolean postMethod = isPostMethod(selectedMethod);
-                MethodInfo methodInfo = new MethodInfo(selectedMethod);
-                String moduleName = getModuleName(editor, project);
-                CURLModelInfo curlModelInfo = getCurlModelInfo(moduleName);
+        Project project = actionEvent.getProject();
+        Assert.notNull(project);
 
-                Assert.notNull(curlModelInfo);
-                String port = StringUtils.isEmpty(curlModelInfo.getPort()) ? getChooseOrInputPort() : curlModelInfo.getPort();
-                StringBuilder stringBuilder = new StringBuilder("curl");
+        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+        Assert.notNull(referenceAt);
 
-                // 访问接口
-                stringBuilder.append(" '")
-                        .append(getBaseApi(port))
-                        .append(buildPath(selectedMethod));
-                if (isGetMethod(selectedMethod.getAnnotations())) {
-                    // Get 请求参数
-                    stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
-                    stringBuilder.append("'");
-                } else {
-                    // 非Get请求参数
-                    stringBuilder.append("'");
-                    stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
-                }
+        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
+            findModuleAndPort(actionEvent);
+        }
 
-                // 添加header
-                List<String[]> headers = curlModelInfo.getHeaders();
-                if (CollectionUtils.isNotEmpty(headers)) {
-                    for (String[] header : headers) {
-                        stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
+        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+        if (selectedMethod != null) {
+            //            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
+            //            boolean postMethod = isPostMethod(selectedMethod);
+            MethodInfo methodInfo = new MethodInfo(selectedMethod);
+            String moduleName = getModuleName(editor, project);
+            CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
 
-                    }
-                }
+            Assert.notNull(curlModuleInfo);
+            String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
 
-                String curlStr = stringBuilder.toString();
-                if (CUrlClientType.CMD.equals(cUrlClientType)) {
-                    curlStr = curlStr.replaceAll("'", "\"");
-                }
-                System.out.println(curlStr);
-                CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
-                NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
+            FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
+            FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
+
+
+            // 访问接口
+            if (isGetMethod(selectedMethod.getAnnotations())) {
+                // Get 请求参数
+                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod) + getRequestParams(selectedMethod, methodInfo));
+            } else {
+                // 非Get请求参数
+                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod));
+                initOptions.setBody(getRequestBody(selectedMethod, methodInfo));
             }
-        } catch (BizException e) {
-            e.printStackTrace();
+
+            PsiAnnotation methodMapping = getMethodMapping(selectedMethod);
+            Assert.notNull(methodMapping, "not specific annotation for mapping web requests ");
+            initOptions.setMethod(getMethodFromAnnotation(methodMapping).name());
+            // 添加header
+            initOptions.setHeaders(curlModuleInfo.getHeadersAsMap());
+
+            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
+                initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
+            }
+            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.cache)) {
+                initOptions.setCache(curlSettingState.fetchConfig.cache);
+            }
+            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.redirect)) {
+                initOptions.setRedirect(curlSettingState.fetchConfig.redirect);
+            }
+            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrer)) {
+                initOptions.setReferrer(curlSettingState.fetchConfig.referrer);
+            }
+            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrerPolicy)) {
+                initOptions.setReferrerPolicy(curlSettingState.fetchConfig.referrerPolicy);
+            }
+            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.integrity)) {
+                initOptions.setIntegrity(curlSettingState.fetchConfig.integrity);
+            }
+
+            fetchRequestInfo.setInitOptions(initOptions);
+            String rawStr = fetchRequestInfo.toPrettyString();
+            System.out.println(rawStr);
+            CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
+            NotificationUtil.infoNotify("已复制到剪切板", rawStr, project);
+        }
+    }
+
+    public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
+        Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
+        Assert.notNull(editor);
+
+        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+        Assert.notNull(psiFile);
+
+        Project project = actionEvent.getProject();
+        Assert.notNull(project);
+
+        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+        Assert.notNull(referenceAt);
+
+        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
+            findModuleAndPort(actionEvent);
+        }
+
+        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+        if (selectedMethod != null) {
+            //            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
+            //            boolean postMethod = isPostMethod(selectedMethod);
+            MethodInfo methodInfo = new MethodInfo(selectedMethod);
+            String moduleName = getModuleName(editor, project);
+            CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
+
+            Assert.notNull(curlModuleInfo);
+            String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+            StringBuilder stringBuilder = new StringBuilder("curl");
+
+            // 访问接口
+            stringBuilder.append(" '")
+                    .append(getBaseApi(port))
+                    .append(buildPath(selectedMethod));
+            if (isGetMethod(selectedMethod.getAnnotations())) {
+                // Get 请求参数
+                stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
+                stringBuilder.append("'");
+            } else {
+                // 非Get请求参数
+                stringBuilder.append("'");
+                stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
+            }
+
+            // 添加header
+            List<String[]> headers = curlModuleInfo.getHeaders();
+            if (CollectionUtils.isNotEmpty(headers)) {
+                for (String[] header : headers) {
+                    stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
+
+                }
+            }
+
+            String curlStr = stringBuilder.toString();
+            if (CUrlClientType.CMD.equals(cUrlClientType)) {
+                curlStr = curlStr.replaceAll("'", "\"");
+            }
+            System.out.println(curlStr);
+            CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
+            NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
+        }
+    }
+
+    public static void findModuleAndPort(AnActionEvent actionEvent) {
+        Project project = actionEvent.getProject();
+        Assert.notNull(project);
+        CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
+        findModuleAndPort(project, state);
+    }
+
+    public static void findModuleAndPort(Project project, CURLSettingState state) {
+        Module[] modules = ModuleManager.getInstance(project).getModules();
+        if (modules.length > 0) {
+            String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
+
+            List<CURLModuleInfo> list = new ArrayList<>();
+            for (Module module : modules) {
+                list.add(new CURLModuleInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
+                        Collections.emptyList()));
+            }
+            for (CURLModuleInfo info : state.moduleInfoList) {
+                list.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
+            }
+
+            state.moduleInfoList.addAll(list);
+            String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+                    oldJson, JsonUtil.gson.toJson(list));
+            NotificationUtil.infoNotify(message, project);
         }
     }
 
@@ -151,6 +274,50 @@ public class CurlUtils {
         return p;
     }
 
+    private PsiAnnotation getMethodMapping(PsiMethod psiMethod) {
+        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+            String text = annotation.getText();
+            if (text.contains("Mapping")) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    private RequestMethodEnum getMethodFromAnnotation(PsiAnnotation methodMapping) {
+        String text = methodMapping.getText();
+        if (text.contains(WebAnnotation.RequestMapping)) {
+            return extractMethodFromAttribute(methodMapping);
+        }
+        return extractMethodFromMappingText(text);
+    }
+
+    private RequestMethodEnum extractMethodFromMappingText(String text) {
+        if (text.contains(WebAnnotation.GetMapping)) {
+            return RequestMethodEnum.GET;
+        }
+        if (text.contains(WebAnnotation.PutMapping)) {
+            return RequestMethodEnum.PUT;
+        }
+        if (text.contains(WebAnnotation.DeleteMapping)) {
+            return RequestMethodEnum.DELETE;
+        }
+        if (text.contains(WebAnnotation.PatchMapping)) {
+            return RequestMethodEnum.PATCH;
+        }
+        return RequestMethodEnum.POST;
+    }
+
+    private RequestMethodEnum extractMethodFromAttribute(PsiAnnotation annotation) {
+        PsiNameValuePair[] psiNameValuePairs = annotation.getParameterList().getAttributes();
+        for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
+            if ("method".equals(psiNameValuePair.getName())) {
+                return RequestMethodEnum.valueOf(psiNameValuePair.getValue().getReference().resolve().getText());
+            }
+        }
+        return RequestMethodEnum.POST;
+    }
+
     public static Module getModule(Editor editor, Project project) {
         Document document = editor.getDocument();
         FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
@@ -181,19 +348,19 @@ public class CurlUtils {
         if (StringUtils.isEmpty(moduleName)) {
             return "";
         }
-        for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
-            if (curlModelInfo.getModuleName().equals(moduleName)) {
-                return curlModelInfo.getPort();
+        for (CURLModuleInfo curlModuleInfo : curlSettingState.moduleInfoList) {
+            if (curlModuleInfo.getModuleName().equals(moduleName)) {
+                return curlModuleInfo.getPort();
             }
         }
         return "";
     }
 
-    private CURLModelInfo getCurlModelInfo(String moduleName) {
+    private CURLModuleInfo getCurlModelInfo(String moduleName) {
         if (StringUtils.isNotEmpty(moduleName)) {
-            for (CURLModelInfo curlModelInfo : curlSettingState.modelInfoList) {
-                if (curlModelInfo.getModuleName().equals(moduleName)) {
-                    return curlModelInfo;
+            for (CURLModuleInfo curlModuleInfo : curlSettingState.moduleInfoList) {
+                if (curlModuleInfo.getModuleName().equals(moduleName)) {
+                    return curlModuleInfo;
                 }
             }
         }
@@ -202,7 +369,7 @@ public class CurlUtils {
 
     private String getChooseOrInputPort() {
         List<String> strings = new ArrayList<>();
-        for (CURLModelInfo info : curlSettingState.modelInfoList) {
+        for (CURLModuleInfo info : curlSettingState.moduleInfoList) {
             if (StringUtils.isNotEmpty(info.getPort())) {
                 strings.add(info.getPort() + ":" + info.getModuleName());
             }
@@ -345,7 +512,42 @@ public class CurlUtils {
         return "";
     }
 
+    public String getRequestBody(PsiMethod psiMethod, MethodInfo methodInfo) {
+        StringUtil.showPsiMethod(psiMethod);
+        List<FieldInfo> requestFields = methodInfo.getRequestFields();
+        if (containRequestBodyAnnotation(psiMethod)) {
+            for (FieldInfo requestField : requestFields) {
+                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                    return JsonUtil.buildRawJson(requestField);
+                }
+            }
+        } else {
+            List<String> strings = generateKeyValue(requestFields);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String string : strings) {
+                stringBuilder.append(string).append("&");
+            }
+            return stringBuilder.toString();
+        }
+        return "";
+    }
+
     public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
+        StringUtil.showPsiMethod(psiMethod);
+        List<FieldInfo> requestFields = methodInfo.getRequestFields();
+        List<String> strings = generateKeyValue(requestFields);
+        StringBuilder stringBuilder = new StringBuilder("?");
+        for (String string : strings) {
+//            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+            stringBuilder.append(string).append("&");
+        }
+        String str = stringBuilder.toString();
+        str = str.substring(0, str.length() - 1);
+//        str = str.replaceAll("%", "^%");
+        return str;
+    }
+
+    public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo) {
         StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         List<String> strings = generateKeyValue(requestFields);
@@ -434,4 +636,95 @@ public class CurlUtils {
         return false;
     }
 
+
+    public static String findPort(Module module) {
+        @SystemIndependent String path = module.getModuleFilePath();
+//        VirtualFile moduleFile = module.getModuleFile();
+//        Assert.notNull(moduleFile);
+
+        String configFilePath = "";
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.properties");
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Properties properties = new Properties();
+            properties.load(virtualFile.getInputStream());
+            String port = properties.getProperty("server.port");
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(port)) {
+                return port;
+            }
+        } catch (Exception e) {
+            System.out.println(configFilePath);
+//            e.printStackTrace();
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yml");
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey("server.port", "", yamlMap);
+            String port = String.valueOf(valueByKey);
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(port)) {
+                return port;
+            }
+        } catch (Exception e) {
+            System.out.println(configFilePath);
+//            e.printStackTrace();
+        }
+        return "";
+    }
+
+    /**
+     * 从Map中获取配置的值
+     * 传的key支持两种形式, 一种是单独的,如user.path.key
+     * 一种是获取数组中的某一个,如 user.path.key[0]
+     *
+     * @param key
+     * @return
+     */
+    public static Object getValueByKey(String key, Object defaultValue, Map properties) {
+        String separator = ".";
+        String[] separatorKeys = null;
+        if (key.contains(separator)) {
+            // 取下面配置项的情况, user.path.keys 这种
+            separatorKeys = key.split("\\.");
+        } else {
+            // 直接取一个配置项的情况, user
+            Object res = properties.get(key);
+            return res == null ? defaultValue : res;
+        }
+        // 下面肯定是取多个的情况
+        String finalValue = null;
+        Object tempObject = properties;
+        for (int i = 0; i < separatorKeys.length; i++) {
+            //如果是user[0].path这种情况,则按list处理
+            String innerKey = separatorKeys[i];
+            Integer index = null;
+//            if (innerKey.contains("[")) {
+//                // 如果是user[0]的形式,则index = 0 , innerKey=user
+//                index = Integer.valueOf(StringTools.getSubstringBetweenFF(innerKey, "[", "]")[0]);
+//                innerKey = innerKey.substring(0, innerKey.indexOf("["));
+//            }
+            Map<String, Object> mapTempObj = (Map) tempObject;
+            Object object = mapTempObj.get(innerKey);
+            // 如果没有对应的配置项,则返回设置的默认值
+            if (object == null) {
+                return defaultValue;
+            }
+            Object targetObj = object;
+            if (index != null) {
+                // 如果是取的数组中的值,在这里取值
+                targetObj = ((ArrayList) object).get(index);
+            }
+            // 一次获取结束,继续获取后面的
+            tempObject = targetObj;
+            if (i == separatorKeys.length - 1) {
+                //循环结束
+                return targetObj;
+            }
+
+        }
+        return null;
+    }
 }

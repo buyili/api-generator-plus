@@ -1,7 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.google.gson.Gson;
-import com.intellij.execution.ExecutionBundle;
 import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
@@ -10,19 +9,23 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.OnePixelDivider;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.*;
-import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBTextField;
-import com.intellij.util.ui.*;
+import com.intellij.ui.components.*;
+import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.ListTableModel;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import site.forgus.plugins.apigeneratorplus.curl.model.CURLModelInfo;
+import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
+import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 /**
@@ -34,63 +37,112 @@ public class CURLSettingConfigurable implements Configurable {
     CURLSettingState oldState;
     JBTextField baseApiTextField;
 
-    private CURLModelInfo selectedInfo;
+    private CURLModuleInfo selectedModuleInfo;
     MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
-    JBTextField canonicalClassNameTextFields;
-    JBTextField includeFiledTextFields;
-    JBTextField excludeFieldTextFields;
+    JBTextArea canonicalClassNameTextFields;
+    JBTextArea includeFiledTextFields;
+    JBTextArea excludeFieldTextFields;
     JBTextField arrayFormatTextFields;
     JBCheckBox excludeChildrenCheckBox;
+    JButton findModuleAndPortBtn;
     MyHeaderListTableWithButton myHeaderListTableWithButton;
+
+
+    JBTextField credentialsTextField;
+    JBTextField cacheTextField;
+    JBTextField redirectTextField;
+    JBTextField referrerTextField;
+    JBTextField referrerPolicyTextField;
+    JBTextField integrityTextField;
 
     public CURLSettingConfigurable(Project project) {
         oldState = ServiceManager.getService(project, CURLSettingState.class);
+        findModuleAndPortBtn = new JButton("Find Module And Port");
+        findModuleAndPortBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                CurlUtils.findModuleAndPort(project, oldState);
+                myOrderPanel.updateAll(oldState.moduleInfoList);
+            }
+        });
     }
 
     @Override
     public String getDisplayName() {
-        return "Copy as cURL";
+        return "Copy as CURL";
     }
 
     @Nullable
     @Override
     public JComponent createComponent() {
-        baseApiTextField = new JBTextField();
-        baseApiTextField.setText(oldState.baseApi);
-
-        canonicalClassNameTextFields = new JBTextField(oldState.filterFieldInfo.canonicalClassName);
-        includeFiledTextFields = new JBTextField(oldState.filterFieldInfo.includeFiled);
-        excludeFieldTextFields = new JBTextField(oldState.filterFieldInfo.excludeField);
+        baseApiTextField = new JBTextField(oldState.baseApi);
+        canonicalClassNameTextFields = new JBTextArea(oldState.filterFieldInfo.canonicalClassName, 5, 0);
+        includeFiledTextFields = new JBTextArea(oldState.filterFieldInfo.includeFiled, 5, 0);
+        excludeFieldTextFields = new JBTextArea(oldState.filterFieldInfo.excludeField, 5, 0);
         arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
         excludeChildrenCheckBox = new JBCheckBox("", oldState.filterFieldInfo.excludeChildren);
 
-//        curlSettingListTableWithButtons = new CURLSettingListTableWithButtons();
-//        curlSettingListTableWithButtons.setValues(oldState.modelInfoList);
-
         myOrderPanel = new MyOrderPanel();
-        myOrderPanel.addAll(oldState.modelInfoList);
+        myOrderPanel.addAll(oldState.moduleInfoList);
 
+        credentialsTextField = new JBTextField(oldState.fetchConfig.credentials);
+        cacheTextField = new JBTextField(oldState.fetchConfig.cache);
+        redirectTextField = new JBTextField(oldState.fetchConfig.redirect);
+        referrerTextField = new JBTextField(oldState.fetchConfig.referrer);
+        referrerPolicyTextField = new JBTextField(oldState.fetchConfig.referrerPolicy);
+        integrityTextField = new JBTextField(oldState.fetchConfig.integrity);
+
+        JBTabbedPane jbTabbedPane = new JBTabbedPane();
+
+        JPanel modulePortLabelPanel = new JPanel();
+        modulePortLabelPanel.add(new JBLabel("Module and Port"));
+        modulePortLabelPanel.add(findModuleAndPortBtn);
+        FlowLayout mgr = new FlowLayout();
+        mgr.setAlignment(FlowLayout.LEFT);
+        modulePortLabelPanel.setLayout(mgr);
         JPanel jPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 1, false)
-//                .addComponent(curlSettingListTableWithButtons.getComponent())
-                .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, true)
+                .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, true)
+                .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatTextFields, 1, false)
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)
-                .addVerticalGap(4)
+                .addVerticalGap(16)
+                .addSeparator()
+                .addComponent(modulePortLabelPanel, 0)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
-        return jPanel;
+        jbTabbedPane.add("Copy as cURL", ScrollPaneFactory.createScrollPane(jPanel));
+
+        JPanel fetchPanel = FormBuilder.createFormBuilder()
+                .addLabeledComponent(new JBLabel("credentials:"), credentialsTextField, 1, false)
+                .addTooltip("请求的 credentials，如 omit、same-origin 或者 include。为了在当前域名内自动发送 cookie ， 必须提供这个选项， ")
+                .addTooltip("从 Chrome 50 开始， 这个属性也可以接受 FederatedCredential 实例或是一个 PasswordCredential 实例。")
+                .addLabeledComponent(new JBLabel("cache:"), cacheTextField, 1, false)
+                .addTooltip("请求的 cache 模式: default、 no-store、 reload 、 no-cache 、 force-cache 或者 only-if-cached 。")
+                .addLabeledComponent(new JBLabel("redirect:"), redirectTextField, 1, false)
+                .addTooltip("可用的 redirect 模式: follow (自动重定向), error (如果产生重定向将自动终止并且抛出一个错误）, 或者 manual (手动处理重定向). ")
+                .addTooltip("在Chrome中默认使用follow（Chrome 47之前的默认值是manual）。")
+                .addLabeledComponent(new JBLabel("referrer:"), referrerTextField, 1, false)
+                .addTooltip("一个 USVString 可以是 no-referrer、client或一个 URL。默认是 client。")
+                .addLabeledComponent(new JBLabel("referrerPolicy:"), referrerPolicyTextField, 1, false)
+                .addTooltip("no-referrer、 no-referrer-when-downgrade、 origin、origin-when-cross-origin、 unsafe-url 。")
+                .addLabeledComponent(new JBLabel("integrity:"), integrityTextField)
+                .addTooltip("包括请求的  subresource integrity 值 （ 例如： sha256-BpfBw7ivV8q2jLiT13fxDYAe2tJllusRSZ273h2nFSE=）。")
+                .addVerticalGap(4)
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
+        jbTabbedPane.add("Copy as fetch", fetchPanel);
+        return jbTabbedPane;
     }
 
     @Override
     public boolean isModified() {
         Gson gson = new Gson();
-//        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
+//        List<CURLModuleInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
 //        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
 //            return true;
 //        }
@@ -103,23 +155,32 @@ public class CURLSettingConfigurable implements Configurable {
         ) {
             return true;
         }
+        if (!oldState.fetchConfig.credentials.equals(credentialsTextField.getText())
+                || !oldState.fetchConfig.cache.equals(cacheTextField.getText())
+                || !oldState.fetchConfig.redirect.equals(redirectTextField.getText())
+                || !oldState.fetchConfig.referrer.equals(referrerTextField.getText())
+                || !oldState.fetchConfig.referrerPolicy.equals(referrerPolicyTextField.getText())
+                || !oldState.fetchConfig.integrity.equals(integrityTextField.getText())
+        ) {
+            return true;
+        }
 
-        if (selectedInfo != null) {
-            List<CURLModelInfo> entries = myOrderPanel.getEntries();
-            for (CURLModelInfo entry : entries) {
-                if (entry.getId().equals(selectedInfo.getId())) {
+        if (selectedModuleInfo != null) {
+            List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+            for (CURLModuleInfo entry : entries) {
+                if (entry.getId().equals(selectedModuleInfo.getId())) {
                     int i = entries.indexOf(entry);
-                    selectedInfo.setModuleName(moduleNameTextField.getText());
-                    selectedInfo.setPort(portTextField.getText());
+                    selectedModuleInfo.setModuleName(moduleNameTextField.getText());
+                    selectedModuleInfo.setPort(portTextField.getText());
                     List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
-                    selectedInfo.setHeaders(items);
-                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedInfo, i, myOrderPanel.getEntryColumn());
+                    selectedModuleInfo.setHeaders(items);
+                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedModuleInfo, i, myOrderPanel.getEntryColumn());
                     break;
                 }
             }
         }
-        List<CURLModelInfo> entries = myOrderPanel.getEntries();
-        List<CURLModelInfo> modelInfoList = oldState.modelInfoList;
+        List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+        List<CURLModuleInfo> modelInfoList = oldState.moduleInfoList;
         if (!gson.toJson(modelInfoList).equals(gson.toJson(entries))) {
             return true;
         }
@@ -128,8 +189,6 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public void apply() throws ConfigurationException {
-//        List<CURLModelInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
-//        oldState.modelInfoList = items;
         oldState.baseApi = baseApiTextField.getText();
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
         oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
@@ -137,7 +196,15 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.arrayFormat = arrayFormatTextFields.getText();
         oldState.filterFieldInfo.excludeChildren = excludeChildrenCheckBox.isSelected();
 
-        oldState.modelInfoList = myOrderPanel.getEntries();
+
+        oldState.fetchConfig.credentials = credentialsTextField.getText();
+        oldState.fetchConfig.cache = cacheTextField.getText();
+        oldState.fetchConfig.redirect = redirectTextField.getText();
+        oldState.fetchConfig.referrer = referrerTextField.getText();
+        oldState.fetchConfig.referrerPolicy = referrerPolicyTextField.getText();
+        oldState.fetchConfig.integrity = integrityTextField.getText();
+
+        oldState.moduleInfoList = myOrderPanel.getEntries();
     }
 
     @Override
@@ -147,12 +214,20 @@ public class CURLSettingConfigurable implements Configurable {
         includeFiledTextFields.setText(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields.setText(oldState.filterFieldInfo.excludeField);
         arrayFormatTextFields.setText(oldState.arrayFormat);
+        excludeChildrenCheckBox.setSelected(oldState.filterFieldInfo.excludeChildren);
+
+        credentialsTextField.setText(oldState.fetchConfig.credentials);
+        cacheTextField.setText(oldState.fetchConfig.cache);
+        redirectTextField.setText(oldState.fetchConfig.redirect);
+        referrerTextField.setText(oldState.fetchConfig.referrer);
+        referrerPolicyTextField.setText(oldState.fetchConfig.referrerPolicy);
+        integrityTextField.setText(oldState.fetchConfig.integrity);
 
         myOrderPanel.clear();
-        myOrderPanel.addAll(oldState.modelInfoList);
+        myOrderPanel.addAll(oldState.moduleInfoList);
     }
 
-    protected class MyOrderPanel extends OrderPanel<CURLModelInfo> {
+    protected class MyOrderPanel extends OrderPanel<CURLModuleInfo> {
 
 
         private final ToolbarDecorator myDecorator;
@@ -160,18 +235,21 @@ public class CURLSettingConfigurable implements Configurable {
         JPanel myDescriptionPanel;
 
         protected MyOrderPanel() {
-            super(CURLModelInfo.class);
+            super(CURLModuleInfo.class, false);
             JTable entryTable = getEntryTable();
             entryTable.setTableHeader(null);
-            entryTable.setDefaultRenderer(CURLModelInfo.class, new ColoredTableCellRenderer() {
+            entryTable.setDefaultRenderer(CURLModuleInfo.class, new ColoredTableCellRenderer() {
                 @Override
                 protected void customizeCellRenderer(JTable table, @Nullable Object value,
                                                      boolean selected,
                                                      boolean hasFocus, int row, int column) {
                     setBorder(null);
                     if (value != null) {
-                        CURLModelInfo curlModelInfo = (CURLModelInfo) value;
-                        append(curlModelInfo.getModuleName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+                        CURLModuleInfo curlModuleInfo = (CURLModuleInfo) value;
+                        append(curlModuleInfo.getModuleName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+                        if (StringUtils.isNotEmpty(curlModuleInfo.getPort())) {
+                            append(":" + curlModuleInfo.getPort());
+                        }
                     }
                 }
             });
@@ -180,16 +258,15 @@ public class CURLSettingConfigurable implements Configurable {
                 public void valueChanged(ListSelectionEvent e) {
                     int selectedRow = entryTable.getSelectedRow();
                     if (selectedRow != -1) {
-                        selectedInfo = getValueAt(selectedRow);
-                        moduleNameTextField.setText(selectedInfo.getModuleName());
-                        portTextField.setText(selectedInfo.getPort());
-                        myHeaderListTableWithButton.setValues(selectedInfo.getHeaders());
+                        selectedModuleInfo = getValueAt(selectedRow);
+                        moduleNameTextField.setText(selectedModuleInfo.getModuleName());
+                        portTextField.setText(selectedModuleInfo.getPort());
+                        myHeaderListTableWithButton.setValues(selectedModuleInfo.getHeaders());
                         myDescriptionPanel.setVisible(true);
                         myDescriptionPanel.updateUI();
                     }
                 }
             });
-            setCheckboxColumnName("");
             moduleNameTextField = new JBTextField();
             portTextField = new JBTextField();
             myHeaderListTableWithButton = new MyHeaderListTableWithButton();
@@ -229,14 +306,14 @@ public class CURLSettingConfigurable implements Configurable {
             return button -> addNewElement(createElement());
         }
 
-        protected CURLModelInfo createElement() {
-            CURLModelInfo curlModelInfo = new CURLModelInfo();
-            curlModelInfo.setId(String.valueOf(System.currentTimeMillis()));
-            curlModelInfo.setModuleName(StringUtil.getName());
-            return curlModelInfo;
+        protected CURLModuleInfo createElement() {
+            CURLModuleInfo curlModuleInfo = new CURLModuleInfo();
+            curlModuleInfo.setId(String.valueOf(System.currentTimeMillis()));
+            curlModuleInfo.setModuleName(StringUtil.getName());
+            return curlModuleInfo;
         }
 
-        protected void addNewElement(CURLModelInfo newElement) {
+        protected void addNewElement(CURLModuleInfo newElement) {
             add(newElement);
             int index = getEntries().size() - 1;
             getEntryTable().setRowSelectionInterval(index, index);
@@ -249,8 +326,8 @@ public class CURLSettingConfigurable implements Configurable {
                 return;
             }
             int selectedIndex = entryTable.getSelectedRow();
-            List<CURLModelInfo> entries = getEntries();
-            CURLModelInfo selectRemoveInfo = entries.get(selectedIndex);
+            List<CURLModuleInfo> entries = getEntries();
+            CURLModuleInfo selectRemoveInfo = entries.get(selectedIndex);
             remove(selectRemoveInfo);
 //            removeItem(selectRemoveInfo);
 
@@ -280,13 +357,13 @@ public class CURLSettingConfigurable implements Configurable {
         }
 
         @Override
-        public boolean isCheckable(CURLModelInfo entry) {
-            return true;
+        public boolean isCheckable(CURLModuleInfo entry) {
+            return false;
         }
 
         @Override
-        public boolean isChecked(CURLModelInfo entry) {
-            return selectedInfo != null && selectedInfo.getModuleName().equals(entry.getModuleName());
+        public boolean isChecked(CURLModuleInfo entry) {
+            return selectedModuleInfo != null && selectedModuleInfo.getModuleName().equals(entry.getModuleName());
         }
 
         @Override
@@ -295,14 +372,21 @@ public class CURLSettingConfigurable implements Configurable {
         }
 
         @Override
-        public void setChecked(CURLModelInfo entry, boolean checked) {
-            System.out.println("--------");
+        public void setChecked(CURLModuleInfo entry, boolean checked) {
         }
 
-        public void addAll(List<CURLModelInfo> orderEntries) {
-            for (CURLModelInfo orderEntry : orderEntries) {
+        public void addAll(List<CURLModuleInfo> orderEntries) {
+            for (CURLModuleInfo orderEntry : orderEntries) {
                 add(orderEntry.clone());
             }
+        }
+
+        public void updateAll(List<CURLModuleInfo> orderEntries) {
+            this.clear();
+            addAll(orderEntries);
+            selectedModuleInfo = null;
+            myDescriptionPanel.setVisible(false);
+            myDescriptionPanel.updateUI();
         }
     }
 

@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
 
 /**
  * @author lmx 2020/11/11 14:19
@@ -13,6 +14,7 @@ import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 public class CopyAsCurlCMDAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
+        try {
 //        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
 //        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
 //        Project project = actionEvent.getProject();
@@ -22,8 +24,11 @@ public class CopyAsCurlCMDAction extends AnAction {
 //            NotificationUtil.errorNotify("this operate only support in class file", project);
 //            return;
 //        }
-        CurlUtils curlUtils = new CurlUtils();
-        curlUtils.copyAsCUrl(actionEvent, CUrlClientType.CMD);
+            CurlUtils curlUtils = new CurlUtils();
+            curlUtils.copyAsCUrl(actionEvent, CUrlClientType.CMD);
+        } catch (BizException e) {
+            e.printStackTrace();
+        }
     }
 
 }
