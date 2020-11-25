@@ -9,10 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.OnePixelDivider;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.*;
-import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBTabbedPane;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.components.*;
 import com.intellij.util.ui.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,9 +40,9 @@ public class CURLSettingConfigurable implements Configurable {
     MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
-    JBTextField canonicalClassNameTextFields;
-    JBTextField includeFiledTextFields;
-    JBTextField excludeFieldTextFields;
+    JBTextArea canonicalClassNameTextFields;
+    JBTextArea includeFiledTextFields;
+    JBTextArea excludeFieldTextFields;
     JBTextField arrayFormatTextFields;
     JBCheckBox excludeChildrenCheckBox;
     JButton findModuleAndPortBtn;
@@ -82,9 +79,9 @@ public class CURLSettingConfigurable implements Configurable {
         baseApiTextField = new JBTextField();
         baseApiTextField.setText(oldState.baseApi);
 
-        canonicalClassNameTextFields = new JBTextField(oldState.filterFieldInfo.canonicalClassName);
-        includeFiledTextFields = new JBTextField(oldState.filterFieldInfo.includeFiled);
-        excludeFieldTextFields = new JBTextField(oldState.filterFieldInfo.excludeField);
+        canonicalClassNameTextFields = new JBTextArea(oldState.filterFieldInfo.canonicalClassName, 5, 0);
+        includeFiledTextFields = new JBTextArea(oldState.filterFieldInfo.includeFiled, 5, 0);
+        excludeFieldTextFields = new JBTextArea(oldState.filterFieldInfo.excludeField, 5, 0);
         arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
         excludeChildrenCheckBox = new JBCheckBox("", oldState.filterFieldInfo.excludeChildren);
 
@@ -114,9 +111,9 @@ public class CURLSettingConfigurable implements Configurable {
         jPanel1.setLayout(mgr);
         JPanel jPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 31, false)
-                .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, false)
-                .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, true)
+                .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, true)
+                .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatTextFields, 1, false)
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)

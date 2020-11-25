@@ -32,6 +32,7 @@ public class FilterFieldInfo {
     }
 
     private List<String> split(String string) {
+        string = string.replace("\n", "");
         if (!StringUtils.isEmpty(string)) {
             String[] split = string.split(";");
             return Arrays.asList(split);
