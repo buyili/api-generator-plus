@@ -1,12 +1,11 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
-        <em>Api development tool, interface document automatic generation (modified on the basis of plug-in Api Generator,
-          adding multi-module project support); Copy as cURL,</em><br><br>
+        <em>Api development tool, YApi api automatic generation; support Copy as cURL,</em><br><br>
         Features：<br>
         <ul>
           <li>Javadoc-based analysis,no additional annotations.</li>
@@ -133,22 +132,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
-      <em>2020.09.10</em><br>
+      <em>1.0.0</em><br>
       <ul>
-          <li>Fix the problem that the generated markdown's artifactId is not correct.</li>
+          <li>YApi Api automatic Generator</li>
+          <li>Copy as CUrl</li>
       </ul>
-      <em>2020.01.15</em><br>
+      <em>1.0.1</em><br>
       <ul>
-          <li>Fix incorrect resolution of RequestMapping path in some cases.</li>
-      </ul>
-      <em>2019.12.31</em><br>
-      <ul>
-          <li>Fix the problem that the generated markdown document cannot render the table correctly under some markdown parsers.</li>
-          <li>Add the function of reminding whether to overwrite the generated markdown document when the file already exists, and add the global switch setting of whether to directly overwrite.</li>
-      </ul>
-      <em>2020.11.24</em><br>
-      <ul>
-          <li>Add the copy as curl</li>
+          <li>Add the <i>Copy as fetch</i></li>
       </ul>
     ]]>
     </change-notes>
