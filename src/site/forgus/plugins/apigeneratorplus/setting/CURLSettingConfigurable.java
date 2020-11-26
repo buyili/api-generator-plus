@@ -6,10 +6,12 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.OnePixelDivider;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.*;
 import com.intellij.ui.components.*;
+import com.intellij.ui.components.labels.LinkLabel;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.ListTableModel;
@@ -34,6 +36,8 @@ import java.util.List;
 
 public class CURLSettingConfigurable implements Configurable {
 
+    Project project;
+
     CURLSettingState oldState;
     JBTextField baseApiTextField;
 
@@ -41,6 +45,7 @@ public class CURLSettingConfigurable implements Configurable {
     MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
+    JBTextField contextPathTextField;
     JBTextArea canonicalClassNameTextFields;
     JBTextArea includeFiledTextFields;
     JBTextArea excludeFieldTextFields;
@@ -58,13 +63,22 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextField integrityTextField;
 
     public CURLSettingConfigurable(Project project) {
+        this.project = project;
         oldState = ServiceManager.getService(project, CURLSettingState.class);
         findModuleAndPortBtn = new JButton("Find Module And Port");
         findModuleAndPortBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                CurlUtils.findModuleAndPort(project, oldState);
-                myOrderPanel.updateAll(oldState.moduleInfoList);
+                List<CURLModuleInfo> foundList = CurlUtils.findModuleInfo(project);
+                int yesNoCancel = Messages.showYesNoCancelDialog("是否覆盖同名模块？", "提示", Messages.getQuestionIcon());
+                if (Messages.YES == yesNoCancel) {
+                    myOrderPanel.updateAll(foundList);
+                } else if (Messages.NO == yesNoCancel) {
+                    for (CURLModuleInfo entry : myOrderPanel.getEntries()) {
+                        foundList.removeIf(curlModuleInfo -> curlModuleInfo.getModuleName().equals(entry.getModuleName()));
+                    }
+                    myOrderPanel.updateAll(foundList);
+                }
             }
         });
     }
@@ -96,12 +110,40 @@ public class CURLSettingConfigurable implements Configurable {
 
         JBTabbedPane jbTabbedPane = new JBTabbedPane();
 
-        JPanel modulePortLabelPanel = new JPanel();
-        modulePortLabelPanel.add(new JBLabel("Module and Port"));
-        modulePortLabelPanel.add(findModuleAndPortBtn);
-        FlowLayout mgr = new FlowLayout();
-        mgr.setAlignment(FlowLayout.LEFT);
-        modulePortLabelPanel.setLayout(mgr);
+        JPanel modulePortLabelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        modulePortLabelPanel.add(new JBLabel("Module Info"));
+        modulePortLabelPanel.add(LinkLabel.create("Find Module Info", new Runnable() {
+            @Override
+            public void run() {
+                List<CURLModuleInfo> foundList = CurlUtils.findModuleInfo(project);
+                if (isRepeat(foundList)) {
+                    int yesNoCancel = Messages.showYesNoCancelDialog("是否覆盖同名模块？", "提示", Messages.getQuestionIcon());
+                    if (Messages.YES == yesNoCancel) {
+                        myOrderPanel.updateAll(foundList);
+                    } else if (Messages.NO == yesNoCancel) {
+                        for (CURLModuleInfo entry : myOrderPanel.getEntries()) {
+                            foundList.removeIf(curlModuleInfo -> curlModuleInfo.getModuleName().equals(entry.getModuleName()));
+                        }
+                        myOrderPanel.addAll(foundList);
+                    }
+                } else {
+                    myOrderPanel.updateAll(foundList);
+                }
+            }
+
+            public boolean isRepeat(List<CURLModuleInfo> foundList) {
+                for (CURLModuleInfo entry : myOrderPanel.getEntries()) {
+                    for (CURLModuleInfo curlModuleInfo : foundList) {
+                        if (entry.getModuleName().equals(curlModuleInfo.getModuleName())) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }));
+
+
         JPanel jPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Base Api:"), baseApiTextField, 1, false)
                 .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, true)
@@ -172,6 +214,7 @@ public class CURLSettingConfigurable implements Configurable {
                     int i = entries.indexOf(entry);
                     selectedModuleInfo.setModuleName(moduleNameTextField.getText());
                     selectedModuleInfo.setPort(portTextField.getText());
+                    selectedModuleInfo.setContextPath(contextPathTextField.getText());
                     List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
                     selectedModuleInfo.setHeaders(items);
                     myOrderPanel.getEntryTable().getModel().setValueAt(selectedModuleInfo, i, myOrderPanel.getEntryColumn());
@@ -248,7 +291,7 @@ public class CURLSettingConfigurable implements Configurable {
                         CURLModuleInfo curlModuleInfo = (CURLModuleInfo) value;
                         append(curlModuleInfo.getModuleName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
                         if (StringUtils.isNotEmpty(curlModuleInfo.getPort())) {
-                            append(":" + curlModuleInfo.getPort());
+                            append("    " + curlModuleInfo.getPort());
                         }
                     }
                 }
@@ -261,6 +304,7 @@ public class CURLSettingConfigurable implements Configurable {
                         selectedModuleInfo = getValueAt(selectedRow);
                         moduleNameTextField.setText(selectedModuleInfo.getModuleName());
                         portTextField.setText(selectedModuleInfo.getPort());
+                        contextPathTextField.setText(selectedModuleInfo.getContextPath());
                         myHeaderListTableWithButton.setValues(selectedModuleInfo.getHeaders());
                         myDescriptionPanel.setVisible(true);
                         myDescriptionPanel.updateUI();
@@ -269,11 +313,13 @@ public class CURLSettingConfigurable implements Configurable {
             });
             moduleNameTextField = new JBTextField();
             portTextField = new JBTextField();
+            contextPathTextField = new JBTextField();
             myHeaderListTableWithButton = new MyHeaderListTableWithButton();
 
             myDescriptionPanel = FormBuilder.createFormBuilder()
-                    .addLabeledComponent(new JBLabel("Module Name"), moduleNameTextField, 1, false)
-                    .addLabeledComponent(new JBLabel("Port"), portTextField, 1, false)
+                    .addLabeledComponent(new JBLabel("Module Name:"), moduleNameTextField, 1, false)
+                    .addLabeledComponent(new JBLabel("Port:"), portTextField, 1, false)
+                    .addLabeledComponent(new JBLabel("Context Path:"), contextPathTextField, 1, false)
                     .addLabeledComponent(new JBLabel("Headers"), myHeaderListTableWithButton.getComponent(), 1, true)
                     .addComponentFillVertically(new JPanel(), 0)
                     .getPanel();

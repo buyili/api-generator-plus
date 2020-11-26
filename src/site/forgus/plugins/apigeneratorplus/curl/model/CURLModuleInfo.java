@@ -25,6 +25,8 @@ public class CURLModuleInfo implements Cloneable {
 
     private String port = "";
 
+    private String contextPath = "";
+
     private List<String[]> headers = Collections.emptyList();
 
     @Override

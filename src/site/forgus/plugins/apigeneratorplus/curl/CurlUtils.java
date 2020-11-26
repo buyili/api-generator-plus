@@ -1,6 +1,5 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
-import com.google.gson.Gson;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
@@ -19,6 +18,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ui.TextTransferable;
+import lombok.extern.log4j.Log4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ import java.util.*;
 /**
  * @author lmx 2020/11/11 15:49
  */
-
+@Log4j
 public class CurlUtils {
 
     private CURLSettingState curlSettingState;
@@ -71,7 +71,7 @@ public class CurlUtils {
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
         if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
-            findModuleAndPort(actionEvent);
+            findModuleInfoAndSave(actionEvent);
         }
 
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
@@ -81,8 +81,8 @@ public class CurlUtils {
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
             CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
-
             Assert.notNull(curlModuleInfo);
+
             String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
 
             FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
@@ -148,7 +148,7 @@ public class CurlUtils {
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
         if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
-            findModuleAndPort(actionEvent);
+            findModuleInfoAndSave(actionEvent);
         }
 
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
@@ -196,32 +196,39 @@ public class CurlUtils {
         }
     }
 
-    public static void findModuleAndPort(AnActionEvent actionEvent) {
+    public static void findModuleInfoAndSave(AnActionEvent actionEvent) {
         Project project = actionEvent.getProject();
         Assert.notNull(project);
         CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
-        findModuleAndPort(project, state);
+        findModuleInfoAndSave(project, state);
     }
 
-    public static void findModuleAndPort(Project project, CURLSettingState state) {
+    public static void findModuleInfoAndSave(Project project, CURLSettingState state) {
+        List<CURLModuleInfo> foundModuleInfoList = findModuleInfo(project);
+        String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
+        for (CURLModuleInfo info : state.moduleInfoList) {
+            foundModuleInfoList.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
+        }
+        state.moduleInfoList.addAll(foundModuleInfoList);
+        String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+                oldJson, JsonUtil.gson.toJson(foundModuleInfoList));
+        NotificationUtil.infoNotify(message, project);
+    }
+
+    public static List<CURLModuleInfo> findModuleInfo(Project project) {
         Module[] modules = ModuleManager.getInstance(project).getModules();
         if (modules.length > 0) {
-            String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
-
             List<CURLModuleInfo> list = new ArrayList<>();
             for (Module module : modules) {
-                list.add(new CURLModuleInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
-                        Collections.emptyList()));
+                CURLModuleInfo curlModuleInfo = new CURLModuleInfo();
+                curlModuleInfo.setModuleName(module.getName());
+                curlModuleInfo.setPort(findPort(module));
+                curlModuleInfo.setContextPath(findContextPath(module));
+                list.add(curlModuleInfo);
             }
-            for (CURLModuleInfo info : state.moduleInfoList) {
-                list.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
-            }
-
-            state.moduleInfoList.addAll(list);
-            String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
-                    oldJson, JsonUtil.gson.toJson(list));
-            NotificationUtil.infoNotify(message, project);
+            return list;
         }
+        return Collections.emptyList();
     }
 
     private String buildPath(PsiMethod psiMethod) {
@@ -639,40 +646,109 @@ public class CurlUtils {
 
     public static String findPort(Module module) {
         @SystemIndependent String path = module.getModuleFilePath();
-//        VirtualFile moduleFile = module.getModuleFile();
-//        Assert.notNull(moduleFile);
 
         String configFilePath = "";
-        try {
-            configFilePath = path.substring(0, path.lastIndexOf("/"))
-                    .concat("/src/main/resources/application.properties");
-            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
-            Properties properties = new Properties();
-            properties.load(virtualFile.getInputStream());
-            String port = properties.getProperty("server.port");
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(port)) {
-                return port;
-            }
-        } catch (Exception e) {
-            System.out.println(configFilePath);
-//            e.printStackTrace();
-        }
+        String key = "server.port";
+        String val = "";
         try {
             configFilePath = path.substring(0, path.lastIndexOf("/"))
                     .concat("/src/main/resources/application.yml");
+            log.info(configFilePath);
             VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
             Yaml yaml = new Yaml();
             Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
-            Object valueByKey = getValueByKey("server.port", "", yamlMap);
-            String port = String.valueOf(valueByKey);
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(port)) {
-                return port;
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yaml");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
             }
         } catch (Exception e) {
             System.out.println(configFilePath);
-//            e.printStackTrace();
         }
-        return "";
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.properties");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Properties properties = new Properties();
+            properties.load(virtualFile.getInputStream());
+            String tempVal = properties.getProperty(key);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+            System.out.println(configFilePath);
+        }
+        return val;
+    }
+
+
+    public static String findContextPath(Module module) {
+        @SystemIndependent String path = module.getModuleFilePath();
+
+        String configFilePath = "";
+        String key = "server.servlet.context-path";
+        String val = "";
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yml");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yaml");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.properties");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Properties properties = new Properties();
+            properties.load(virtualFile.getInputStream());
+            String tempVal = properties.getProperty(key);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        return val;
     }
 
     /**
