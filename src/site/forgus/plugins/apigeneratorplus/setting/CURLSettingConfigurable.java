@@ -115,7 +115,7 @@ public class CURLSettingConfigurable implements Configurable {
                 .addComponent(modulePortLabelPanel, 0)
                 .addComponentFillVertically(myOrderPanel, 0)
                 .getPanel();
-        jbTabbedPane.add("Copy as cURL", ScrollPaneFactory.createScrollPane(jPanel));
+        jbTabbedPane.add("Copy as cURL", jPanel);
 
         JPanel fetchPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("credentials:"), credentialsTextField, 1, false)
