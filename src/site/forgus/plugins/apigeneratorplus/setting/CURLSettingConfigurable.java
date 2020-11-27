@@ -20,14 +20,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
+import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 /**
@@ -35,6 +35,8 @@ import java.util.List;
  */
 
 public class CURLSettingConfigurable implements Configurable {
+    public static final String EMPTY = "empty";
+    public static final String PANEL = "panel";
 
     Project project;
 
@@ -51,7 +53,6 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextArea excludeFieldTextFields;
     JBTextField arrayFormatTextFields;
     JBCheckBox excludeChildrenCheckBox;
-    JButton findModuleAndPortBtn;
     MyHeaderListTableWithButton myHeaderListTableWithButton;
 
 
@@ -65,22 +66,6 @@ public class CURLSettingConfigurable implements Configurable {
     public CURLSettingConfigurable(Project project) {
         this.project = project;
         oldState = ServiceManager.getService(project, CURLSettingState.class);
-        findModuleAndPortBtn = new JButton("Find Module And Port");
-        findModuleAndPortBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                List<CURLModuleInfo> foundList = CurlUtils.findModuleInfo(project);
-                int yesNoCancel = Messages.showYesNoCancelDialog("是否覆盖同名模块？", "提示", Messages.getQuestionIcon());
-                if (Messages.YES == yesNoCancel) {
-                    myOrderPanel.updateAll(foundList);
-                } else if (Messages.NO == yesNoCancel) {
-                    for (CURLModuleInfo entry : myOrderPanel.getEntries()) {
-                        foundList.removeIf(curlModuleInfo -> curlModuleInfo.getModuleName().equals(entry.getModuleName()));
-                    }
-                    myOrderPanel.updateAll(foundList);
-                }
-            }
-        });
     }
 
     @Override
@@ -119,7 +104,23 @@ public class CURLSettingConfigurable implements Configurable {
                 if (isRepeat(foundList)) {
                     int yesNoCancel = Messages.showYesNoCancelDialog("是否覆盖同名模块？", "提示", Messages.getQuestionIcon());
                     if (Messages.YES == yesNoCancel) {
-                        myOrderPanel.updateAll(foundList);
+                        for (CURLModuleInfo foundItem : foundList) {
+                            List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+                            boolean repeat = false;
+                            for (CURLModuleInfo entry : entries) {
+                                if (entry.getModuleName().equals(foundItem.getModuleName())) {
+                                    if (entry.getId().equals(selectedModuleInfo.getId())) {
+                                        myOrderPanel.removeRowSelected();
+                                    }
+                                    myOrderPanel.setValueAt(foundItem, entries.indexOf(entry));
+                                    repeat = true;
+                                    break;
+                                }
+                            }
+                            if (!repeat) {
+                                myOrderPanel.add(foundItem);
+                            }
+                        }
                     } else if (Messages.NO == yesNoCancel) {
                         for (CURLModuleInfo entry : myOrderPanel.getEntries()) {
                             foundList.removeIf(curlModuleInfo -> curlModuleInfo.getModuleName().equals(entry.getModuleName()));
@@ -127,7 +128,7 @@ public class CURLSettingConfigurable implements Configurable {
                         myOrderPanel.addAll(foundList);
                     }
                 } else {
-                    myOrderPanel.updateAll(foundList);
+                    myOrderPanel.addAll(foundList);
                 }
             }
 
@@ -207,24 +208,33 @@ public class CURLSettingConfigurable implements Configurable {
             return true;
         }
 
-        if (selectedModuleInfo != null) {
             List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+        if (selectedModuleInfo != null) {
             for (CURLModuleInfo entry : entries) {
                 if (entry.getId().equals(selectedModuleInfo.getId())) {
                     int i = entries.indexOf(entry);
-                    selectedModuleInfo.setModuleName(moduleNameTextField.getText());
-                    selectedModuleInfo.setPort(portTextField.getText());
-                    selectedModuleInfo.setContextPath(contextPathTextField.getText());
+                    entry.setModuleName(moduleNameTextField.getText());
+                    entry.setPort(portTextField.getText());
+                    entry.setContextPath(contextPathTextField.getText());
                     List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
-                    selectedModuleInfo.setHeaders(items);
-                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedModuleInfo, i, myOrderPanel.getEntryColumn());
+//                    System.out.println(JsonUtil.gson.toJson(items));
+                    entry.setHeaders(items);
+//                    selectedModuleInfo.setModuleName(moduleNameTextField.getText());
+//                    selectedModuleInfo.setPort(portTextField.getText());
+//                    selectedModuleInfo.setContextPath(contextPathTextField.getText());
+//                    List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
+////                    System.out.println(JsonUtil.gson.toJson(items));
+//                    selectedModuleInfo.setHeaders(items);
+//                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedModuleInfo, i, myOrderPanel.getEntryColumn());
                     break;
                 }
             }
         }
-        List<CURLModuleInfo> entries = myOrderPanel.getEntries();
+//        List<CURLModuleInfo> entries = myOrderPanel.getEntries();
         List<CURLModuleInfo> modelInfoList = oldState.moduleInfoList;
         if (!gson.toJson(modelInfoList).equals(gson.toJson(entries))) {
+            System.out.println(gson.toJson(modelInfoList));
+            System.out.println(gson.toJson(entries));
             return true;
         }
         return false;
@@ -276,9 +286,14 @@ public class CURLSettingConfigurable implements Configurable {
         private final ToolbarDecorator myDecorator;
         private final CommonActionsPanel myActionsPanel;
         JPanel myDescriptionPanel;
+        private final JPanel itemPanelWrapper;
+        final CardLayout cardLayout;
 
         protected MyOrderPanel() {
             super(CURLModuleInfo.class, false);
+
+            cardLayout = new CardLayout();
+
             JTable entryTable = getEntryTable();
             entryTable.setTableHeader(null);
             entryTable.setDefaultRenderer(CURLModuleInfo.class, new ColoredTableCellRenderer() {
@@ -306,8 +321,9 @@ public class CURLSettingConfigurable implements Configurable {
                         portTextField.setText(selectedModuleInfo.getPort());
                         contextPathTextField.setText(selectedModuleInfo.getContextPath());
                         myHeaderListTableWithButton.setValues(selectedModuleInfo.getHeaders());
-                        myDescriptionPanel.setVisible(true);
-                        myDescriptionPanel.updateUI();
+                        cardLayout.show(itemPanelWrapper, PANEL);
+                    } else {
+                        cardLayout.show(itemPanelWrapper, EMPTY);
                     }
                 }
             });
@@ -323,7 +339,15 @@ public class CURLSettingConfigurable implements Configurable {
                     .addLabeledComponent(new JBLabel("Headers"), myHeaderListTableWithButton.getComponent(), 1, true)
                     .addComponentFillVertically(new JPanel(), 0)
                     .getPanel();
-            myDescriptionPanel.setVisible(false);
+
+            itemPanelWrapper = new JPanel(cardLayout);
+
+            JLabel descLabel =
+                    new JLabel("<html>select module on left</html>");
+            descLabel.setBorder(new EmptyBorder(0, 25, 0, 25));
+
+            itemPanelWrapper.add(descLabel, EMPTY);
+            itemPanelWrapper.add(myDescriptionPanel, PANEL);
 //            myDescriptionPanel.setPreferredSize(new JBDimension(600, 400));
             removeAll();
 
@@ -331,9 +355,9 @@ public class CURLSettingConfigurable implements Configurable {
             myDecorator.setAddAction(createAddAction()).setRemoveAction(createRemoveAction());
             myActionsPanel = myDecorator.getActionsPanel();
 
-            Splitter splitter = new OnePixelSplitter(false);
-            splitter.setFirstComponent(wrapWithPane(myDecorator.createPanel(), 1, 0));
-            splitter.setSecondComponent(wrapWithPane(myDescriptionPanel, 0, 1));
+            Splitter splitter = new Splitter(false, 0.25f);
+            splitter.setFirstComponent(myDecorator.createPanel());
+            splitter.setSecondComponent(itemPanelWrapper);
             add(splitter, BorderLayout.CENTER);
         }
 
@@ -365,6 +389,11 @@ public class CURLSettingConfigurable implements Configurable {
             getEntryTable().setRowSelectionInterval(index, index);
         }
 
+        public void removeRowSelected() {
+            int row = getEntryTable().getSelectedRow();
+            getEntryTable().removeRowSelectionInterval(row, getEntryColumn());
+        }
+
         protected void removeSelected() {
             JTable entryTable = getEntryTable();
             int[] selectedRows = entryTable.getSelectedRows();
@@ -375,7 +404,6 @@ public class CURLSettingConfigurable implements Configurable {
             List<CURLModuleInfo> entries = getEntries();
             CURLModuleInfo selectRemoveInfo = entries.get(selectedIndex);
             remove(selectRemoveInfo);
-//            removeItem(selectRemoveInfo);
 
             entries = getEntries();
             int pre = selectedIndex - 1;
@@ -384,9 +412,7 @@ public class CURLSettingConfigurable implements Configurable {
             } else if (selectedIndex < entries.size()) {
                 entryTable.setRowSelectionInterval(selectedIndex, selectedIndex);
             } else {
-                myDescriptionPanel.setVisible(false);
-//                myDescriptionPanel.removeAll();
-                myDescriptionPanel.updateUI();
+                cardLayout.show(itemPanelWrapper, EMPTY);
             }
         }
 
@@ -395,6 +421,10 @@ public class CURLSettingConfigurable implements Configurable {
             JScrollPane pane = ScrollPaneFactory.createScrollPane(c);
             pane.setBorder(JBUI.Borders.customLine(OnePixelDivider.BACKGROUND, 1, left, 1, right));
             return pane;
+        }
+
+        public void setValueAt(Object value, int row) {
+            getEntryTable().setValueAt(value, row, getEntryColumn());
         }
 
         @Override
