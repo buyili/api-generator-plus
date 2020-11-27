@@ -17,6 +17,8 @@ import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
@@ -43,9 +45,11 @@ public class ApiGeneratorSetting implements Configurable {
     JBCheckBox isMultiModuleCheckBox;
     JBCheckBox isUseDefaultTokenCheckBox;
     ProjectConfigListTableWithButtons projectConfigListTable;
+    YApiProjectPanel yApiProjectPanel;
 
     public ApiGeneratorSetting(Project project) {
         oldState = ServiceManager.getService(project, ApiGeneratorConfig.class);
+        yApiProjectPanel = new YApiProjectPanel();
     }
 
     @Nls(capitalization = Nls.Capitalization.Title)
@@ -127,16 +131,24 @@ public class ApiGeneratorSetting implements Configurable {
         jbTabbedPane.addTab("YApi Setting", yApiJPanel);
 
         //YApi setting
-        isMultiModuleCheckBox = new JBCheckBox("", oldState.isMultiModule);
-        isUseDefaultTokenCheckBox = new JBCheckBox("", oldState.isUseDefaultToken);
+        isMultiModuleCheckBox = new JBCheckBox("Is Multiple Module Project", oldState.isMultiModule);
+        isUseDefaultTokenCheckBox = new JBCheckBox("Is Use Default Token", oldState.isUseDefaultToken);
         projectConfigListTable = new ProjectConfigListTableWithButtons();
         projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
+        projectConfigListTable.getTableView().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                YApiProjectConfigInfo item = projectConfigListTable.getTableView().getSelectedObject();
+                yApiProjectPanel.setItem(item);
+            }
+        });
 
         JPanel panel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("Is Multiple Module Project"), isMultiModuleCheckBox, 1, false)
-                .addLabeledComponent(new JBLabel("Is Use Default Token"), isUseDefaultTokenCheckBox, 1, false)
+                .addLabeledComponent("", isMultiModuleCheckBox, 1, false)
+                .addLabeledComponent("", isUseDefaultTokenCheckBox, 1, false)
                 .addVerticalGap(4)
                 .addComponentFillVertically(projectConfigListTable.getComponent(), 0)
+                .addComponentFillVertically(yApiProjectPanel.getPanel(), 0)
                 .getPanel();
         jbTabbedPane.addTab("Multiple Module Project Config", panel);
 
