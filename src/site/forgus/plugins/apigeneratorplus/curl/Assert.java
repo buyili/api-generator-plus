@@ -1,8 +1,8 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
+import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 
-import javax.annotation.Nullable;
 
 /**
  * @author lmx 2020/11/23 15:52

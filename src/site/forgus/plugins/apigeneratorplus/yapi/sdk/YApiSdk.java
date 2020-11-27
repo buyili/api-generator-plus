@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.ui.Messages;
+import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.util.HttpUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
