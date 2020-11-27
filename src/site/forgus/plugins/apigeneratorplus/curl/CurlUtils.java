@@ -70,9 +70,6 @@ public class CurlUtils {
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
-        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
-            findModuleInfoAndSave(actionEvent);
-        }
 
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
         if (selectedMethod != null) {
@@ -80,8 +77,9 @@ public class CurlUtils {
             //            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
+            checkHasModuleConfig(project, moduleName);
             CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
-            Assert.notNull(curlModuleInfo);
+            Assert.notNull(curlModuleInfo, "no matching module configuration");
 
             String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
 
@@ -92,10 +90,10 @@ public class CurlUtils {
             // 访问接口
             if (isGetMethod(selectedMethod.getAnnotations())) {
                 // Get 请求参数
-                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod) + getRequestParams(selectedMethod, methodInfo));
+                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo) + getRequestParams(selectedMethod, methodInfo));
             } else {
                 // 非Get请求参数
-                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod));
+                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
                 initOptions.setBody(getRequestBody(selectedMethod, methodInfo));
             }
 
@@ -147,9 +145,6 @@ public class CurlUtils {
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
-        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
-            findModuleInfoAndSave(actionEvent);
-        }
 
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
         if (selectedMethod != null) {
@@ -157,16 +152,17 @@ public class CurlUtils {
             //            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
+            checkHasModuleConfig(project, moduleName);
             CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
-
             Assert.notNull(curlModuleInfo);
+
             String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
             StringBuilder stringBuilder = new StringBuilder("curl");
 
             // 访问接口
             stringBuilder.append(" '")
                     .append(getBaseApi(port))
-                    .append(buildPath(selectedMethod));
+                    .append(buildPath(selectedMethod, curlModuleInfo));
             if (isGetMethod(selectedMethod.getAnnotations())) {
                 // Get 请求参数
                 stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
@@ -231,7 +227,7 @@ public class CurlUtils {
         return Collections.emptyList();
     }
 
-    private String buildPath(PsiMethod psiMethod) {
+    private String buildPath(PsiMethod psiMethod, CURLModuleInfo info) {
         String classPath = "";
         String methodPath = "";
         for (PsiAnnotation annotation : Objects.requireNonNull(psiMethod.getContainingClass()).getAnnotations()) {
@@ -246,7 +242,24 @@ public class CurlUtils {
                 break;
             }
         }
-        return classPath + methodPath;
+        return pathResolve(info.getContextPath(), classPath, methodPath);
+    }
+
+    public String pathResolve(String... args) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String arg : args) {
+            if (StringUtils.isNotBlank(arg)) {
+                if (!arg.startsWith("/")) {
+                    stringBuilder.append('/');
+                }
+                if (arg.endsWith("/")) {
+                    stringBuilder.append(arg.substring(0, arg.length() - 1));
+                } else {
+                    stringBuilder.append(arg);
+                }
+            }
+        }
+        return stringBuilder.toString();
     }
 
     private String getPathFromAnnotation(PsiAnnotation annotation) {
@@ -337,6 +350,13 @@ public class CurlUtils {
         return null;
     }
 
+    private void checkHasModuleConfig(Project project, String moduleName) {
+        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)
+                || getCurlModelInfo(moduleName) == null) {
+            findModuleInfoAndSave(project, curlSettingState);
+        }
+    }
+
     private String getModuleName(Editor editor, Project project) {
         Document document = editor.getDocument();
         FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
@@ -371,6 +391,7 @@ public class CurlUtils {
                 }
             }
         }
+//        NotificationUtil.errorNotify("no matching module configuration\n Please right click 'Copy as CURL-> Generate Project Modules' to scan the module information");
         return null;
     }
 
