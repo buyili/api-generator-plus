@@ -25,6 +25,7 @@ import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -184,11 +185,6 @@ public class CURLSettingConfigurable implements Configurable {
 
     @Override
     public boolean isModified() {
-        Gson gson = new Gson();
-//        List<CURLModuleInfo> items = curlSettingListTableWithButtons.getTableView().getItems();
-//        if (!gson.toJson(oldState.modelInfoList).equals(gson.toJson(items))) {
-//            return true;
-//        }
         if (!oldState.baseApi.equals(baseApiTextField.getText())
                 || !oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
                 || !oldState.filterFieldInfo.includeFiled.equals(includeFiledTextFields.getText())
@@ -208,36 +204,7 @@ public class CURLSettingConfigurable implements Configurable {
             return true;
         }
 
-            List<CURLModuleInfo> entries = myOrderPanel.getEntries();
-        if (selectedModuleInfo != null) {
-            for (CURLModuleInfo entry : entries) {
-                if (entry.getId().equals(selectedModuleInfo.getId())) {
-                    int i = entries.indexOf(entry);
-                    entry.setModuleName(moduleNameTextField.getText());
-                    entry.setPort(portTextField.getText());
-                    entry.setContextPath(contextPathTextField.getText());
-                    List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
-//                    System.out.println(JsonUtil.gson.toJson(items));
-                    entry.setHeaders(items);
-//                    selectedModuleInfo.setModuleName(moduleNameTextField.getText());
-//                    selectedModuleInfo.setPort(portTextField.getText());
-//                    selectedModuleInfo.setContextPath(contextPathTextField.getText());
-//                    List<String[]> items = myHeaderListTableWithButton.getTableView().getItems();
-////                    System.out.println(JsonUtil.gson.toJson(items));
-//                    selectedModuleInfo.setHeaders(items);
-//                    myOrderPanel.getEntryTable().getModel().setValueAt(selectedModuleInfo, i, myOrderPanel.getEntryColumn());
-                    break;
-                }
-            }
-        }
-//        List<CURLModuleInfo> entries = myOrderPanel.getEntries();
-        List<CURLModuleInfo> modelInfoList = oldState.moduleInfoList;
-        if (!gson.toJson(modelInfoList).equals(gson.toJson(entries))) {
-            System.out.println(gson.toJson(modelInfoList));
-            System.out.println(gson.toJson(entries));
-            return true;
-        }
-        return false;
+        return myOrderPanel.isModified();
     }
 
     @Override
@@ -315,6 +282,7 @@ public class CURLSettingConfigurable implements Configurable {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     int selectedRow = entryTable.getSelectedRow();
+                    apply();
                     if (selectedRow != -1) {
                         selectedModuleInfo = getValueAt(selectedRow);
                         moduleNameTextField.setText(selectedModuleInfo.getModuleName());
@@ -339,6 +307,20 @@ public class CURLSettingConfigurable implements Configurable {
                     .addLabeledComponent(new JBLabel("Headers"), myHeaderListTableWithButton.getComponent(), 1, true)
                     .addComponentFillVertically(new JPanel(), 0)
                     .getPanel();
+
+            moduleNameTextField.getDocument().addDocumentListener(new DocumentAdapter() {
+                @Override
+                protected void textChanged(@NotNull DocumentEvent e) {
+                    if (selectedModuleInfo != null) {
+                        String moduleName = moduleNameTextField.getText().trim();
+                        boolean changed = !selectedModuleInfo.getModuleName().equals(moduleName);
+                        selectedModuleInfo.setModuleName(moduleName);
+                        if (changed) {
+                            getEntryTable().repaint();
+                        }
+                    }
+                }
+            });
 
             itemPanelWrapper = new JPanel(cardLayout);
 
@@ -381,6 +363,33 @@ public class CURLSettingConfigurable implements Configurable {
             curlModuleInfo.setId(String.valueOf(System.currentTimeMillis()));
             curlModuleInfo.setModuleName(StringUtil.getName());
             return curlModuleInfo;
+        }
+
+        public void apply() {
+            if (selectedModuleInfo == null) {
+                return;
+            }
+
+            selectedModuleInfo.setModuleName(moduleNameTextField.getText().trim());
+            selectedModuleInfo.setPort(portTextField.getText().trim());
+            selectedModuleInfo.setContextPath(contextPathTextField.getText().trim());
+            selectedModuleInfo.setHeaders(myHeaderListTableWithButton.getTableView().getItems());
+        }
+
+        public boolean isModified() {
+            apply();
+            List<CURLModuleInfo> items = getEntries();
+            List<CURLModuleInfo> oldItems = oldState.moduleInfoList;
+            if (items.size() != oldItems.size()) {
+                return true;
+            } else {
+                for (int i = 0; i < items.size(); i++) {
+                    if (!items.get(i).equals(oldItems.get(i))) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         protected void addNewElement(CURLModuleInfo newElement) {
