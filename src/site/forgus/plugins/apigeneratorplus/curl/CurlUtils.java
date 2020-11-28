@@ -87,13 +87,11 @@ public class CurlUtils {
             FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
 
 
+            fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo) + getRequestParams(selectedMethod, methodInfo));
             // 访问接口
-            if (isGetMethod(selectedMethod.getAnnotations())) {
-                // Get 请求参数
-                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo) + getRequestParams(selectedMethod, methodInfo));
-            } else {
+            if (!isGetMethod(selectedMethod.getAnnotations())) {
                 // 非Get请求参数
-                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
+                //fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
                 initOptions.setBody(getRequestBody(selectedMethod, methodInfo));
             }
 
@@ -163,13 +161,10 @@ public class CurlUtils {
             stringBuilder.append(" '")
                     .append(getBaseApi(port))
                     .append(buildPath(selectedMethod, curlModuleInfo));
-            if (isGetMethod(selectedMethod.getAnnotations())) {
-                // Get 请求参数
-                stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
-                stringBuilder.append("'");
-            } else {
+            stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
+            stringBuilder.append("'");
+            if (!isGetMethod(selectedMethod.getAnnotations())) {
                 // 非Get请求参数
-                stringBuilder.append("'");
                 stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
             }
 
@@ -531,7 +526,7 @@ public class CurlUtils {
             stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
             stringBuilder.append(" --data-raw '");
             for (String string : strings) {
-//                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
                 stringBuilder.append(string).append("&");
             }
             stringBuilder.append("'");
@@ -562,16 +557,31 @@ public class CurlUtils {
 
     public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         StringUtil.showPsiMethod(psiMethod);
+        boolean containRequestBodyAnnotation = containRequestBodyAnnotation(psiMethod);
+        if (!isGetMethod(psiMethod.getAnnotations()) && !containRequestBodyAnnotation) {
+            return "";
+        }
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        List<String> strings = generateKeyValue(requestFields);
+        List<FieldInfo> filteredFields = new ArrayList<>(requestFields);
+        if (containRequestBodyAnnotation) {
+            for (FieldInfo requestField : requestFields) {
+                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                    filteredFields.remove(requestField);
+                }
+            }
+            if (CollectionUtils.isEmpty(filteredFields)) {
+                return "";
+            }
+        }
+        List<String> strings = generateKeyValue(filteredFields);
         StringBuilder stringBuilder = new StringBuilder("?");
         for (String string : strings) {
-//            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+            //            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
             stringBuilder.append(string).append("&");
         }
         String str = stringBuilder.toString();
         str = str.substring(0, str.length() - 1);
-//        str = str.replaceAll("%", "^%");
+        //        str = str.replaceAll("%", "^%");
         return str;
     }
 
