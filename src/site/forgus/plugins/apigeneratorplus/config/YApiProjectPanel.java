@@ -31,7 +31,7 @@ public class YApiProjectPanel {
             return;
         }
         nameTextField.setText(yApiProject.getName());
-        idTextField.setText(yApiProject.get_id().toString());
+        idTextField.setText(yApiProject.get_id() == null ? "" : yApiProject.get_id().toString());
         descTextField.setText(yApiProject.getDesc());
         basePathTextField.setText(yApiProject.getBasepath());
     }
