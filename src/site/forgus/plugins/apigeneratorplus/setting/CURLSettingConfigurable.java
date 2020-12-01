@@ -45,6 +45,7 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextField baseApiTextField;
 
     private CURLModuleInfo selectedModuleInfo;
+    CURLModuleInfoUI curlModuleInfoUI;
     MyOrderPanel myOrderPanel;
     JBTextField moduleNameTextField;
     JBTextField portTextField;
@@ -86,6 +87,8 @@ public class CURLSettingConfigurable implements Configurable {
 
         myOrderPanel = new MyOrderPanel();
         myOrderPanel.addAll(oldState.moduleInfoList);
+        curlModuleInfoUI = new CURLModuleInfoUI(oldState);
+        curlModuleInfoUI.reset(oldState.moduleInfoList);
 
         credentialsTextField = new JBTextField(oldState.fetchConfig.credentials);
         cacheTextField = new JBTextField(oldState.fetchConfig.cache);
@@ -157,7 +160,7 @@ public class CURLSettingConfigurable implements Configurable {
                 .addVerticalGap(16)
                 .addSeparator()
                 .addComponent(modulePortLabelPanel, 0)
-                .addComponentFillVertically(myOrderPanel, 0)
+                .addComponentFillVertically(curlModuleInfoUI.getComponent(), 0)
                 .getPanel();
         jbTabbedPane.add("Copy as cURL", jPanel);
 
@@ -204,7 +207,8 @@ public class CURLSettingConfigurable implements Configurable {
             return true;
         }
 
-        return myOrderPanel.isModified();
+//        return myOrderPanel.isModified();
+        return curlModuleInfoUI.isModified(oldState.moduleInfoList);
     }
 
     @Override
@@ -225,6 +229,7 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.fetchConfig.integrity = integrityTextField.getText();
 
         oldState.moduleInfoList = myOrderPanel.getEntries();
+        curlModuleInfoUI.apply(oldState.moduleInfoList);
     }
 
     @Override
