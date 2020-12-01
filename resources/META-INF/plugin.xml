@@ -135,19 +135,41 @@
         <h3>1.0.2</h3>
         <h4>New features</h4>
         <ul>
-          <li>scan base path for module configuration</i></li>
+          <li>
+            copy as curl
+            <ul>
+              <li>scan base path for module configuration</i></li>
+            </ul>
+          </li>
         </ul>
         <h4>Bug fixes</h4>
         <ul>
-          <li>Fix module header configuration error</i></li>
+          <li>
+            copy as curl
+            <ul>
+              <li>Fix that the method that contains the @RequestBody annotation does not generate the query parameter</li>
+              <li>Fix module header configuration error</i></li>
+            </ul>
+          </li>
         </ul>
         <h4>新特性</h4>
         <ul>
-          <li>自动扫描模块信息时读取配置文件（application.yaml,application.yml,application.properties）中的上下文路径</i></li>
+          <li>
+            copy as curl
+            <ul>
+              <li>自动扫描模块信息时读取配置文件（application.yaml,application.yml,application.properties）中的上下文路径</i></li>
+            </ul>
+          </li>
         </ul>
         <h4>Bug 修复</h4>
         <ul>
-          <li>修复配置模块header时保存位置错误</i></li>
+          <li>
+            copy as curl
+            <ul>
+              <li>修复包含@RequestBody的方法没有生成Query参数</i></li>
+              <li>修复配置模块header时保存位置错误</i></li>
+            </ul>
+          </li>
         </ul>
         <em>1.0.1</em><br>
         <ul>
