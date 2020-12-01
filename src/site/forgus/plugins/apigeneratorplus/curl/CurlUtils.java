@@ -28,6 +28,7 @@ import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.Header;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
@@ -168,12 +169,10 @@ public class CurlUtils {
                 stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
             }
 
-            // 添加header
-            List<String[]> headers = curlModuleInfo.getHeaders();
-            if (CollectionUtils.isNotEmpty(headers)) {
-                for (String[] header : headers) {
-                    stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
-
+            if (CollectionUtils.isNotEmpty(curlModuleInfo.getRequestHeaders())) {
+                for (Header requestHeader : curlModuleInfo.getRequestHeaders()) {
+                    stringBuilder.append(" -H '").append(requestHeader.getKey()).append(": ")
+                            .append(requestHeader.getValue()).append("'");
                 }
             }
 

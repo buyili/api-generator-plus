@@ -18,6 +18,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,11 +54,6 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
             return item.getModuleName().isEmpty();
         }
 
-        @Override
-        public boolean isEditable(@NotNull CURLModuleInfo item) {
-            return !oldState.moduleInfoList.contains(item);
-        }
-
         @NotNull
         @Override
         public String getName(@NotNull CURLModuleInfo item) {
@@ -65,7 +61,7 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
         }
     };
 
-    private final ListModelEditor<CURLModuleInfo> editor = new ListModelEditor<>(itemEditor);
+    public final ListModelEditor<CURLModuleInfo> editor = new ListModelEditor<>(itemEditor);
 
     private final JComponent component;
 
@@ -82,8 +78,8 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
                     cardLayout.show(itemPanelWrapper, EMPTY);
                     itemPanel.setItem(null);
                 } else {
-                    cardLayout.show(itemPanelWrapper, PANEL);
                     itemPanel.setItem(editor.getMutable(item));
+                    cardLayout.show(itemPanelWrapper, PANEL);
                 }
             }
         });
@@ -144,25 +140,32 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
     public void apply(@NotNull List<CURLModuleInfo> settings) throws ConfigurationException {
         itemPanel.apply();
 
-        editor.ensureNonEmptyNames("Quick list should have non empty name");
-        editor.processModifiedItems((newItem, oldItem) -> {
-            if (!oldItem.getModuleName().equals(newItem.getModuleName())) {
-//                keymapListener.quickListRenamed(oldItem, newItem);
-            }
-            return true;
-        });
+        editor.ensureNonEmptyNames("Module info should have non empty name");
+//        editor.processModifiedItems((newItem, oldItem) -> {
+//            if (!oldItem.getModuleName().equals(newItem.getModuleName())) {
+////                keymapListener.quickListRenamed(oldItem, newItem);
+//            }
+//            return true;
+//        });
 
         if (isModified(settings)) {
             List<CURLModuleInfo> result = editor.apply();
             if(result.size() == 0){
                 editor.reset(result);
             }
+            if(editor.isModified()){
+                // 解决   editor.reset(result);   后result被清空问题
+                List<CURLModuleInfo> newList = new ArrayList<>(result);
+                editor.reset(newList);
+            }
 
+            // apply后，不切换左侧列表项，再次修改后检测不到是否修改
             CURLModuleInfo item = editor.getSelected();
             if (item != null) {
                 itemPanel.setItem(editor.getMutable(item));
             }
-            oldState.moduleInfoList = result;
+
+            oldState.moduleInfoList = new ArrayList<>(result);
         }
     }
 

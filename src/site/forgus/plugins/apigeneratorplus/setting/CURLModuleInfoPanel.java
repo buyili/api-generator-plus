@@ -2,7 +2,6 @@ package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.ui.CollectionListModel;
-import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
@@ -10,9 +9,10 @@ import com.intellij.util.ui.ListTableModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.Header;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
+import java.util.ArrayList;
 
 /**
  * @author lmx 2020/12/1 11:48
@@ -60,8 +60,7 @@ public class CURLModuleInfoPanel {
         item.setModuleName(moduleNameTextField.getText().trim());
         item.setPort(portTextField.getText().trim());
         item.setContextPath(contextPathTextField.getText().trim());
-        item.setHeaders(myHeaderListTableWithButton.getTableView().getItems());
-
+        item.setRequestHeaders(new ArrayList<>(myHeaderListTableWithButton.getTableView().getItems()));
     }
 
     public void setItem(@Nullable CURLModuleInfo item) {
@@ -75,95 +74,95 @@ public class CURLModuleInfoPanel {
         moduleNameTextField.setText(item.getModuleName());
         portTextField.setText(item.getPort());
         contextPathTextField.setText(item.getContextPath());
-        myHeaderListTableWithButton.setValues(item.getHeaders());
+        myHeaderListTableWithButton.setValues(item.getRequestHeaders());
+        myHeaderListTableWithButton.getTableView().repaint();
 
     }
 
 
 
-    protected class MyHeaderListTableWithButton extends ListTableWithButtons<String[]> {
-
+    protected class MyHeaderListTableWithButton extends ListTableWithButtons<Header> {
         @Override
         protected ListTableModel createListModel() {
             return new ListTableModel(new KeyColumnInfo(), new ValueColumnInfo());
         }
 
         @Override
-        protected String[] createElement() {
-            return new String[2];
+        protected Header createElement() {
+            return new Header();
         }
 
         @Override
-        protected boolean isEmpty(String[] element) {
-            return element[0] == null || "".equals(element[0]);
+        protected boolean isEmpty(Header element) {
+            return element.getKey() == null || "".equals(element.getKey());
         }
 
         @Override
-        protected String[] cloneElement(String[] variable) {
-            return variable.clone();
+        protected Header cloneElement(Header variable) {
+            return variable == null ? null : variable.clone();
         }
 
         @Override
-        protected boolean canDeleteElement(String[] selection) {
+        protected boolean canDeleteElement(Header selection) {
             return true;
         }
 
 
-        protected class KeyColumnInfo extends ElementsColumnInfoBase<String[]> {
+        protected class KeyColumnInfo extends ElementsColumnInfoBase<Header> {
 
             protected KeyColumnInfo() {
                 super("KEY");
             }
 
+            @Override
+            public void setValue(Header header, String value) {
+                header.setKey(value);
+            }
+
+            @Override
+            public boolean isCellEditable(Header header) {
+                return true;
+            }
+
             @Nullable
             @Override
-            protected String getDescription(String[] element) {
+            protected String getDescription(Header element) {
                 return null;
             }
 
             @Nullable
             @Override
-            public String valueOf(String[] strings) {
-                return strings[0];
-            }
-
-            @Override
-            public void setValue(String[] strings, String value) {
-                strings[0] = value;
-            }
-
-            @Override
-            public boolean isCellEditable(String[] strings) {
-                return true;
+            public String valueOf(Header header) {
+                return header == null ? "" : header.getKey();
             }
         }
 
-        protected class ValueColumnInfo extends ElementsColumnInfoBase<String[]> {
+        protected class ValueColumnInfo extends ElementsColumnInfoBase<Header> {
 
             protected ValueColumnInfo() {
                 super("VALUE");
             }
 
+            @Override
+            public boolean isCellEditable(Header header) {
+                return true;
+            }
+
+            @Override
+            public void setValue(Header header, String value) {
+                header.setValue(value);
+            }
+
             @Nullable
             @Override
-            protected String getDescription(String[] element) {
+            protected String getDescription(Header element) {
                 return null;
             }
 
             @Nullable
             @Override
-            public String valueOf(String[] strings) {
-                return strings[1];
-            }
-
-            @Override
-            public void setValue(String[] strings, String value) {
-                strings[1] = value;
-            }
-
-            @Override
-            public boolean isCellEditable(String[] strings) {
-                return true;
+            public String valueOf(Header header) {
+                return header == null ? "" : header.getValue();
             }
         }
     }

@@ -6,10 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author lmx 2020/11/11 22:53
@@ -27,7 +24,14 @@ public class CURLModuleInfo implements Cloneable {
 
     private String contextPath = "";
 
+    @Deprecated
     private List<String[]> headers = Collections.emptyList();
+
+    /**
+     * @since 1.0.2
+     */
+    private List<Header> requestHeaders = new ArrayList<>();
+
 
     @Override
     public CURLModuleInfo clone() {
@@ -40,16 +44,16 @@ public class CURLModuleInfo implements Cloneable {
 
     public String getJsonHeaders() {
         Map<String, String> map = new HashMap<>();
-        for (String[] header : headers) {
-            map.put(header[0], header[1]);
+        for (Header header : requestHeaders) {
+            map.put(header.getKey(), header.getValue());
         }
         return JsonUtil.gson.toJson(map);
     }
 
     public Map<String, String> getHeadersAsMap() {
-        Map<String, String> map = new HashMap<>();
-        for (String[] header : headers) {
-            map.put(header[0], header[1]);
+        Map<String, String> map = new HashMap<>(requestHeaders.size());
+        for (Header header : requestHeaders) {
+            map.put(header.getKey(), header.getValue());
         }
         return map;
     }
