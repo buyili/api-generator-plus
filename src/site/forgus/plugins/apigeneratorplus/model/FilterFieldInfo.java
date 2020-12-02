@@ -1,5 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.model;
 
+import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 
@@ -37,7 +38,7 @@ public class FilterFieldInfo {
             String[] split = string.split(";");
             return Arrays.asList(split);
         }
-        return Collections.emptyList();
+        return ContainerUtil.newArrayList();
     }
 
 

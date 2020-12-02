@@ -1,6 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.curl.model;
 
 
+import com.intellij.util.containers.ContainerUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class CURLModuleInfo implements Cloneable {
     private String contextPath = "";
 
     @Deprecated
-    private List<String[]> headers = Collections.emptyList();
+    private List<String[]> headers = ContainerUtil.newArrayList();
 
     /**
      * @since 1.0.2

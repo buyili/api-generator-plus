@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.TextTransferable;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -218,7 +219,7 @@ public class CurlUtils {
             }
             return list;
         }
-        return Collections.emptyList();
+        return ContainerUtil.newArrayList();
     }
 
     private String buildPath(PsiMethod psiMethod, CURLModuleInfo info) {
@@ -601,7 +602,7 @@ public class CurlUtils {
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
-            return Collections.emptyList();
+            return ContainerUtil.newArrayList();
         }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
@@ -630,13 +631,13 @@ public class CurlUtils {
         if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
             if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
-                children.removeIf(child -> !includeFiledList.get(index).contains(child.getName()));
+                children.removeIf(child -> !includeFiledList.get(index).contains(child.getName() + ","));
             } else if (excludeFiledList.size() > index && StringUtils.isNotEmpty(excludeFiledList.get(index))) {
                 children.removeIf(child -> excludeFiledList.get(index).contains(child.getName()));
             }
             if (filterFieldInfo.excludeChildren) {
                 for (FieldInfo child : children) {
-                    child.setChildren(Collections.emptyList());
+                    child.setChildren(ContainerUtil.newArrayList());
                 }
             }
         }
