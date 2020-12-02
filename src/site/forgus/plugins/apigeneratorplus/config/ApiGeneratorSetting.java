@@ -7,6 +7,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.AddEditDeleteListPanel;
 import com.intellij.ui.components.*;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.ListTableModel;
 import org.apache.commons.lang.StringUtils;
@@ -21,6 +22,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,13 +44,12 @@ public class ApiGeneratorSetting implements Configurable {
     JBTextField excludeFields;
 
 
-    JBCheckBox isMultiModuleCheckBox;
-    JBCheckBox isUseDefaultTokenCheckBox;
-    ProjectConfigListTableWithButtons projectConfigListTable;
     YApiProjectPanel yApiProjectPanel;
+    YApiProjectListsPanel yApiProjectListsPanel;
 
     public ApiGeneratorSetting(Project project) {
         oldState = ServiceManager.getService(project, ApiGeneratorConfig.class);
+        yApiProjectListsPanel = new YApiProjectListsPanel(project);
         yApiProjectPanel = new YApiProjectPanel();
     }
 
@@ -131,34 +132,9 @@ public class ApiGeneratorSetting implements Configurable {
         jbTabbedPane.addTab("YApi Setting", yApiJPanel);
 
         //YApi setting
-        isMultiModuleCheckBox = new JBCheckBox("Is Multiple Module Project", oldState.isMultiModule);
-        isUseDefaultTokenCheckBox = new JBCheckBox("Is Use Default Token", oldState.isUseDefaultToken);
-        projectConfigListTable = new ProjectConfigListTableWithButtons();
-        projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
-        projectConfigListTable.getTableView().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                YApiProjectConfigInfo item = projectConfigListTable.getTableView().getSelectedObject();
-                yApiProjectPanel.setItem(item);
-            }
-        });
-
-        JPanel panel = FormBuilder.createFormBuilder()
-                .addLabeledComponent("", isMultiModuleCheckBox, 1, false)
-                .addLabeledComponent("", isUseDefaultTokenCheckBox, 1, false)
-                .addVerticalGap(4)
-                .addComponentFillVertically(projectConfigListTable.getComponent(), 0)
-                .addComponentFillVertically(yApiProjectPanel.getPanel(), 0)
-                .getPanel();
-        jbTabbedPane.addTab("Multiple Module Project Config", panel);
+        jbTabbedPane.addTab("Multiple Module Project Config", yApiProjectListsPanel.getPanel());
 
 
-//        ProjectConfigListComponent projectConfigListComponent = new ProjectConfigListComponent();
-//
-//        JPanel panel1 = FormBuilder.createFormBuilder()
-//                .addComponentFillVertically(projectConfigListComponent, 0)
-//                .getPanel();
-//        jbTabbedPane.addTab("Project Config1", panel1);
         return jbTabbedPane;
     }
 
@@ -213,9 +189,7 @@ public class ApiGeneratorSetting implements Configurable {
                 oldState.autoCat != autoCatCheckBox.isSelected() ||
                 !oldState.dirPath.equals(dirPathTextField.getText()) ||
                 !oldState.excludeFields.equals(excludeFields.getText()) ||
-                oldState.isMultiModule != isMultiModuleCheckBox.isSelected() ||
-                oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected() ||
-                !compareProjectConfigInfoList(oldState.yApiProjectConfigInfoList, projectConfigListTable.getTableView().getItems());
+                yApiProjectListsPanel.isModified();
     }
 
     @Override
@@ -243,24 +217,8 @@ public class ApiGeneratorSetting implements Configurable {
         oldState.defaultCat = defaultCatTextField.getText();
         oldState.autoCat = autoCatCheckBox.isSelected();
 
-        oldState.isMultiModule = isMultiModuleCheckBox.isSelected();
-        oldState.isUseDefaultToken = isUseDefaultTokenCheckBox.isSelected();
-        List<YApiProjectConfigInfo> items = projectConfigListTable.getTableView().getItems();
-        for (YApiProjectConfigInfo item : items) {
-            if (AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(item.getToken())) {
-                try {
-                    YApiProject yApiProject = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), item.getToken());
-                    if (null != yApiProject) {
-                        item.setProject(yApiProject);
-                        String projectId = yApiProject.get_id().toString();
-                        item.setProjectId(projectId);
-                    }
-                } catch (IOException e) {
-//                    e.printStackTrace();
-                }
-            }
-        }
-        oldState.yApiProjectConfigInfoList = items;
+        yApiProjectListsPanel.apply();
+
     }
 
     @Override
@@ -274,9 +232,7 @@ public class ApiGeneratorSetting implements Configurable {
         tokenTextField.setText(oldState.projectToken);
         defaultCatTextField.setText(oldState.defaultCat);
         autoCatCheckBox.setSelected(oldState.autoCat);
-        isMultiModuleCheckBox.setSelected(oldState.isMultiModule);
-        isUseDefaultTokenCheckBox.setSelected(oldState.isUseDefaultToken);
-        projectConfigListTable.setValues(oldState.yApiProjectConfigInfoList);
+        yApiProjectListsPanel.reset();
     }
 
     public static void main(String[] args) {
@@ -310,148 +266,4 @@ public class ApiGeneratorSetting implements Configurable {
         frame.setVisible(true);
     }
 
-    public static class ProjectConfigListTableWithButtons extends ListTableWithButtons<YApiProjectConfigInfo> {
-        @Override
-        protected ListTableModel createListModel() {
-            return new ListTableModel(new TokenColumnInfo(), new PackageNameColumnInfo(), new ProjectIdColumnInfo(),
-                    new BasePathColumnInfo());
-        }
-
-        @Override
-        protected YApiProjectConfigInfo createElement() {
-            return new YApiProjectConfigInfo();
-        }
-
-        @Override
-        protected boolean isEmpty(YApiProjectConfigInfo element) {
-            return false;
-        }
-
-        @Override
-        protected YApiProjectConfigInfo cloneElement(YApiProjectConfigInfo variable) {
-            return variable.clone();
-        }
-
-        @Override
-        protected boolean canDeleteElement(YApiProjectConfigInfo selection) {
-            return true;
-        }
-
-        protected static class TokenColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
-            protected TokenColumnInfo() {
-                super("项目Token");
-            }
-
-            @Override
-            public boolean isCellEditable(YApiProjectConfigInfo projectConfigInfo) {
-                return true;
-            }
-
-            @Override
-            public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
-                if (projectConfigInfo != null) {
-                    projectConfigInfo.setToken(value);
-                }
-            }
-
-            @Nullable
-            @Override
-            protected String getDescription(YApiProjectConfigInfo element) {
-                return "";
-            }
-
-            @Nullable
-            @Override
-            public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
-                return projectConfigInfo == null ? "" : projectConfigInfo.getToken();
-            }
-        }
-
-        protected static class BasePathColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
-            protected BasePathColumnInfo() {
-                super("接口基本路径");
-            }
-
-            @Nullable
-            @Override
-            protected String getDescription(YApiProjectConfigInfo element) {
-                return "自动拼接在每个接口之前";
-            }
-
-            @Override
-            public boolean isCellEditable(YApiProjectConfigInfo projectConfigInfo) {
-                return true;
-            }
-
-            @Override
-            public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
-                if (projectConfigInfo != null) {
-                    projectConfigInfo.setBasePath(value);
-                }
-            }
-
-            @Nullable
-            @Override
-            public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
-                return projectConfigInfo == null ? "" : projectConfigInfo.getBasePath();
-            }
-        }
-
-        protected static class PackageNameColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
-            protected PackageNameColumnInfo() {
-                super("模块包名");
-            }
-
-            @Nullable
-            @Override
-            protected String getDescription(YApiProjectConfigInfo element) {
-                return "多模块项目中模块包名";
-            }
-
-            @Override
-            public boolean isCellEditable(YApiProjectConfigInfo projectConfigInfo) {
-                return true;
-            }
-
-            @Override
-            public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
-                if (projectConfigInfo != null) {
-                    projectConfigInfo.setPackageName(value);
-                }
-            }
-
-            @Nullable
-            @Override
-            public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
-                return projectConfigInfo == null ? "" : projectConfigInfo.getPackageName();
-            }
-        }
-
-        protected static class ProjectIdColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
-            protected ProjectIdColumnInfo() {
-                super("Project Id");
-            }
-
-            @Nullable
-            @Override
-            protected String getDescription(YApiProjectConfigInfo element) {
-                return "YApi项目id";
-            }
-
-            @Override
-            public void setValue(YApiProjectConfigInfo projectConfigInfo, String value) {
-                if (projectConfigInfo != null) {
-                    projectConfigInfo.setProjectId(value);
-                }
-            }
-
-            @Nullable
-            @Override
-            public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
-                return projectConfigInfo == null ? "" : projectConfigInfo.getProjectId();
-            }
-        }
-
-
-    }
 }
