@@ -27,6 +27,7 @@ public class YApiProjectListsPanel {
     private JPanel detailPanel;
     private JPanel listTablePanel;
     private JPanel myPanel;
+    private JCheckBox matchWithModuleNameCheckBox;
     YApiProjectPanel yApiProjectPanel;
 
     ProjectConfigListTableWithButtons projectConfigListTableWithButtons;
@@ -61,12 +62,14 @@ public class YApiProjectListsPanel {
     public boolean isModified() {
         return oldState.isMultiModule != isMultipleModuleProjectCheckBox.isSelected()
                 || oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected()
+                || oldState.matchWithModuleName != matchWithModuleNameCheckBox.isSelected()
                 || !compareProjectConfigInfoList(oldState.yApiProjectConfigInfoList, projectConfigListTableWithButtons.getTableView().getItems());
     }
 
     public void apply() {
         oldState.isMultiModule = isMultipleModuleProjectCheckBox.isSelected();
         oldState.isUseDefaultToken = isUseDefaultTokenCheckBox.isSelected();
+        oldState.matchWithModuleName = matchWithModuleNameCheckBox.isSelected();
         List<YApiProjectConfigInfo> items = projectConfigListTableWithButtons.getTableView().getItems();
         for (YApiProjectConfigInfo item : items) {
             if (AssertUtils.isNotEmpty(oldState.yApiServerUrl) && AssertUtils.isNotEmpty(item.getToken())) {
@@ -92,6 +95,7 @@ public class YApiProjectListsPanel {
     public void reset() {
         isMultipleModuleProjectCheckBox.setSelected(oldState.isMultiModule);
         isUseDefaultTokenCheckBox.setSelected(oldState.isUseDefaultToken);
+        matchWithModuleNameCheckBox.setSelected(oldState.matchWithModuleName);
         projectConfigListTableWithButtons.setValues(oldState.yApiProjectConfigInfoList);
     }
 
@@ -108,7 +112,7 @@ public class YApiProjectListsPanel {
     public static class ProjectConfigListTableWithButtons extends ListTableWithButtons<YApiProjectConfigInfo> {
         @Override
         protected ListTableModel createListModel() {
-            return new ListTableModel(new TokenColumnInfo(), new PackageNameColumnInfo(), new ProjectIdColumnInfo(),
+            return new ListTableModel(new TokenColumnInfo(), new PackageNameColumnInfo(), new ModuleNameColumnInfo(),
                     new BasePathColumnInfo());
         }
 
@@ -244,6 +248,35 @@ public class YApiProjectListsPanel {
             @Override
             public String valueOf(YApiProjectConfigInfo projectConfigInfo) {
                 return projectConfigInfo == null ? "" : projectConfigInfo.getProjectId();
+            }
+        }
+
+        protected static class ModuleNameColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo>{
+
+            protected ModuleNameColumnInfo() {
+                super("Module Name");
+            }
+
+            @Nullable
+            @Override
+            protected String getDescription(YApiProjectConfigInfo element) {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public String valueOf(YApiProjectConfigInfo info) {
+                return info == null ? "" : info.getModuleName();
+            }
+
+            @Override
+            public void setValue(YApiProjectConfigInfo info, String value) {
+                info.setModuleName(value);
+            }
+
+            @Override
+            public boolean isCellEditable(YApiProjectConfigInfo info) {
+                return true;
             }
         }
 

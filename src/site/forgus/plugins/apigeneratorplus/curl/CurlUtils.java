@@ -352,7 +352,7 @@ public class CurlUtils {
         }
     }
 
-    private String getModuleName(Editor editor, Project project) {
+    private static String getModuleName(Editor editor, Project project) {
         Document document = editor.getDocument();
         FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
         VirtualFile virtualFile = fileDocumentManager.getFile(document);

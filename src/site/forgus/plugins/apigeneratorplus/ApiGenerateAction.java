@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
@@ -23,6 +24,7 @@ import site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.Assert;
+import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
@@ -41,10 +43,13 @@ public class ApiGenerateAction extends AnAction {
 
     private static final String SLASH = "/";
 
+    private Editor editor;
+    private Project project;
+
     @Override
     public void actionPerformed(AnActionEvent actionEvent) {
         try {
-            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
+            editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
             if (editor == null) {
                 return;
             }
@@ -52,7 +57,7 @@ public class ApiGenerateAction extends AnAction {
             if (psiFile == null) {
                 return;
             }
-            Project project = editor.getProject();
+            project = editor.getProject();
             if (project == null) {
                 return;
             }
@@ -876,12 +881,13 @@ public class ApiGenerateAction extends AnAction {
         String qualifiedName = containingClass.getQualifiedName();
         YApiProjectConfigInfo selectedConfig = null;
         if (config.isMultiModule) {
-            for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
-                String packageName = yApiProjectConfigInfo.getPackageName();
-                if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
-                    selectedConfig = yApiProjectConfigInfo.clone();
-                }
-            }
+//            for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+//                String packageName = yApiProjectConfigInfo.getPackageName();
+//                if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
+//                    selectedConfig = yApiProjectConfigInfo.clone();
+//                }
+//            }
+            selectedConfig = getProjectInfoFromStorage(psiMethod);
             // 选择包名对应的YApi项目
             if (selectedConfig == null) {
                 int isUseModuleOrDefault = Messages.showYesNoCancelDialog("该模块未配置YApi项目token，是否选择配置过token的模块？" +
@@ -938,5 +944,32 @@ public class ApiGenerateAction extends AnAction {
         selectedConfig.setProjectId(config.getState().projectId);
         selectedConfig.setBasePath("");
         return selectedConfig;
+    }
+
+    private YApiProjectConfigInfo getProjectInfoFromStorage(PsiMethod psiMethod) {
+        Boolean matchWithModuleName = config.matchWithModuleName;
+        if (matchWithModuleName) {
+            Module module = CurlUtils.getModule(editor, project);
+            if (module == null) {
+                return null;
+            }
+            String moduleName = module.getName();
+            for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+                String packageName = yApiProjectConfigInfo.getPackageName();
+                if (packageName != null && moduleName != null && moduleName.startsWith(packageName)) {
+                    return yApiProjectConfigInfo.clone();
+                }
+            }
+        } else {
+            PsiClass containingClass = psiMethod.getContainingClass();
+            String qualifiedName = containingClass.getQualifiedName();
+            for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+                String packageName = yApiProjectConfigInfo.getPackageName();
+                if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
+                    return yApiProjectConfigInfo.clone();
+                }
+            }
+        }
+        return null;
     }
 }
