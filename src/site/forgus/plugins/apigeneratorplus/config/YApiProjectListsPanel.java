@@ -28,6 +28,11 @@ public class YApiProjectListsPanel {
     private JPanel listTablePanel;
     private JPanel myPanel;
     private JCheckBox matchWithModuleNameCheckBox;
+    private JTextField yApiUrlTextField;
+    private JTextField tokenTextField;
+    private JTextField defaultCatTextField;
+    private JLabel projectIdLabel;
+    private JCheckBox autoCatCheckBox;
     YApiProjectPanel yApiProjectPanel;
 
     ProjectConfigListTableWithButtons projectConfigListTableWithButtons;
@@ -60,13 +65,30 @@ public class YApiProjectListsPanel {
     }
 
     public boolean isModified() {
-        return oldState.isMultiModule != isMultipleModuleProjectCheckBox.isSelected()
+        return !oldState.yApiServerUrl.equals(yApiUrlTextField.getText())
+                || !oldState.projectToken.equals(tokenTextField.getText())
+                || !oldState.projectId.equals(projectIdLabel.getText())
+                || !oldState.defaultCat.equals(defaultCatTextField.getText())
+                || oldState.autoCat != autoCatCheckBox.isSelected()
+                || oldState.isMultiModule != isMultipleModuleProjectCheckBox.isSelected()
                 || oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected()
                 || oldState.matchWithModuleName != matchWithModuleNameCheckBox.isSelected()
                 || !compareProjectConfigInfoList(oldState.yApiProjectConfigInfoList, projectConfigListTableWithButtons.getTableView().getItems());
     }
 
     public void apply() {
+
+        oldState.yApiServerUrl = yApiUrlTextField.getText();
+        oldState.projectToken = tokenTextField.getText();
+        if (AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(tokenTextField.getText())) {
+            try {
+                oldState.projectId = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), tokenTextField.getText()).get_id().toString();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        oldState.defaultCat = defaultCatTextField.getText();
+        oldState.autoCat = autoCatCheckBox.isSelected();
         oldState.isMultiModule = isMultipleModuleProjectCheckBox.isSelected();
         oldState.isUseDefaultToken = isUseDefaultTokenCheckBox.isSelected();
         oldState.matchWithModuleName = matchWithModuleNameCheckBox.isSelected();
@@ -93,6 +115,11 @@ public class YApiProjectListsPanel {
     }
 
     public void reset() {
+        yApiUrlTextField.setText(oldState.yApiServerUrl);
+        tokenTextField.setText(oldState.projectToken);
+        projectIdLabel.setText(oldState.projectId);
+        defaultCatTextField.setText(oldState.defaultCat);
+        autoCatCheckBox.setSelected(oldState.autoCat);
         isMultipleModuleProjectCheckBox.setSelected(oldState.isMultiModule);
         isUseDefaultTokenCheckBox.setSelected(oldState.isUseDefaultToken);
         matchWithModuleNameCheckBox.setSelected(oldState.matchWithModuleName);
@@ -251,7 +278,7 @@ public class YApiProjectListsPanel {
             }
         }
 
-        protected static class ModuleNameColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo>{
+        protected static class ModuleNameColumnInfo extends ElementsColumnInfoBase<YApiProjectConfigInfo> {
 
             protected ModuleNameColumnInfo() {
                 super("Module Name");

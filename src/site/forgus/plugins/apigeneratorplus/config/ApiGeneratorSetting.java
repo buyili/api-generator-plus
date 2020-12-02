@@ -36,11 +36,6 @@ public class ApiGeneratorSetting implements Configurable {
     JBCheckBox cnFileNameCheckBox;
     JBCheckBox overwriteCheckBox;
 
-    JBTextField yApiUrlTextField;
-    JBTextField tokenTextField;
-    JBLabel projectIdLabel;
-    JBTextField defaultCatTextField;
-    JBCheckBox autoCatCheckBox;
     JBTextField excludeFields;
 
 
@@ -64,27 +59,13 @@ public class ApiGeneratorSetting implements Configurable {
     public JComponent createComponent() {
         JBTabbedPane jbTabbedPane = new JBTabbedPane();
         GridBagLayout layout = new GridBagLayout();
+
         //normal setting
-//        JBPanel normalPanel = new JBPanel(layout);
-
-//        normalPanel.add(buildLabel(layout, "Exclude Fields:"));
         excludeFields = new JBTextField(oldState.excludeFields);
-//        layout.setConstraints(excludeFields, getValueConstraints());
-//        normalPanel.add(excludeFields);
-
-//        normalPanel.add(buildLabel(layout, "Save Directory:"));
         dirPathTextField = buildTextField(layout, oldState.dirPath);
-//        normalPanel.add(dirPathTextField);
-
-//        normalPanel.add(buildLabel(layout, "Indent Style:"));
         prefixTextField = buildTextField(layout, oldState.prefix);
-//        normalPanel.add(prefixTextField);
-
         overwriteCheckBox = buildJBCheckBox(layout, "Overwrite exists docs", oldState.overwrite);
-//        normalPanel.add(overwriteCheckBox);
-
         cnFileNameCheckBox = buildJBCheckBox(layout, "Extract filename from doc comments", oldState.cnFileName);
-//        normalPanel.add(cnFileNameCheckBox);
 
         JPanel normalJPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFields, 1, false)
@@ -97,43 +78,7 @@ public class ApiGeneratorSetting implements Configurable {
         jbTabbedPane.addTab("Api Setting", normalJPanel);
 
         //YApi setting
-//        JBPanel yApiPanel = new JBPanel(layout);
-
-//        yApiPanel.add(buildLabel(layout, "YApi server url:"));
-        yApiUrlTextField = buildTextField(layout, oldState.yApiServerUrl);
-//        yApiPanel.add(yApiUrlTextField);
-
-//        yApiPanel.add(buildLabel(layout, "Project token:"));
-        tokenTextField = buildTextField(layout, oldState.projectToken);
-//        yApiPanel.add(tokenTextField);
-
-//        yApiPanel.add(buildLabel(layout, "Project id:"));
-        GridBagConstraints textConstraints = getValueConstraints();
-        projectIdLabel = new JBLabel(oldState.projectId);
-//        layout.setConstraints(projectIdLabel, textConstraints);
-//        yApiPanel.add(projectIdLabel);
-
-//        yApiPanel.add(buildLabel(layout, "Default save category:"));
-        defaultCatTextField = buildTextField(layout, oldState.defaultCat);
-//        yApiPanel.add(defaultCatTextField);
-
-        autoCatCheckBox = buildJBCheckBox(layout, "Classify API automatically", oldState.autoCat);
-//        yApiPanel.add(autoCatCheckBox);
-
-        JPanel yApiJPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("YApi server url:"), yApiUrlTextField, 1, false)
-                .addLabeledComponent(new JBLabel("Project token:"), tokenTextField, 1, false)
-                .addLabeledComponent(new JBLabel("Project id:"), projectIdLabel, 1, false)
-                .addLabeledComponent(new JBLabel("Default save category:"), defaultCatTextField, 1, false)
-                .addComponent(autoCatCheckBox)
-                .addComponentFillVertically(new JPanel(), 0)
-                .getPanel();
-//        jbTabbedPane.addTab("YApi Setting", yApiPanel);
-        jbTabbedPane.addTab("YApi Setting", yApiJPanel);
-
-        //YApi setting
-        jbTabbedPane.addTab("Multiple Module Project Config", yApiProjectListsPanel.getPanel());
-
+        jbTabbedPane.addTab("YApi Setting", yApiProjectListsPanel.getPanel());
 
         return jbTabbedPane;
     }
@@ -182,11 +127,6 @@ public class ApiGeneratorSetting implements Configurable {
         return !oldState.prefix.equals(prefixTextField.getText()) ||
                 oldState.cnFileName != cnFileNameCheckBox.isSelected() ||
                 oldState.overwrite != overwriteCheckBox.isSelected() ||
-                !oldState.yApiServerUrl.equals(yApiUrlTextField.getText()) ||
-                !oldState.projectToken.equals(tokenTextField.getText()) ||
-                !oldState.projectId.equals(projectIdLabel.getText()) ||
-                !oldState.defaultCat.equals(defaultCatTextField.getText()) ||
-                oldState.autoCat != autoCatCheckBox.isSelected() ||
                 !oldState.dirPath.equals(dirPathTextField.getText()) ||
                 !oldState.excludeFields.equals(excludeFields.getText()) ||
                 yApiProjectListsPanel.isModified();
@@ -205,17 +145,6 @@ public class ApiGeneratorSetting implements Configurable {
         oldState.prefix = prefixTextField.getText();
         oldState.cnFileName = cnFileNameCheckBox.isSelected();
         oldState.overwrite = overwriteCheckBox.isSelected();
-        oldState.yApiServerUrl = yApiUrlTextField.getText();
-        oldState.projectToken = tokenTextField.getText();
-        if (AssertUtils.isNotEmpty(yApiUrlTextField.getText()) && AssertUtils.isNotEmpty(tokenTextField.getText())) {
-            try {
-                oldState.projectId = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), tokenTextField.getText()).get_id().toString();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        oldState.defaultCat = defaultCatTextField.getText();
-        oldState.autoCat = autoCatCheckBox.isSelected();
 
         yApiProjectListsPanel.apply();
 
@@ -228,10 +157,6 @@ public class ApiGeneratorSetting implements Configurable {
         prefixTextField.setText(oldState.prefix);
         cnFileNameCheckBox.setSelected(oldState.cnFileName);
         overwriteCheckBox.setSelected(oldState.overwrite);
-        yApiUrlTextField.setText(oldState.yApiServerUrl);
-        tokenTextField.setText(oldState.projectToken);
-        defaultCatTextField.setText(oldState.defaultCat);
-        autoCatCheckBox.setSelected(oldState.autoCat);
         yApiProjectListsPanel.reset();
     }
 
