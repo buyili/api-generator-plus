@@ -78,6 +78,7 @@ public class ApiGenerateAction extends AnAction {
             }
             generateMarkdownForClass(project, selectedClass);
         } catch (BizException e) {
+            NotificationUtil.errorNotify("", e.getMessage(), project);
             System.out.println(e.getMessage());
         }
     }
@@ -112,7 +113,7 @@ public class ApiGenerateAction extends AnAction {
             }
             config.getState().yApiServerUrl = serverUrl;
         }
-        if (StringUtils.isEmpty(config.getState().projectToken)) {
+        if (config.isUseDefaultToken && StringUtils.isBlank(config.getState().projectToken)) {
             String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
             if (StringUtils.isEmpty(projectToken)) {
                 NotificationUtil.warnNotify("Project token can not be empty.", project);
@@ -217,7 +218,7 @@ public class ApiGenerateAction extends AnAction {
             }
             config.getState().yApiServerUrl = serverUrl;
         }
-        if (StringUtils.isEmpty(config.getState().projectToken)) {
+        if (config.isUseDefaultToken && StringUtils.isBlank(config.getState().projectToken)) {
             String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
             if (StringUtils.isEmpty(projectToken)) {
                 NotificationUtil.warnNotify("Project token can not be empty.", project);
@@ -919,6 +920,7 @@ public class ApiGenerateAction extends AnAction {
                 }
             }
             if (selectedConfig != null) {
+                System.out.println(selectedConfig.getBasePath());
                 if (AssertUtils.isEmpty(selectedConfig.getToken())) {
                     if (!config.isUseDefaultToken) {
                         int resultIdx = Messages.showOkCancelDialog("匹配到的包名没有配置YApi token;是否使用默认YApi token?" +
@@ -965,7 +967,8 @@ public class ApiGenerateAction extends AnAction {
             String qualifiedName = containingClass.getQualifiedName();
             for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
                 String packageName = yApiProjectConfigInfo.getPackageName();
-                if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
+                if (StringUtils.isNotBlank(packageName) && StringUtils.isNotBlank(qualifiedName)
+                        && qualifiedName.startsWith(packageName)) {
                     return yApiProjectConfigInfo.clone();
                 }
             }
