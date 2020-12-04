@@ -7,7 +7,6 @@ import com.intellij.ui.DocumentAdapter;
 import com.intellij.util.ui.ListItemEditor;
 import com.intellij.util.ui.ListModelEditor;
 import org.jetbrains.annotations.NotNull;
-import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

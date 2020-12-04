@@ -1,18 +1,11 @@
 package site.forgus.plugins.apigeneratorplus.config;
 
-import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.ui.CollectionListModel;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
-import com.intellij.util.ui.FormBuilder;
-import com.intellij.util.ui.ListTableModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
-import site.forgus.plugins.apigeneratorplus.curl.model.Header;
 
 import javax.swing.*;
-import java.util.ArrayList;
 
 /**
  * @author lmx 2020/12/1 11:48

@@ -3,12 +3,10 @@ package site.forgus.plugins.apigeneratorplus.setting;
 import com.intellij.openapi.options.ConfigurableUi;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Splitter;
-import com.intellij.ui.*;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.util.ui.ListItemEditor;
 import com.intellij.util.ui.ListModelEditor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 

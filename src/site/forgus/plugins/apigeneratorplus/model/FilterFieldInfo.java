@@ -4,7 +4,8 @@ import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author lmx 2020/11/19 14:32

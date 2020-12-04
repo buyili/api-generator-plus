@@ -1,6 +1,5 @@
 package site.forgus.plugins.apigeneratorplus.util;
 
-import com.google.gson.Gson;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiNameValuePair;

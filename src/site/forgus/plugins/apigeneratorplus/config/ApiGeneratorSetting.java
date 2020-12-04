@@ -1,29 +1,19 @@
 package site.forgus.plugins.apigeneratorplus.config;
 
 import com.google.gson.Gson;
-import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.AddEditDeleteListPanel;
 import com.intellij.ui.components.*;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.FormBuilder;
-import com.intellij.util.ui.ListTableModel;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
-import site.forgus.plugins.apigeneratorplus.util.AssertUtils;
-import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
-import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

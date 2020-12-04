@@ -1,20 +1,17 @@
 package site.forgus.plugins.apigeneratorplus.normal;
 
-import com.intellij.psi.*;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiType;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
-import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
-import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
-import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
-import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
-import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import java.io.Serializable;
-import java.net.URLEncoder;
 import java.util.*;
 
 @Data

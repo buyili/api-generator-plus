@@ -3,7 +3,6 @@ package site.forgus.plugins.apigeneratorplus.yapi.sdk;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.util.HttpUtil;
