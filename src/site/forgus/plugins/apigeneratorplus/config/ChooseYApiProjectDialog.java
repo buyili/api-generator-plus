@@ -23,6 +23,9 @@ public class ChooseYApiProjectDialog extends JDialog {
 
     private List<YApiProjectConfigInfo> list;
 
+    private YApiProjectConfigInfo selectConfigInfo;
+    private int exitCode = -1;
+
     public ChooseYApiProjectDialog(List<YApiProjectConfigInfo> list) {
         this.list = list;
         setContentPane(contentPane);
@@ -72,14 +75,20 @@ public class ChooseYApiProjectDialog extends JDialog {
         comboBoxProject.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if(e.getStateChange() == ItemEvent.SELECTED){
-                    yapiProjectPanel.setItem((YApiProjectConfigInfo) e.getItem());
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    YApiProjectConfigInfo item = (YApiProjectConfigInfo) e.getItem();
+                    exitCode = list.indexOf(item);
+                    yapiProjectPanel.setItem(item);
                 }
             }
         });
 
-        yapiProjectPanel.setItem(list.get(0));
+        if (list.size() > 0) {
+            exitCode = 0;
+            yapiProjectPanel.setItem(list.get(0));
+        }
         yapiProjectPanelWrap.add(yapiProjectPanel.getPanel());
+        setTitle("Choose YApi project");
     }
 
     private void onOK() {
@@ -89,7 +98,15 @@ public class ChooseYApiProjectDialog extends JDialog {
 
     private void onCancel() {
         // add your code here if necessary
+        exitCode = -1;
         dispose();
+    }
+
+    public static int showDialog(List<YApiProjectConfigInfo> list) {
+        ChooseYApiProjectDialog dialog = new ChooseYApiProjectDialog(list);
+        dialog.pack();
+        dialog.setVisible(true);
+        return dialog.exitCode;
     }
 
     public static void main(String[] args) {

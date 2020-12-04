@@ -30,7 +30,7 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
     public String defaultCat = "api_generator";
 
     public Boolean isMultiModule = false;
-    public Boolean isUseDefaultToken = true;
+    public Boolean isUseDefaultToken = false;
     public Boolean matchWithModuleName = false;
     public List<YApiProjectConfigInfo> yApiProjectConfigInfoList = new ArrayList<>();
 
