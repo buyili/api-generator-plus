@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.intellij.execution.util.ListTableWithButtons;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.AddEditDeleteListPanel;
 import com.intellij.ui.components.*;
@@ -44,7 +45,7 @@ public class ApiGeneratorSetting implements Configurable {
 
     public ApiGeneratorSetting(Project project) {
         oldState = ServiceManager.getService(project, ApiGeneratorConfig.class);
-        yApiProjectListsPanel = new YApiProjectListsPanel(project);
+        yApiProjectListsPanel = new YApiProjectListsPanel(oldState);
         yApiProjectPanel = new YApiProjectPanel();
     }
 
@@ -133,7 +134,7 @@ public class ApiGeneratorSetting implements Configurable {
     }
 
     @Override
-    public void apply() {
+    public void apply() throws ConfigurationException {
         oldState.excludeFields = excludeFields.getText();
         if (!StringUtils.isEmpty(excludeFields.getText())) {
             String[] split = excludeFields.getText().split(",");
