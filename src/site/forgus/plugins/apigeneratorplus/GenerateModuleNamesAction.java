@@ -15,7 +15,7 @@ public class GenerateModuleNamesAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         try {
-            CurlUtils.findModuleAndPort(actionEvent);
+            CurlUtils.findModuleInfoAndSave(actionEvent);
         } catch (Exception e) {
             e.printStackTrace();
         }

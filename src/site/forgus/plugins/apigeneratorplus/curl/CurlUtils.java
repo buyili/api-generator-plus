@@ -1,6 +1,5 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
-import com.google.gson.Gson;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
@@ -18,7 +17,9 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.TextTransferable;
+import lombok.extern.log4j.Log4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,7 @@ import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
+import site.forgus.plugins.apigeneratorplus.curl.model.Header;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
@@ -48,7 +50,7 @@ import java.util.*;
 /**
  * @author lmx 2020/11/11 15:49
  */
-
+@Log4j
 public class CurlUtils {
 
     private CURLSettingState curlSettingState;
@@ -70,9 +72,6 @@ public class CurlUtils {
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
-        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
-            findModuleAndPort(actionEvent);
-        }
 
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
         if (selectedMethod != null) {
@@ -80,22 +79,21 @@ public class CurlUtils {
             //            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
+            checkHasModuleConfig(project, moduleName);
             CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
+            Assert.notNull(curlModuleInfo, "no matching module configuration");
 
-            Assert.notNull(curlModuleInfo);
             String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
 
             FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
             FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
 
 
+            fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo) + getRequestParams(selectedMethod, methodInfo));
             // 访问接口
-            if (isGetMethod(selectedMethod.getAnnotations())) {
-                // Get 请求参数
-                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod) + getRequestParams(selectedMethod, methodInfo));
-            } else {
+            if (!isGetMethod(selectedMethod.getAnnotations())) {
                 // 非Get请求参数
-                fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod));
+                //fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
                 initOptions.setBody(getRequestBody(selectedMethod, methodInfo));
             }
 
@@ -147,9 +145,6 @@ public class CurlUtils {
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
-        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)) {
-            findModuleAndPort(actionEvent);
-        }
 
         PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
         if (selectedMethod != null) {
@@ -157,32 +152,28 @@ public class CurlUtils {
             //            boolean postMethod = isPostMethod(selectedMethod);
             MethodInfo methodInfo = new MethodInfo(selectedMethod);
             String moduleName = getModuleName(editor, project);
+            checkHasModuleConfig(project, moduleName);
             CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
-
             Assert.notNull(curlModuleInfo);
+
             String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
             StringBuilder stringBuilder = new StringBuilder("curl");
 
             // 访问接口
             stringBuilder.append(" '")
                     .append(getBaseApi(port))
-                    .append(buildPath(selectedMethod));
-            if (isGetMethod(selectedMethod.getAnnotations())) {
-                // Get 请求参数
-                stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
-                stringBuilder.append("'");
-            } else {
+                    .append(buildPath(selectedMethod, curlModuleInfo));
+            stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
+            stringBuilder.append("'");
+            if (!isGetMethod(selectedMethod.getAnnotations())) {
                 // 非Get请求参数
-                stringBuilder.append("'");
                 stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
             }
 
-            // 添加header
-            List<String[]> headers = curlModuleInfo.getHeaders();
-            if (CollectionUtils.isNotEmpty(headers)) {
-                for (String[] header : headers) {
-                    stringBuilder.append(" -H '").append(header[0]).append(": ").append(header[1]).append("'");
-
+            if (CollectionUtils.isNotEmpty(curlModuleInfo.getRequestHeaders())) {
+                for (Header requestHeader : curlModuleInfo.getRequestHeaders()) {
+                    stringBuilder.append(" -H '").append(requestHeader.getKey()).append(": ")
+                            .append(requestHeader.getValue()).append("'");
                 }
             }
 
@@ -196,35 +187,42 @@ public class CurlUtils {
         }
     }
 
-    public static void findModuleAndPort(AnActionEvent actionEvent) {
+    public static void findModuleInfoAndSave(AnActionEvent actionEvent) {
         Project project = actionEvent.getProject();
         Assert.notNull(project);
         CURLSettingState state = ServiceManager.getService(project, CURLSettingState.class);
-        findModuleAndPort(project, state);
+        findModuleInfoAndSave(project, state);
     }
 
-    public static void findModuleAndPort(Project project, CURLSettingState state) {
+    public static void findModuleInfoAndSave(Project project, CURLSettingState state) {
+        List<CURLModuleInfo> foundModuleInfoList = findModuleInfo(project);
+        String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
+        for (CURLModuleInfo info : state.moduleInfoList) {
+            foundModuleInfoList.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
+        }
+        state.moduleInfoList.addAll(foundModuleInfoList);
+        String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+                oldJson, JsonUtil.gson.toJson(foundModuleInfoList));
+        NotificationUtil.infoNotify(message, project);
+    }
+
+    public static List<CURLModuleInfo> findModuleInfo(Project project) {
         Module[] modules = ModuleManager.getInstance(project).getModules();
         if (modules.length > 0) {
-            String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
-
             List<CURLModuleInfo> list = new ArrayList<>();
             for (Module module : modules) {
-                list.add(new CURLModuleInfo(String.valueOf(System.nanoTime()), module.getName(), CurlUtils.findPort(module),
-                        Collections.emptyList()));
+                CURLModuleInfo curlModuleInfo = new CURLModuleInfo();
+                curlModuleInfo.setModuleName(module.getName());
+                curlModuleInfo.setPort(findPort(module));
+                curlModuleInfo.setContextPath(findContextPath(module));
+                list.add(curlModuleInfo);
             }
-            for (CURLModuleInfo info : state.moduleInfoList) {
-                list.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
-            }
-
-            state.moduleInfoList.addAll(list);
-            String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
-                    oldJson, JsonUtil.gson.toJson(list));
-            NotificationUtil.infoNotify(message, project);
+            return list;
         }
+        return ContainerUtil.newArrayList();
     }
 
-    private String buildPath(PsiMethod psiMethod) {
+    private String buildPath(PsiMethod psiMethod, CURLModuleInfo info) {
         String classPath = "";
         String methodPath = "";
         for (PsiAnnotation annotation : Objects.requireNonNull(psiMethod.getContainingClass()).getAnnotations()) {
@@ -239,7 +237,24 @@ public class CurlUtils {
                 break;
             }
         }
-        return classPath + methodPath;
+        return pathResolve(info.getContextPath(), classPath, methodPath);
+    }
+
+    public String pathResolve(String... args) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String arg : args) {
+            if (StringUtils.isNotBlank(arg)) {
+                if (!arg.startsWith("/")) {
+                    stringBuilder.append('/');
+                }
+                if (arg.endsWith("/")) {
+                    stringBuilder.append(arg.substring(0, arg.length() - 1));
+                } else {
+                    stringBuilder.append(arg);
+                }
+            }
+        }
+        return stringBuilder.toString();
     }
 
     private String getPathFromAnnotation(PsiAnnotation annotation) {
@@ -330,7 +345,14 @@ public class CurlUtils {
         return null;
     }
 
-    private String getModuleName(Editor editor, Project project) {
+    private void checkHasModuleConfig(Project project, String moduleName) {
+        if (CollectionUtils.isEmpty(curlSettingState.moduleInfoList)
+                || getCurlModelInfo(moduleName) == null) {
+            findModuleInfoAndSave(project, curlSettingState);
+        }
+    }
+
+    private static String getModuleName(Editor editor, Project project) {
         Document document = editor.getDocument();
         FileDocumentManager fileDocumentManager = FileDocumentManager.getInstance();
         VirtualFile virtualFile = fileDocumentManager.getFile(document);
@@ -364,6 +386,7 @@ public class CurlUtils {
                 }
             }
         }
+//        NotificationUtil.errorNotify("no matching module configuration\n Please right click 'Copy as CURL-> Generate Project Modules' to scan the module information");
         return null;
     }
 
@@ -503,7 +526,7 @@ public class CurlUtils {
             stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
             stringBuilder.append(" --data-raw '");
             for (String string : strings) {
-//                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
                 stringBuilder.append(string).append("&");
             }
             stringBuilder.append("'");
@@ -534,16 +557,31 @@ public class CurlUtils {
 
     public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         StringUtil.showPsiMethod(psiMethod);
+        boolean containRequestBodyAnnotation = containRequestBodyAnnotation(psiMethod);
+        if (!isGetMethod(psiMethod.getAnnotations()) && !containRequestBodyAnnotation) {
+            return "";
+        }
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        List<String> strings = generateKeyValue(requestFields);
+        List<FieldInfo> filteredFields = new ArrayList<>(requestFields);
+        if (containRequestBodyAnnotation) {
+            for (FieldInfo requestField : requestFields) {
+                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                    filteredFields.remove(requestField);
+                }
+            }
+            if (CollectionUtils.isEmpty(filteredFields)) {
+                return "";
+            }
+        }
+        List<String> strings = generateKeyValue(filteredFields);
         StringBuilder stringBuilder = new StringBuilder("?");
         for (String string : strings) {
-//            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+            //            stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
             stringBuilder.append(string).append("&");
         }
         String str = stringBuilder.toString();
         str = str.substring(0, str.length() - 1);
-//        str = str.replaceAll("%", "^%");
+        //        str = str.replaceAll("%", "^%");
         return str;
     }
 
@@ -564,7 +602,7 @@ public class CurlUtils {
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
-            return Collections.emptyList();
+            return ContainerUtil.newArrayList();
         }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
@@ -593,13 +631,15 @@ public class CurlUtils {
         if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
             if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
-                children.removeIf(child -> !includeFiledList.get(index).contains(child.getName()));
+                String includeFieldStr = includeFiledList.get(index).concat(",");
+                children.removeIf(child -> !includeFieldStr.contains(child.getName() + ","));
             } else if (excludeFiledList.size() > index && StringUtils.isNotEmpty(excludeFiledList.get(index))) {
-                children.removeIf(child -> excludeFiledList.get(index).contains(child.getName()));
+                String excludeFieldStr = excludeFiledList.get(index).concat(",");
+                children.removeIf(child -> excludeFieldStr.contains(child.getName() + ","));
             }
             if (filterFieldInfo.excludeChildren) {
                 for (FieldInfo child : children) {
-                    child.setChildren(Collections.emptyList());
+                    child.setChildren(ContainerUtil.newArrayList());
                 }
             }
         }
@@ -639,40 +679,109 @@ public class CurlUtils {
 
     public static String findPort(Module module) {
         @SystemIndependent String path = module.getModuleFilePath();
-//        VirtualFile moduleFile = module.getModuleFile();
-//        Assert.notNull(moduleFile);
 
         String configFilePath = "";
-        try {
-            configFilePath = path.substring(0, path.lastIndexOf("/"))
-                    .concat("/src/main/resources/application.properties");
-            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
-            Properties properties = new Properties();
-            properties.load(virtualFile.getInputStream());
-            String port = properties.getProperty("server.port");
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(port)) {
-                return port;
-            }
-        } catch (Exception e) {
-            System.out.println(configFilePath);
-//            e.printStackTrace();
-        }
+        String key = "server.port";
+        String val = "";
         try {
             configFilePath = path.substring(0, path.lastIndexOf("/"))
                     .concat("/src/main/resources/application.yml");
+            log.info(configFilePath);
             VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
             Yaml yaml = new Yaml();
             Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
-            Object valueByKey = getValueByKey("server.port", "", yamlMap);
-            String port = String.valueOf(valueByKey);
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(port)) {
-                return port;
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yaml");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
             }
         } catch (Exception e) {
             System.out.println(configFilePath);
-//            e.printStackTrace();
         }
-        return "";
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.properties");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Properties properties = new Properties();
+            properties.load(virtualFile.getInputStream());
+            String tempVal = properties.getProperty(key);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+            System.out.println(configFilePath);
+        }
+        return val;
+    }
+
+
+    public static String findContextPath(Module module) {
+        @SystemIndependent String path = module.getModuleFilePath();
+
+        String configFilePath = "";
+        String key = "server.servlet.context-path";
+        String val = "";
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yml");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.yaml");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Yaml yaml = new Yaml();
+            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Object valueByKey = getValueByKey(key, "", yamlMap);
+            String tempVal = String.valueOf(valueByKey);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        try {
+            configFilePath = path.substring(0, path.lastIndexOf("/"))
+                    .concat("/src/main/resources/application.properties");
+            log.info(configFilePath);
+            VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
+            Properties properties = new Properties();
+            properties.load(virtualFile.getInputStream());
+            String tempVal = properties.getProperty(key);
+            if (StringUtils.isNotBlank(tempVal)) {
+                val = tempVal;
+            }
+        } catch (Exception e) {
+//            System.out.println(configFilePath);
+        }
+        return val;
     }
 
     /**

@@ -7,6 +7,12 @@ import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 @Data
 public class YApiProjectConfigInfo implements Cloneable {
 
+    private String id = String.valueOf(System.currentTimeMillis());
+
+    private String name = "";
+
+    private String moduleName = "";
+
     private String packageName = "";
 
     private String token = "";

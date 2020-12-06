@@ -3,11 +3,11 @@ package site.forgus.plugins.apigeneratorplus.yapi.sdk;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.intellij.openapi.ui.Messages;
+import org.jetbrains.annotations.Nullable;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.util.HttpUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
@@ -52,8 +52,9 @@ public class YApiSdk {
         if (yApiResponse != null && yApiResponse.getErrcode() != 0) {
             String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
                     serverUrl, token);
-            Messages.showErrorDialog(message, "多模块项目配置保存失败");
-            return null;
+            throw new BizException(message);
+//            Messages.showErrorDialog(message, "多模块项目配置保存失败");
+//            return null;
         }
         return yApiResponse.getData();
     }
@@ -72,6 +73,11 @@ public class YApiSdk {
         Type type = new TypeToken<YApiResponse<List<YApiCat>>>() {
         }.getType();
         YApiResponse<List<YApiCat>> yApiResponse = gson.fromJson(responseStr, type);
+        if (yApiResponse != null && yApiResponse.getErrcode() != 0) {
+            String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
+                    serverUrl, token);
+            throw new BizException(message);
+        }
         return yApiResponse.getData();
     }
 

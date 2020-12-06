@@ -20,7 +20,7 @@ public class CopyIPAction extends AnAction {
         Project project = actionEvent.getProject();
         String baseApi = CurlUtils.getRealIP();
         CopyPasteManager.getInstance().setContents(new TextTransferable(baseApi));
-        NotificationUtil.infoNotify("当前系统ip：", baseApi, project);
+        NotificationUtil.infoNotify("Native IP address：", baseApi, project);
     }
 
 }

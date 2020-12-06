@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
@@ -18,11 +19,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
+import site.forgus.plugins.apigeneratorplus.config.ChooseYApiProjectDialog;
 import site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.Assert;
+import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
@@ -41,10 +45,13 @@ public class ApiGenerateAction extends AnAction {
 
     private static final String SLASH = "/";
 
+    private Editor editor;
+    private Project project;
+
     @Override
     public void actionPerformed(AnActionEvent actionEvent) {
         try {
-            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
+            editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
             if (editor == null) {
                 return;
             }
@@ -52,11 +59,29 @@ public class ApiGenerateAction extends AnAction {
             if (psiFile == null) {
                 return;
             }
-            Project project = editor.getProject();
+            project = editor.getProject();
             if (project == null) {
                 return;
             }
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
+
+            if (StringUtils.isBlank(config.getState().yApiServerUrl)) {
+                String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
+                if (StringUtils.isEmpty(serverUrl)) {
+                    NotificationUtil.warnNotify("YApi server url can not be empty.", project);
+                    return;
+                }
+                config.getState().yApiServerUrl = serverUrl;
+            }
+            if (StringUtils.isBlank(config.projectToken) && (!config.isMultiModule || config.isUseDefaultToken)) {
+                String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
+                if (StringUtils.isEmpty(projectToken)) {
+                    NotificationUtil.warnNotify("Project token can not be empty.", project);
+                    return;
+                }
+                config.getState().projectToken = projectToken;
+            }
+
             PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
             PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
             if (selectedClass == null) {
@@ -73,6 +98,8 @@ public class ApiGenerateAction extends AnAction {
             }
             generateMarkdownForClass(project, selectedClass);
         } catch (BizException e) {
+            e.printStackTrace();
+            NotificationUtil.errorNotify("", e.getMessage(), project);
             System.out.println(e.getMessage());
         }
     }
@@ -107,7 +134,7 @@ public class ApiGenerateAction extends AnAction {
             }
             config.getState().yApiServerUrl = serverUrl;
         }
-        if (StringUtils.isEmpty(config.getState().projectToken)) {
+        if (config.isUseDefaultToken && StringUtils.isBlank(config.getState().projectToken)) {
             String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
             if (StringUtils.isEmpty(projectToken)) {
                 NotificationUtil.warnNotify("Project token can not be empty.", project);
@@ -212,7 +239,7 @@ public class ApiGenerateAction extends AnAction {
             }
             config.getState().yApiServerUrl = serverUrl;
         }
-        if (StringUtils.isEmpty(config.getState().projectToken)) {
+        if (config.isUseDefaultToken && StringUtils.isBlank(config.getState().projectToken)) {
             String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
             if (StringUtils.isEmpty(projectToken)) {
                 NotificationUtil.warnNotify("Project token can not be empty.", project);
@@ -276,16 +303,17 @@ public class ApiGenerateAction extends AnAction {
 
         RequestMethodEnum requestMethodEnum = getMethodFromAnnotation(methodMapping);
         yApiInterface.setMethod(requestMethodEnum.name());
+        List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
         if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
             yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
-            yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(methodInfo.getRequestFields())));
+            yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
         } else {
             if (yApiInterface.getMethod().equals(RequestMethodEnum.POST.name())) {
                 yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
-                yApiInterface.setReq_body_form(listYApiForms(methodInfo.getRequestFields()));
+                yApiInterface.setReq_body_form(listYApiForms(requestFields));
             }
         }
-        yApiInterface.setReq_query(listYApiQueries(methodInfo.getRequestFields(), requestMethodEnum));
+        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum));
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         PsiDocComment classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
@@ -303,7 +331,7 @@ public class ApiGenerateAction extends AnAction {
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
-        yApiInterface.setReq_params(listYApiPathVariables(methodInfo.getRequestFields()));
+        yApiInterface.setReq_params(listYApiPathVariables(requestFields));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc() : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
 
 
@@ -876,43 +904,39 @@ public class ApiGenerateAction extends AnAction {
         String qualifiedName = containingClass.getQualifiedName();
         YApiProjectConfigInfo selectedConfig = null;
         if (config.isMultiModule) {
-            for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
-                String packageName = yApiProjectConfigInfo.getPackageName();
-                if (packageName != null && qualifiedName != null && qualifiedName.startsWith(packageName)) {
-                    selectedConfig = yApiProjectConfigInfo.clone();
-                }
-            }
+            selectedConfig = getProjectInfoFromStorage(psiMethod);
             // 选择包名对应的YApi项目
-            if (selectedConfig == null) {
-                int isUseModuleOrDefault = Messages.showYesNoCancelDialog("该模块未配置YApi项目token，是否选择配置过token的模块？" +
-                                "\nYes：选择模块项目；" +
-                                "\nNo：直接使用配置的默认YApi项目；" +
-                                "\n如果不想每次都提醒，可以在设置里·取消勾选· Is multiple module；或者配置包名和对应的token",
-                        "提示", Messages.getQuestionIcon());
-                if (isUseModuleOrDefault == Messages.YES) {
-                    List<String> packageNames = new ArrayList<>();
-                    for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                        if (StringUtils.isNotEmpty(yApiProjectConfigInfo.getPackageName())) {
-                            packageNames.add(yApiProjectConfigInfo.getPackageName());
-                        }
-                    }
-                    if (CollectionUtils.isNotEmpty(packageNames)) {
-                        int selectModuleIdx = Messages.showDialog("请选择YApi项目", "提示", packageNames.toArray(new String[0]),
-                                0, Messages.getQuestionIcon());
-                        if (selectModuleIdx == -1) {
-                            throw new BizException("cancel generator api");
-                        }
-                        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                            if (yApiProjectConfigInfo.getPackageName().equals(packageNames.get(selectModuleIdx))) {
-                                selectedConfig = yApiProjectConfigInfo.clone();
-                            }
-                        }
-                    }
-                } else if (isUseModuleOrDefault == Messages.CANCEL) {
-                    throw new BizException("cancel generator api");
-                }
-            }
+//            if (selectedConfig == null) {
+//                int isUseModuleOrDefault = Messages.showYesNoCancelDialog("该模块未配置YApi项目token，是否选择配置过token的模块？" +
+//                                "\nYes：选择模块项目；" +
+//                                "\nNo：直接使用配置的默认YApi项目；" +
+//                                "\n如果不想每次都提醒，可以在设置里·取消勾选· Is multiple module；或者配置包名和对应的token",
+//                        "提示", Messages.getQuestionIcon());
+//                if (isUseModuleOrDefault == Messages.YES) {
+//                    List<String> packageNames = new ArrayList<>();
+//                    for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
+//                        if (StringUtils.isNotEmpty(yApiProjectConfigInfo.getPackageName())) {
+//                            packageNames.add(yApiProjectConfigInfo.getPackageName());
+//                        }
+//                    }
+//                    if (CollectionUtils.isNotEmpty(packageNames)) {
+//                        int selectModuleIdx = Messages.showDialog("请选择YApi项目", "提示", packageNames.toArray(new String[0]),
+//                                0, Messages.getQuestionIcon());
+//                        if (selectModuleIdx == -1) {
+//                            throw new BizException("cancel generator api");
+//                        }
+//                        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
+//                            if (yApiProjectConfigInfo.getPackageName().equals(packageNames.get(selectModuleIdx))) {
+//                                selectedConfig = yApiProjectConfigInfo.clone();
+//                            }
+//                        }
+//                    }
+//                } else if (isUseModuleOrDefault == Messages.CANCEL) {
+//                    throw new BizException("cancel generator api");
+//                }
+//            }
             if (selectedConfig != null) {
+                System.out.println(selectedConfig.getBasePath());
                 if (AssertUtils.isEmpty(selectedConfig.getToken())) {
                     if (!config.isUseDefaultToken) {
                         int resultIdx = Messages.showOkCancelDialog("匹配到的包名没有配置YApi token;是否使用默认YApi token?" +
@@ -926,7 +950,7 @@ public class ApiGenerateAction extends AnAction {
                     selectedConfig.setProjectId(config.getState().projectId);
                 }
                 Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "token 和 projectId 为空");
+                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "token 或 projectId 为空");
                 if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
                     selectedConfig.setBasePath("");
                 }
@@ -938,5 +962,49 @@ public class ApiGenerateAction extends AnAction {
         selectedConfig.setProjectId(config.getState().projectId);
         selectedConfig.setBasePath("");
         return selectedConfig;
+    }
+
+    /**
+     * 根据包名或模块名获取YApi项目配置
+     *
+     * @param psiMethod
+     * @return
+     */
+    @Nullable
+    private YApiProjectConfigInfo getProjectInfoFromStorage(PsiMethod psiMethod) {
+        if (CollectionUtils.isNotEmpty(config.yApiProjectConfigInfoList)) {
+            Boolean matchWithModuleName = config.matchWithModuleName;
+            if (matchWithModuleName) {
+                Module module = CurlUtils.getModule(editor, project);
+                if (module == null) {
+                    throw new BizException("Failed to get module name");
+                }
+                String moduleName = module.getName();
+                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+                    String dbModuleName = yApiProjectConfigInfo.getModuleName();
+                    if (moduleName.equals(dbModuleName)) {
+                        return yApiProjectConfigInfo.clone();
+                    }
+                }
+
+                // 模块名没有匹配时，弹出选择框手动选择上传项目
+                int exitCode = ChooseYApiProjectDialog.showDialog(config.yApiProjectConfigInfoList);
+                if (exitCode == -1) {
+                    throw new BizException("cancel generator api");
+                }
+                return config.yApiProjectConfigInfoList.get(exitCode);
+            } else {
+                PsiClass containingClass = psiMethod.getContainingClass();
+                String qualifiedName = containingClass.getQualifiedName();
+                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.getState().yApiProjectConfigInfoList) {
+                    String packageName = yApiProjectConfigInfo.getPackageName();
+                    if (StringUtils.isNotBlank(packageName) && StringUtils.isNotBlank(qualifiedName)
+                            && qualifiedName.startsWith(packageName)) {
+                        return yApiProjectConfigInfo.clone();
+                    }
+                }
+            }
+        }
+        throw new BizException("There is no multi-module project configuration");
     }
 }

@@ -1,9 +1,11 @@
 package site.forgus.plugins.apigeneratorplus.model;
 
+import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author lmx 2020/11/19 14:32
@@ -11,11 +13,14 @@ import java.util.*;
 @Data
 public class FilterFieldInfo {
 
-    public String canonicalClassName = "";
+    /**
+     * com.baomidou.mybatisplus.extension.plugins.pagination.Page
+     */
+    public String canonicalClassName = "com.baomidou.mybatisplus.extension.plugins.pagination.Page;";
 
-    public String includeFiled = "";
+    public String includeFiled = "size,current;";
 
-    public String excludeField = "";
+    public String excludeField = ";";
 
     public boolean excludeChildren = true;
 
@@ -37,7 +42,7 @@ public class FilterFieldInfo {
             String[] split = string.split(";");
             return Arrays.asList(split);
         }
-        return Collections.emptyList();
+        return ContainerUtil.newArrayList();
     }
 
 

@@ -4,8 +4,12 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
+import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
+import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
 
 import java.util.*;
@@ -141,6 +145,42 @@ public class FieldUtil {
             }
         }
         return null;
+    }
+
+    public static List<FieldInfo> filterChildrenFiled(List<FieldInfo> items, FilterFieldInfo filterFieldInfo) {
+        List<String> canonicalClassNameList = filterFieldInfo.getCanonicalClassNameList();
+        List<String> includeFiledList = filterFieldInfo.getIncludeFiledList();
+        List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
+        for (FieldInfo item : items) {
+            List<FieldInfo> children = item.getChildren();
+            int index = getIndexOnCanonicalClassNameList(item.getPsiType().getCanonicalText(), canonicalClassNameList);
+            if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
+
+                if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
+                    String includeFieldStr = includeFiledList.get(index).concat(",");
+                    children.removeIf(child -> !includeFieldStr.contains(child.getName() + ","));
+                } else if (excludeFiledList.size() > index && StringUtils.isNotEmpty(excludeFiledList.get(index))) {
+                    String excludeFieldStr = excludeFiledList.get(index).concat(",");
+                    children.removeIf(child -> excludeFieldStr.contains(child.getName() + ","));
+                }
+                if (filterFieldInfo.excludeChildren) {
+                    for (FieldInfo child : children) {
+                        child.setChildren(ContainerUtil.newArrayList());
+                    }
+                }
+            }
+            item.setChildren(children);
+        }
+        return items;
+    }
+
+    public static int getIndexOnCanonicalClassNameList(String canonicalClassName, List<String> set) {
+        for (String s : set) {
+            if (canonicalClassName.startsWith(s)) {
+                return set.indexOf(s);
+            }
+        }
+        return -1;
     }
 }
 

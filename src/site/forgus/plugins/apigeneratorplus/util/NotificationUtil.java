@@ -22,12 +22,20 @@ public class NotificationUtil {
         Notifications.Bus.notify(notificationGroup.createNotification(title, null, message, NotificationType.INFORMATION), project);
     }
 
+    public static void errorNotify(String title, String message, Project project) {
+        Notifications.Bus.notify(notificationGroup.createNotification(title, null, message, NotificationType.ERROR), project);
+    }
+
     public static void errorNotify(String message, Project project) {
-        Notifications.Bus.notify(notificationGroup.createNotification(message, NotificationType.ERROR), project);
+        Notifications.Bus.notify(notificationGroup.createNotification("Api Generator Plus", null, message, NotificationType.ERROR), project);
+    }
+
+    public static void errorNotify(String title, String message) {
+        Notifications.Bus.notify(notificationGroup.createNotification(title, null, message, NotificationType.ERROR));
     }
 
     public static void errorNotify(String message) {
-        Notifications.Bus.notify(notificationGroup.createNotification(message, NotificationType.ERROR));
+        Notifications.Bus.notify(notificationGroup.createNotification("Api Generator Plus", null, message, NotificationType.ERROR));
     }
 
 }
