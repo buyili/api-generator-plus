@@ -6,6 +6,7 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,12 +30,13 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
     public String projectToken = "";
     public String projectId = "";
     public Boolean autoCat = false;
-    public String defaultCat = "api_generator";
+    public String defaultCat = "api_generator_plus";
 
     public Boolean isMultiModule = false;
     public Boolean isUseDefaultToken = false;
     public Boolean matchWithModuleName = false;
     public List<YApiProjectConfigInfo> yApiProjectConfigInfoList = new ArrayList<>();
+    public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
 
 
     @Nullable

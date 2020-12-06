@@ -13,11 +13,14 @@ import java.util.List;
 @Data
 public class FilterFieldInfo {
 
-    public String canonicalClassName = "";
+    /**
+     * com.baomidou.mybatisplus.extension.plugins.pagination.Page
+     */
+    public String canonicalClassName = "com.baomidou.mybatisplus.extension.plugins.pagination.Page;";
 
-    public String includeFiled = "";
+    public String includeFiled = "size,current;";
 
-    public String excludeField = "";
+    public String excludeField = ";";
 
     public boolean excludeChildren = true;
 

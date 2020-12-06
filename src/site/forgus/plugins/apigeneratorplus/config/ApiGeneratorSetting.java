@@ -26,6 +26,7 @@ public class ApiGeneratorSetting implements Configurable {
     JBTextField prefixTextField;
     JBCheckBox cnFileNameCheckBox;
     JBCheckBox overwriteCheckBox;
+    FilterFieldInfoPanel filterFieldInfoPanel;
 
     JBTextField excludeFields;
 
@@ -57,6 +58,8 @@ public class ApiGeneratorSetting implements Configurable {
         prefixTextField = buildTextField(layout, oldState.prefix);
         overwriteCheckBox = buildJBCheckBox(layout, "Overwrite exists docs", oldState.overwrite);
         cnFileNameCheckBox = buildJBCheckBox(layout, "Extract filename from doc comments", oldState.cnFileName);
+        filterFieldInfoPanel = new FilterFieldInfoPanel();
+        filterFieldInfoPanel.setItem(oldState.filterFieldInfo);
 
         JPanel normalJPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFields, 1, false)
@@ -64,6 +67,8 @@ public class ApiGeneratorSetting implements Configurable {
                 .addLabeledComponent(new JBLabel("Indent Style:"), prefixTextField, 1, false)
                 .addComponent(overwriteCheckBox)
                 .addComponent(cnFileNameCheckBox)
+                .addSeparator()
+                .addComponent(filterFieldInfoPanel.getPanel(), 0)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
         jbTabbedPane.addTab("Api Setting", normalJPanel);
@@ -120,6 +125,7 @@ public class ApiGeneratorSetting implements Configurable {
                 oldState.overwrite != overwriteCheckBox.isSelected() ||
                 !oldState.dirPath.equals(dirPathTextField.getText()) ||
                 !oldState.excludeFields.equals(excludeFields.getText()) ||
+                filterFieldInfoPanel.isModified(oldState.filterFieldInfo) ||
                 yApiProjectListsPanel.isModified();
     }
 
@@ -137,6 +143,8 @@ public class ApiGeneratorSetting implements Configurable {
         oldState.cnFileName = cnFileNameCheckBox.isSelected();
         oldState.overwrite = overwriteCheckBox.isSelected();
 
+        filterFieldInfoPanel.apply(oldState.filterFieldInfo);
+
         yApiProjectListsPanel.apply();
 
     }
@@ -148,6 +156,7 @@ public class ApiGeneratorSetting implements Configurable {
         prefixTextField.setText(oldState.prefix);
         cnFileNameCheckBox.setSelected(oldState.cnFileName);
         overwriteCheckBox.setSelected(oldState.overwrite);
+        filterFieldInfoPanel.reset(oldState.filterFieldInfo);
         yApiProjectListsPanel.reset();
     }
 

@@ -303,16 +303,17 @@ public class ApiGenerateAction extends AnAction {
 
         RequestMethodEnum requestMethodEnum = getMethodFromAnnotation(methodMapping);
         yApiInterface.setMethod(requestMethodEnum.name());
+        List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
         if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
             yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
-            yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(methodInfo.getRequestFields())));
+            yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
         } else {
             if (yApiInterface.getMethod().equals(RequestMethodEnum.POST.name())) {
                 yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
-                yApiInterface.setReq_body_form(listYApiForms(methodInfo.getRequestFields()));
+                yApiInterface.setReq_body_form(listYApiForms(requestFields));
             }
         }
-        yApiInterface.setReq_query(listYApiQueries(methodInfo.getRequestFields(), requestMethodEnum));
+        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum));
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         PsiDocComment classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
@@ -330,7 +331,7 @@ public class ApiGenerateAction extends AnAction {
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
-        yApiInterface.setReq_params(listYApiPathVariables(methodInfo.getRequestFields()));
+        yApiInterface.setReq_params(listYApiPathVariables(requestFields));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc() : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
 
 

@@ -631,9 +631,11 @@ public class CurlUtils {
         if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
             if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
-                children.removeIf(child -> !includeFiledList.get(index).contains(child.getName() + ","));
+                String includeFieldStr = includeFiledList.get(index).concat(",");
+                children.removeIf(child -> !includeFieldStr.contains(child.getName() + ","));
             } else if (excludeFiledList.size() > index && StringUtils.isNotEmpty(excludeFiledList.get(index))) {
-                children.removeIf(child -> excludeFiledList.get(index).contains(child.getName()));
+                String excludeFieldStr = excludeFiledList.get(index).concat(",");
+                children.removeIf(child -> excludeFieldStr.contains(child.getName() + ","));
             }
             if (filterFieldInfo.excludeChildren) {
                 for (FieldInfo child : children) {
