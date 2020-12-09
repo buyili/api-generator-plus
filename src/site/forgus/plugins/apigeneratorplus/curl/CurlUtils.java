@@ -522,15 +522,17 @@ public class CurlUtils {
             }
         } else {
             List<String> strings = generateKeyValue(requestFields);
-            StringBuilder stringBuilder = new StringBuilder("");
-            stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
-            stringBuilder.append(" --data-raw '");
-            for (String string : strings) {
-                //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
-                stringBuilder.append(string).append("&");
+            if (CollectionUtils.isNotEmpty(strings)) {
+                StringBuilder stringBuilder = new StringBuilder("");
+                stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
+                stringBuilder.append(" --data-raw '");
+                for (String string : strings) {
+                    //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                    stringBuilder.append(string).append("&");
+                }
+                stringBuilder.append("'");
+                return stringBuilder.toString();
             }
-            stringBuilder.append("'");
-            return stringBuilder.toString();
         }
         return "";
     }
