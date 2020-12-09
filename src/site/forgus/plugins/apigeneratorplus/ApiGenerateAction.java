@@ -642,7 +642,16 @@ public class ApiGenerateAction extends AnAction {
         PsiNameValuePair[] psiNameValuePairs = annotation.getParameterList().getAttributes();
         for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
             if ("method".equals(psiNameValuePair.getName())) {
-                return RequestMethodEnum.valueOf(psiNameValuePair.getValue().getReference().resolve().getText());
+                PsiReference reference = psiNameValuePair.getValue().getReference();
+                if (reference != null) {
+                    return RequestMethodEnum.valueOf(reference.resolve().getText());
+                }
+                PsiElement[] children = psiNameValuePair.getValue().getChildren();
+                for (PsiElement child : children) {
+                    if (child instanceof PsiReference) {
+                        return RequestMethodEnum.valueOf(((PsiReference) child).resolve().getText());
+                    }
+                }
             }
         }
         return RequestMethodEnum.POST;
