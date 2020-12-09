@@ -159,12 +159,21 @@ public class CurlUtils {
             String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
             StringBuilder stringBuilder = new StringBuilder("curl");
 
+            PsiAnnotation methodMapping = getMethodMapping(selectedMethod);
+            Assert.notNull(methodMapping, "not specific annotation for mapping web requests ");
+            String method = getMethodFromAnnotation(methodMapping).name();
+
             // 访问接口
             stringBuilder.append(" '")
                     .append(getBaseApi(port))
                     .append(buildPath(selectedMethod, curlModuleInfo));
             stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
             stringBuilder.append("'");
+
+            stringBuilder.append(" -X ")
+                    .append(method)
+                    .append(" ");
+
             if (!isGetMethod(selectedMethod.getAnnotations())) {
                 // 非Get请求参数
                 stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
@@ -327,7 +336,16 @@ public class CurlUtils {
         PsiNameValuePair[] psiNameValuePairs = annotation.getParameterList().getAttributes();
         for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
             if ("method".equals(psiNameValuePair.getName())) {
-                return RequestMethodEnum.valueOf(psiNameValuePair.getValue().getReference().resolve().getText());
+                PsiReference reference = psiNameValuePair.getValue().getReference();
+                if (reference != null) {
+                    return RequestMethodEnum.valueOf(reference.resolve().getText());
+                }
+                PsiElement[] children = psiNameValuePair.getValue().getChildren();
+                for (PsiElement child : children) {
+                    if (child instanceof PsiReference) {
+                        return RequestMethodEnum.valueOf(((PsiReference) child).resolve().getText());
+                    }
+                }
             }
         }
         return RequestMethodEnum.POST;
@@ -522,15 +540,17 @@ public class CurlUtils {
             }
         } else {
             List<String> strings = generateKeyValue(requestFields);
-            StringBuilder stringBuilder = new StringBuilder("");
-            stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
-            stringBuilder.append(" --data-raw '");
-            for (String string : strings) {
-                //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
-                stringBuilder.append(string).append("&");
+            if (CollectionUtils.isNotEmpty(strings)) {
+                StringBuilder stringBuilder = new StringBuilder("");
+                stringBuilder.append(" -H 'Content-Type: application/x-www-form-urlencoded'");
+                stringBuilder.append(" --data-raw '");
+                for (String string : strings) {
+                    //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                    stringBuilder.append(string).append("&");
+                }
+                stringBuilder.append("'");
+                return stringBuilder.toString();
             }
-            stringBuilder.append("'");
-            return stringBuilder.toString();
         }
         return "";
     }

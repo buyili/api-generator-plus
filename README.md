@@ -46,7 +46,7 @@ Is Use Default Token|是否使用默认token|Is Multiple Module Project选项被
 
 
 # Copy as cUrl
-《Copy as cUrl》可以一键生成在cmd、bash上运行的curl命令，帮助开发者快速调试接口。该功能是受Chrome的Copy as cUrl功能启发。生成的curl命令可以导入到postman中
+《Copy as cUrl》可以一键生成在cmd、bash上运行的curl命令，或生成[fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)方法帮助开发者快速调试接口。该功能是受Chrome的Copy as cUrl功能启发。生成的curl命令可以导入到postman中
 
 ## 快速开始
 选择一个类，点击鼠标右键，在弹出的菜单项里选择“Copy as cURL - Generate Project Modules”单击，插件会自动扫描项目中对应的模块和模块端口。
@@ -107,6 +107,9 @@ public class B{
 ```
 Canonical Class Name值包含com.xxx.B，Exclude Children Field值为true时，curl命令不会包含A类的字段aName；为false时，包含A类的字段aName
 
+
+## Copy as fetch
+将Spring MVC接口复制成[fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)方法。配置参数各个含义可查看文档：  [fetch()](https://developer.mozilla.org/zh-CN/docs/Web/API/WindowOrWorkerGlobalScope/fetch)
 
 
 
