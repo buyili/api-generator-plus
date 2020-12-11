@@ -1012,6 +1012,7 @@ public class ApiGenerateAction extends AnAction {
                         return yApiProjectConfigInfo.clone();
                     }
                 }
+                throw new BizException("Matching configuration failed based on package name");
             }
         }
         throw new BizException("There is no multi-module project configuration");
