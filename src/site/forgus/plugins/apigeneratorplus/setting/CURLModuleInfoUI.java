@@ -49,7 +49,7 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
 
         @Override
         public boolean isEmpty(@NotNull CURLModuleInfo item) {
-            return item.getModuleName().isEmpty();
+            return item.getModuleName().isEmpty() && item.getPort().isEmpty() && item.getContextPath().isEmpty();
         }
 
         @NotNull
@@ -138,7 +138,7 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
     public void apply(@NotNull List<CURLModuleInfo> settings) throws ConfigurationException {
         itemPanel.apply();
 
-        editor.ensureNonEmptyNames("Module info should have non empty name");
+        editor.ensureNonEmptyNames("'Module Name' must not to be empty");
 //        editor.processModifiedItems((newItem, oldItem) -> {
 //            if (!oldItem.getModuleName().equals(newItem.getModuleName())) {
 ////                keymapListener.quickListRenamed(oldItem, newItem);

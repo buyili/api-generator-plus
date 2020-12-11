@@ -28,6 +28,7 @@ import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.Assert;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.util.*;
@@ -36,6 +37,7 @@ import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
+import javax.print.attribute.standard.Media;
 import java.io.*;
 import java.util.*;
 
@@ -304,16 +306,17 @@ public class ApiGenerateAction extends AnAction {
         RequestMethodEnum requestMethodEnum = getMethodFromAnnotation(methodMapping);
         yApiInterface.setMethod(requestMethodEnum.name());
         List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
+        MediaType mediaType = methodInfo.getMediaType();
         if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
             yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
             yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
         } else {
-            if (yApiInterface.getMethod().equals(RequestMethodEnum.POST.name())) {
+            if (MediaType.APPLICATION_FORM_URLENCODED == mediaType || MediaType.MULTIPART_FORM_DATA == mediaType) {
                 yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
                 yApiInterface.setReq_body_form(listYApiForms(requestFields));
             }
         }
-        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum));
+        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, mediaType));
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         PsiDocComment classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
@@ -321,6 +324,8 @@ public class ApiGenerateAction extends AnAction {
         if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
+        } else if (MediaType.MULTIPART_FORM_DATA == mediaType) {
+            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.multipartFormData()));
         } else {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.form()));
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
@@ -528,8 +533,12 @@ public class ApiGenerateAction extends AnAction {
         return catNameMap;
     }
 
-    private List<YApiQuery> listYApiQueries(List<FieldInfo> requestFields, RequestMethodEnum requestMethodEnum) {
+    private List<YApiQuery> listYApiQueries(List<FieldInfo> requestFields, RequestMethodEnum requestMethodEnum,
+                                            MediaType mediaType) {
         List<YApiQuery> queries = new ArrayList<>();
+        if (MediaType.MULTIPART_FORM_DATA == mediaType || MediaType.APPLICATION_FORM_URLENCODED == mediaType) {
+            return queries;
+        }
         for (FieldInfo fieldInfo : requestFields) {
             if (notQuery(fieldInfo.getAnnotations(), requestMethodEnum)) {
                 continue;
@@ -554,7 +563,8 @@ public class ApiGenerateAction extends AnAction {
         if (getPathVariableAnnotation(annotations) != null) {
             return true;
         }
-        return FieldUtil.findAnnotationByName(annotations, WebAnnotation.RequestBody) != null || !RequestMethodEnum.GET.equals(requestMethodEnum);
+        return FieldUtil.findAnnotationByName(annotations, WebAnnotation.RequestBody) != null;
+//                || !RequestMethodEnum.GET.equals(requestMethodEnum);
     }
 
     private YApiQuery buildYApiQuery(FieldInfo fieldInfo) {
@@ -608,6 +618,9 @@ public class ApiGenerateAction extends AnAction {
     private YApiForm buildYApiForm(FieldInfo fieldInfo) {
         YApiForm param = new YApiForm();
         param.setName(fieldInfo.getName());
+        if (FieldUtil.isFileType(fieldInfo.getPsiType().getPresentableText())) {
+            param.setType("file");
+        }
         param.setDesc(fieldInfo.getDesc());
         param.setExample(FieldUtil.getValue(fieldInfo.getPsiType()).toString());
         param.setRequired(convertRequired(fieldInfo.isRequire()));

@@ -24,6 +24,9 @@ public class FieldUtil {
      */
     public static final List<String> genericList = new ArrayList<>();
 
+    public static final List<String> fileList = Arrays.asList("MultipartFile", "CommonsMultipartFile", "MockMultipartFile",
+            "StandardMultipartFile");
+
 
     static {
         normalTypes.put("int", 1);
@@ -44,8 +47,14 @@ public class FieldUtil {
         normalTypes.put("String", "@string");
         normalTypes.put("Date", new Date().getTime());
         normalTypes.put("BigDecimal", 0.111111);
+        normalTypes.put("LocalTime", "HH:mm:ss");
+        normalTypes.put("LocalDate", "yyyy-MM-dd");
         normalTypes.put("LocalDateTime", "yyyy-MM-dd HH:mm:ss");
         normalTypes.put("BigInteger", 0);
+        normalTypes.put("MultipartFile", "@/path");
+        normalTypes.put("CommonsMultipartFile", "@/path");
+        normalTypes.put("MockMultipartFile", "@/path");
+        normalTypes.put("StandardMultipartFile", "@/path");
         genericList.add("T");
         genericList.add("E");
         genericList.add("K");
@@ -106,6 +115,10 @@ public class FieldUtil {
 
     public static boolean isNormalType(String typeName) {
         return normalTypes.containsKey(typeName);
+    }
+
+    public static boolean isFileType(String typeName) {
+        return fileList.contains(typeName);
     }
 
     private static boolean isIterableType(String typeName) {

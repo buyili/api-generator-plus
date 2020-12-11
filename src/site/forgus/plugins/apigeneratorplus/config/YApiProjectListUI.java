@@ -47,7 +47,8 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 
         @Override
         public boolean isEmpty(@NotNull YApiProjectConfigInfo item) {
-            return item.getName().isEmpty();
+            return item.getName().isEmpty() && item.getToken().isEmpty() && item.getModuleName().isEmpty()
+                    && item.getPackageName().isEmpty() && item.getBasePath().isEmpty();
         }
 
         @NotNull
@@ -128,7 +129,7 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
     public void apply(@NotNull List<YApiProjectConfigInfo> settings) throws ConfigurationException {
         itemPanel.apply();
 
-        editor.ensureNonEmptyNames("Module info should have non empty name");
+        editor.ensureNonEmptyNames("'Name' must not to be empty");
 //        editor.processModifiedItems((newItem, oldItem) -> {
 //            if (!oldItem.getModuleName().equals(newItem.getModuleName())) {
 ////                keymapListener.quickListRenamed(oldItem, newItem);

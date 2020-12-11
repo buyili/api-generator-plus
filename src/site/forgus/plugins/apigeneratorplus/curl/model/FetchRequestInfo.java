@@ -66,7 +66,7 @@ public class FetchRequestInfo {
         private String integrity;
 
         public String toPrettyString() {
-            return JsonUtil.gson.toJson(this);
+            return JsonUtil.prettyJson.toJson(this);
         }
     }
 

@@ -13,13 +13,13 @@ import java.util.*;
 
 public class JsonUtil {
 
-    public static final Gson gson = new GsonBuilder()
+    public static final Gson prettyJson = new GsonBuilder()
             .excludeFieldsWithModifiers(Modifier.STATIC, Modifier.FINAL)
             .disableHtmlEscaping()
             .setPrettyPrinting().create();
 
     public static String buildPrettyJson(List<FieldInfo> children) {
-        return gson.toJson(getStringObjectMap(children));
+        return prettyJson.toJson(getStringObjectMap(children));
     }
 
     public static String buildPrettyJson(FieldInfo fieldInfo) {
@@ -28,9 +28,9 @@ public class JsonUtil {
         }
         Map<String, Object> stringObjectMap = getStringObjectMap(fieldInfo.getChildren());
         if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
-            return gson.toJson(Collections.singletonList(stringObjectMap));
+            return prettyJson.toJson(Collections.singletonList(stringObjectMap));
         }
-        return gson.toJson(stringObjectMap);
+        return prettyJson.toJson(stringObjectMap);
     }
 
     public static String buildRawJson(FieldInfo fieldInfo) {

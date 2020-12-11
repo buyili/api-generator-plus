@@ -3,9 +3,11 @@ package site.forgus.plugins.apigeneratorplus.yapi.sdk;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import lombok.extern.log4j.Log4j;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.util.HttpUtil;
+import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 
 import java.io.IOException;
@@ -102,6 +104,7 @@ public class YApiSdk {
      * @throws IOException
      */
     public static YApiResponse saveInterface(String serverUrl, YApiInterface yApiInterface) throws IOException {
+        System.out.println(JsonUtil.prettyJson.toJson(yApiInterface));
         String string = HttpUtil.doPost(serverUrl + SAVE_INTERFACE_URI, gson.toJson(yApiInterface));
         return gson.fromJson(string, YApiResponse.class);
     }
