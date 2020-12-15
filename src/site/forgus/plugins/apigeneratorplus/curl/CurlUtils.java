@@ -105,10 +105,11 @@ public class CurlUtils {
             // 添加header
             Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
             MediaType mediaType = MethodUtil.getMediaType(selectedMethod);
-            if (mediaType != null) {
+            if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
                 headers.putAll(mediaType.getHeader());
             }
             initOptions.setHeaders(headers);
+
 
             if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
                 initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
@@ -130,7 +131,15 @@ public class CurlUtils {
             }
 
             fetchRequestInfo.setInitOptions(initOptions);
+
             String rawStr = fetchRequestInfo.toPrettyString();
+            if (MediaType.MULTIPART_FORM_DATA == mediaType) {
+                List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                        curlSettingState.filterFieldInfo);
+                String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+                fetchRequestInfo.setFormDataVal(formDataVal);
+                rawStr = fetchRequestInfo.toPrettyStringForFormData();
+            }
             System.out.println(rawStr);
             CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
             NotificationUtil.infoNotify("已复制到剪切板", rawStr, project);

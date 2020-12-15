@@ -13,12 +13,23 @@ import java.util.Map;
 @Accessors(chain = true)
 public class FetchRequestInfo {
 
+    private String formDataVal;
+
     private String input;
 
     private InitOptions initOptions;
 
     public String toPrettyString() {
         return "fetch('" + input + "'," + initOptions.toPrettyString() +
+                ')';
+    }
+
+    public String toPrettyStringForFormData() {
+        this.initOptions.setBody("$body");
+        String initOptionsStr = this.initOptions.toPrettyString();
+        initOptionsStr = initOptionsStr.replace("\"$body\"", "formData");
+        return formDataVal +
+                "\nfetch('" + input + "'," + initOptionsStr +
                 ')';
     }
 

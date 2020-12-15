@@ -2,14 +2,21 @@ package site.forgus.plugins.apigeneratorplus.util;
 
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl;
+import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
+import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
+import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
 import javax.print.attribute.standard.Media;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author lmx 2020/12/11 11:43
@@ -117,6 +124,73 @@ public class MethodUtil {
             }
         }
         return MediaType.APPLICATION_FORM_URLENCODED;
+    }
+
+    public static int getIndexOnCanonicalClassNameList(String canonicalClassName, List<String> set) {
+        for (String s : set) {
+            if (canonicalClassName.startsWith(s)) {
+                return set.indexOf(s);
+            }
+        }
+        return -1;
+    }
+
+    public static List<FieldInfo> filterChildrenFiled(List<FieldInfo> list, FilterFieldInfo filterFieldInfo) {
+        List<String> canonicalClassNameList = filterFieldInfo.getCanonicalClassNameList();
+        List<String> includeFiledList = filterFieldInfo.getIncludeFiledList();
+        List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
+
+        for (FieldInfo item : list) {
+            List<FieldInfo> children = item.getChildren();
+            int index = getIndexOnCanonicalClassNameList(item.getPsiType().getCanonicalText(), canonicalClassNameList);
+            if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
+
+                if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
+                    String includeFieldStr = includeFiledList.get(index).concat(",");
+                    children.removeIf(child -> !includeFieldStr.contains(child.getName() + ","));
+                } else if (excludeFiledList.size() > index && StringUtils.isNotEmpty(excludeFiledList.get(index))) {
+                    String excludeFieldStr = excludeFiledList.get(index).concat(",");
+                    children.removeIf(child -> excludeFieldStr.contains(child.getName() + ","));
+                }
+                if (filterFieldInfo.excludeChildren) {
+                    for (FieldInfo child : children) {
+                        child.setChildren(ContainerUtil.newArrayList());
+                    }
+                }
+            }
+            item.setChildren(children);
+        }
+
+        return list;
+    }
+
+    public static String getFormDataVal(List<FieldInfo> list) {
+        StringBuilder stringBuilder = new StringBuilder("var formData = new FormData();\n");
+        List<Object[]> keyValues = generateKeyValue(list);
+        for (Object[] keyValue : keyValues) {
+            stringBuilder.append("formData.append(\"")
+                    .append(keyValue[0])
+                    .append("\", \"")
+                    .append(keyValue[1] == null ? "" : keyValue[1].toString())
+                    .append("\");\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    private static List<Object[]> generateKeyValue(List<FieldInfo> fieldInfoList) {
+        if (CollectionUtils.isEmpty(fieldInfoList)) {
+            return ContainerUtil.newArrayList();
+        }
+        ArrayList<Object[]> strings = new ArrayList<>();
+        for (FieldInfo requestField : fieldInfoList) {
+            if (requestField.hasChildren()) {
+                strings.addAll(generateKeyValue(requestField.getChildren()));
+            } else {
+                Object value = FieldUtil.getValue(requestField.getPsiType());
+                strings.add(new Object[]{requestField.getName(), value});
+            }
+        }
+        return strings;
     }
 
 }
