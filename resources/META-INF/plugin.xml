@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
@@ -132,6 +132,25 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.0.4</h3>
+        <h4>Bug fixes</h4>
+        <ul>
+          <li>
+            copy as curl
+            <ul>
+              <li>Fixed curl and fetch syntax errors when content-type was multipart/form-data</li>
+            </ul>
+          </li>
+        </ul>
+        <h4>Bug 修复</h4>
+        <ul>
+          <li>
+            copy as curl
+            <ul>
+              <li>修复Content-Type为 multipart/form-data时curl、fetch语法错误</li>
+            </ul>
+          </li>
+        </ul>
         <h3>1.0.3</h3>
         <h4>Bug fixes</h4>
         <ul>
