@@ -24,4 +24,8 @@ public class YApiHeader implements Serializable {
         return new YApiHeader("Content-Type", "application/x-www-form-urlencoded");
     }
 
+    public static YApiHeader multipartFormData() {
+        return new YApiHeader("Content-Type", "multipart/form-data");
+    }
+
 }

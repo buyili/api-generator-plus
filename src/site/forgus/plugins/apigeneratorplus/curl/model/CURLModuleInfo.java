@@ -51,7 +51,7 @@ public class CURLModuleInfo implements Cloneable {
         for (Header header : requestHeaders) {
             map.put(header.getKey(), header.getValue());
         }
-        return JsonUtil.gson.toJson(map);
+        return JsonUtil.prettyJson.toJson(map);
     }
 
     public Map<String, String> getHeadersAsMap() {

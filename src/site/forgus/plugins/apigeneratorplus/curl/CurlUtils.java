@@ -30,14 +30,12 @@ import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.Header;
+import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
-import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
-import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
-import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
-import site.forgus.plugins.apigeneratorplus.util.StringUtil;
+import site.forgus.plugins.apigeneratorplus.util.*;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
 import java.net.Inet4Address;
@@ -89,7 +87,11 @@ public class CurlUtils {
             FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
 
 
-            fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo) + getRequestParams(selectedMethod, methodInfo));
+            String input = getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo);
+            if (MethodUtil.isGetMethod(selectedMethod.getAnnotations())) {
+                input = input + getRequestParams(selectedMethod, methodInfo);
+            }
+            fetchRequestInfo.setInput(input);
             // 访问接口
             if (!isGetMethod(selectedMethod.getAnnotations())) {
                 // 非Get请求参数
@@ -101,7 +103,13 @@ public class CurlUtils {
             Assert.notNull(methodMapping, "not specific annotation for mapping web requests ");
             initOptions.setMethod(getMethodFromAnnotation(methodMapping).name());
             // 添加header
-            initOptions.setHeaders(curlModuleInfo.getHeadersAsMap());
+            Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
+            MediaType mediaType = MethodUtil.getMediaType(selectedMethod);
+            if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
+                headers.putAll(mediaType.getHeader());
+            }
+            initOptions.setHeaders(headers);
+
 
             if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
                 initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
@@ -123,7 +131,15 @@ public class CurlUtils {
             }
 
             fetchRequestInfo.setInitOptions(initOptions);
+
             String rawStr = fetchRequestInfo.toPrettyString();
+            if (MediaType.MULTIPART_FORM_DATA == mediaType) {
+                List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                        curlSettingState.filterFieldInfo);
+                String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+                fetchRequestInfo.setFormDataVal(formDataVal);
+                rawStr = fetchRequestInfo.toPrettyStringForFormData();
+            }
             System.out.println(rawStr);
             CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
             NotificationUtil.infoNotify("已复制到剪切板", rawStr, project);
@@ -205,13 +221,13 @@ public class CurlUtils {
 
     public static void findModuleInfoAndSave(Project project, CURLSettingState state) {
         List<CURLModuleInfo> foundModuleInfoList = findModuleInfo(project);
-        String oldJson = JsonUtil.gson.toJson(state.moduleInfoList);
+        String oldJson = JsonUtil.prettyJson.toJson(state.moduleInfoList);
         for (CURLModuleInfo info : state.moduleInfoList) {
             foundModuleInfoList.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
         }
         state.moduleInfoList.addAll(foundModuleInfoList);
         String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
-                oldJson, JsonUtil.gson.toJson(foundModuleInfoList));
+                oldJson, JsonUtil.prettyJson.toJson(foundModuleInfoList));
         NotificationUtil.infoNotify(message, project);
     }
 
@@ -523,7 +539,8 @@ public class CurlUtils {
     public String getRequestBody(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        if (containRequestBodyAnnotation(psiMethod)) {
+        MediaType mediaType = methodInfo.getMediaType();
+        if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
                     StringBuilder stringBuilder = new StringBuilder();
@@ -538,7 +555,7 @@ public class CurlUtils {
                     return stringBuilder.toString();
                 }
             }
-        } else {
+        } else if (mediaType == MediaType.APPLICATION_FORM_URLENCODED) {
             List<String> strings = generateKeyValue(requestFields);
             if (CollectionUtils.isNotEmpty(strings)) {
                 StringBuilder stringBuilder = new StringBuilder("");
@@ -551,10 +568,28 @@ public class CurlUtils {
                 stringBuilder.append("'");
                 return stringBuilder.toString();
             }
+        } else if (mediaType == MediaType.MULTIPART_FORM_DATA) {
+            List<String> strings = generateKeyValue(requestFields);
+            if (CollectionUtils.isNotEmpty(strings)) {
+                StringBuilder stringBuilder = new StringBuilder("");
+                stringBuilder.append(" -H 'Content-Type: multipart/form-data'");
+                for (String string : strings) {
+                    //                stringBuilder.append(string).append(cUrlClientType.getSymbolAnd());
+                    stringBuilder.append(" -F '").append(string).append("'");
+                }
+                return stringBuilder.toString();
+            }
         }
         return "";
     }
 
+    /**
+     * for Copy as Fetch
+     *
+     * @param psiMethod
+     * @param methodInfo
+     * @return
+     */
     public String getRequestBody(PsiMethod psiMethod, MethodInfo methodInfo) {
         StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
@@ -630,7 +665,9 @@ public class CurlUtils {
                 strings.addAll(generateKeyValue(filterChildrenFiled(requestField)));
             } else {
                 String value = FieldUtil.getValueForCurl(requestField.getName(), requestField.getPsiType(), curlSettingState);
-                strings.add(value);
+                if (StringUtils.isNotBlank(value)) {
+                    strings.add(value);
+                }
 //                String strVal = "";
 //                if (null != value && !"".equals(String.valueOf(value))) {
 //                    strVal = URLEncoder.encode(value.toString());
