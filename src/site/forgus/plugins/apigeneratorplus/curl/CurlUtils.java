@@ -1,5 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
@@ -24,6 +25,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.SystemIndependent;
+import org.jetbrains.kotlin.idea.KotlinLanguage;
+import org.jetbrains.kotlin.psi.KtFunction;
 import org.yaml.snakeyaml.Yaml;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
@@ -158,6 +161,11 @@ public class CurlUtils {
 
         PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
         Assert.notNull(referenceAt);
+        Language language = referenceAt.getLanguage();
+        if(language instanceof KotlinLanguage){
+            KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
+            MethodInfo methodInfo = new MethodInfo(ktFunction);
+        }
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);

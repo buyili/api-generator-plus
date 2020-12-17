@@ -9,6 +9,7 @@ import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.MethodUtil;
@@ -32,6 +33,8 @@ public class MethodInfo implements Serializable {
     private PsiMethod psiMethod;
     private MediaType mediaType;
 
+    private KtFunction ktFunction;
+
     private List<String> excludeParamTypes = Arrays.asList("RedirectAttributes", "HttpServletRequest", "HttpServletResponse");
 
     public MethodInfo(PsiMethod psiMethod) {
@@ -54,6 +57,33 @@ public class MethodInfo implements Serializable {
         FieldInfo fieldInfo = new FieldInfo(psiMethod.getProject(), psiMethod.getReturnType());
         this.response = fieldInfo;
         this.setResponseFields(fieldInfo.getChildren());
+    }
+
+    public MethodInfo(KtFunction ktFunction){
+        this.ktFunction = ktFunction;
+        this.mediaType = MethodUtil.getMediaType(ktFunction);
+        this.setParamStr(ktFunction.getValueParameterList().getText());
+        this.setMethodName(ktFunction.getName());
+        this.setRequestFields(listParamFieldInfos(ktFunction));
+
+    }
+
+    private List<FieldInfo> listParamFieldInfos(KtFunction ktFunction) {
+        List<FieldInfo> fieldInfoList = new ArrayList<>();
+//        Map<String, String> paramNameDescMap = getParamDescMap(psiMethod.getDocComment());
+        List<KtParameter> parameters = ktFunction.getValueParameterList().getParameters();
+        for (KtParameter parameter : parameters) {
+            KtTypeReference ktTypeReference = parameter.getTypeReference();
+            FieldInfo fieldInfo = new FieldInfo(
+                    ktFunction.getProject(),
+                    parameter.getName(),
+                    ktTypeReference,
+                    null,
+                    parameter.getAnnotationEntries()
+            );
+            fieldInfoList.add(fieldInfo);
+        }
+        return fieldInfoList;
     }
 
     private List<FieldInfo> listParamFieldInfos(PsiMethod psiMethod) {

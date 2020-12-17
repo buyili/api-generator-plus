@@ -7,6 +7,7 @@ import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
@@ -104,6 +105,15 @@ public class MethodUtil {
         return false;
     }
 
+    public static boolean isGetMethod(List<KtAnnotation> annotations) {
+        for (KtAnnotation annotation : annotations) {
+            if (annotation.getText().contains("GetMapping") || annotation.getText().contains("GET")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static MediaType getMediaType(MethodInfo methodInfo) {
         return getMediaType(methodInfo.getPsiMethod());
     }
@@ -121,6 +131,24 @@ public class MethodUtil {
                 if (annotation.getText().contains(WebAnnotation.RequestBody)) {
                     return MediaType.APPLICATION_JSON;
                 }
+            }
+        }
+        return MediaType.APPLICATION_FORM_URLENCODED;
+    }
+
+    public static MediaType getMediaType(KtFunction ktFunction) {
+        if (isGetMethod(ktFunction.getAnnotations())) {
+            return null;
+        }
+        List<KtParameter> parameters = ktFunction.getValueParameterList().getParameters();
+        for (KtParameter parameter : parameters) {
+            KtTypeReference typeReference = parameter.getTypeReference();
+            String typeName = typeReference.getText();
+            if (FieldUtil.isFileType(typeName)) {
+                return MediaType.MULTIPART_FORM_DATA;
+            }
+            if (parameter.getText().contains(WebAnnotation.RequestBody)) {
+                return MediaType.APPLICATION_JSON;
             }
         }
         return MediaType.APPLICATION_FORM_URLENCODED;
