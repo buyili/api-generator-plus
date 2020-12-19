@@ -165,6 +165,7 @@ public class CurlUtils {
         if(language instanceof KotlinLanguage){
             KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
             MethodInfo methodInfo = new MethodInfo(ktFunction);
+            System.out.println();
         }
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);

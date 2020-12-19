@@ -34,12 +34,16 @@ public class FieldInfo {
 
     private KtTypeReference ktTypeReference;
     private List<KtAnnotationEntry> ktAnnotationEntries;
-    private Map<KtTypeReference, KtTypeReference> ktGenericsMap;
+    private Map<String, KtTypeReference> ktGenericsMap;
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         FieldInfo fieldInfo = (FieldInfo) o;
         return name.equals(fieldInfo.name) &&
                 Objects.equals(parent, fieldInfo.parent);
@@ -86,7 +90,8 @@ public class FieldInfo {
         }
     }
 
-    public FieldInfo(Project project, String name, KtTypeReference ktTypeReference, String desc, List<KtAnnotationEntry> annotations) {
+    public FieldInfo(Project project, String name, KtTypeReference ktTypeReference, String desc,
+                     List<KtAnnotationEntry> annotations) {
         this.project = project;
         config = ServiceManager.getService(project, ApiGeneratorConfig.class);
 //        RequireAndRange requireAndRange = getRequireAndRange(annotations);
@@ -97,7 +102,7 @@ public class FieldInfo {
 //        this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
         this.ktAnnotationEntries = annotations;
-//        this.genericsMap = resolveGenerics(ktTypeReference);
+        this.ktGenericsMap = resolveGenerics(ktTypeReference);
         if (ktTypeReference != null) {
             if (FieldUtil.isNormalType(ktTypeReference.getText())) {
                 paramType = TypeEnum.LITERAL;
@@ -142,17 +147,18 @@ public class FieldInfo {
         }
     }
 
-    public FieldInfo(Project project, FieldInfo parent, KtTypeReference ktTypeReference, String name, String desc, PsiAnnotation[] annotations) {
+    public FieldInfo(Project project, FieldInfo parent, KtTypeReference ktTypeReference, String name, String desc,
+                     List<KtAnnotationEntry> annotations) {
         this.project = project;
         config = ServiceManager.getService(project, ApiGeneratorConfig.class);
-        RequireAndRange requireAndRange = getRequireAndRange(annotations);
+//        RequireAndRange requireAndRange = getRequireAndRange(annotations);
         String fieldName = getParamName(name, annotations);
         this.name = fieldName == null ? "N/A" : fieldName;
         this.ktTypeReference = ktTypeReference;
-        this.require = requireAndRange.isRequire();
-        this.range = requireAndRange.getRange();
+//        this.require = requireAndRange.isRequire();
+//        this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
-        this.annotations = Arrays.asList(annotations);
+        this.ktAnnotationEntries = annotations;
         this.parent = parent;
         if (ktTypeReference != null) {
             if (FieldUtil.isNormalType(ktTypeReference.getText())) {
@@ -163,7 +169,7 @@ public class FieldInfo {
                 paramType = TypeEnum.OBJECT;
             }
             if (needResolveChildren(parent, ktTypeReference)) {
-                this.children = listChildren(this);
+                this.children = listChildrenKt(this);
             }
         } else {
             paramType = TypeEnum.OBJECT;
@@ -243,11 +249,13 @@ public class FieldInfo {
             //如果是集合类型
             if (FieldUtil.isIterableType(psiType)) {
                 PsiType iterableType = PsiUtil.extractIterableTypeParameter(psiType, false);
-                iterableType = getTypeByGenerics(iterableType);
-                if (iterableType == null || FieldUtil.isNormalType(iterableType.getPresentableText()) || isMapType(iterableType)) {
+                iterableType = getKtTypeByGenerics(iterableType);
+                if (iterableType == null || FieldUtil.isNormalType(iterableType.getPresentableText())
+                        || isMapType(iterableType)) {
                     return new ArrayList<>();
                 }
-                return listChildren(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType.getPresentableText(), iterableType, "", new PsiAnnotation[0]));
+                return listChildren(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType.getPresentableText(),
+                        iterableType, "", new PsiAnnotation[0]));
             }
             String typeName = psiType.getPresentableText();
             if (typeName.startsWith("Map")) {
@@ -261,7 +269,8 @@ public class FieldInfo {
                     if (config.getState().excludeFields.contains(outField.getName())) {
                         continue;
                     }
-                    fieldInfos.add(new FieldInfo(project, fieldInfo, outField.getName(), type, DesUtil.getDescription(outField.getDocComment()), outField.getAnnotations()));
+                    fieldInfos.add(new FieldInfo(project, fieldInfo, outField.getName(), type,
+                            DesUtil.getDescription(outField.getDocComment()), outField.getAnnotations()));
                 }
                 return fieldInfos;
             }
@@ -273,7 +282,8 @@ public class FieldInfo {
                 if (config.getState().excludeFields.contains(psiField.getName())) {
                     continue;
                 }
-                fieldInfos.add(new FieldInfo(project, fieldInfo, psiField.getName(), psiField.getType(), DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));
+                fieldInfos.add(new FieldInfo(project, fieldInfo, psiField.getName(), psiField.getType(),
+                        DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));
             }
             return fieldInfos;
         }
@@ -297,46 +307,55 @@ public class FieldInfo {
                 KtTypeReference iterableType = null;
                 for (KtTypeReference typeArgumentsAsType : typeArgumentsAsTypes) {
                     iterableType = typeArgumentsAsType;
-//                    String text = typeArgumentsAsType.getText();
-//                    System.out.println(true);
                 }
-                iterableType = getTypeByGenerics(iterableType);
+                iterableType = getKtTypeByGenerics(iterableType);
                 if (iterableType == null || FieldUtil.isNormalType(iterableType.getText()) || isMapType(iterableType)) {
                     return new ArrayList<>();
                 }
-                return listChildren(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType, iterableType.getText(), "", new PsiAnnotation[0]));
+                return listChildrenKt(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType,
+                        iterableType.getText(), "", new ArrayList<>()));
             }
             String typeName = ktTypeReference.getText();
             if (typeName.startsWith("Map")) {
-                fieldInfos.add(new FieldInfo(project,fieldInfo, null, typeName, "", new PsiAnnotation[0]));
+                fieldInfos.add(new FieldInfo(project, fieldInfo, null, typeName, "", new ArrayList<>()));
                 return fieldInfos;
             }
-            if (typeName.contains("<")) {
-                KtTypeReference outerKtType = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes().get(0);
-
-                PsiClass outerClass = PsiUtil.resolveClassInType(ktTypeReference);
-                for (PsiField outField : outerClass.getAllFields()) {
+//            if (typeName.contains("<")) {
+//                KtTypeReference genericType = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes().get(0);
+//                ktTypeReference = genericType;
+////                return fieldInfos;
+//            }
+            PsiElement fieldClass = getPsiReference(ktTypeReference).resolve();
+            if (fieldClass instanceof PsiClass) {
+                PsiClass psiClass = (PsiClass) fieldClass;
+                for (PsiField outField : psiClass.getAllFields()) {
                     PsiType type = outField.getType();
                     if (config.getState().excludeFields.contains(outField.getName())) {
                         continue;
                     }
-                    fieldInfos.add(new FieldInfo(project,fieldInfo, outField.getName(), type, DesUtil.getDescription(outField.getDocComment()), outField.getAnnotations()));
+                    fieldInfos.add(new FieldInfo(project, fieldInfo, outField.getName(), type,
+                            DesUtil.getDescription(outField.getDocComment()), outField.getAnnotations()));
                 }
-                return fieldInfos;
+            } else if (fieldClass instanceof KtClass) {
+                KtClass ktClass = (KtClass) fieldClass;
+                for (KtProperty property : ktClass.getProperties()) {
+                    KtTypeReference typeReference = property.getTypeReference();
+                    if (config.getState().excludeFields.contains(property.getName())) {
+                        continue;
+                    }
+                    fieldInfos.add(new FieldInfo(project, fieldInfo, typeReference, property.getName(),
+                            "", property.getAnnotationEntries()));
+                }
             }
-//            PsiClass psiClass = PsiUtil.resolveClassInType(ktTypeReference);
-//            if (psiClass == null) {
-//                return new ArrayList<>();
-//            }
-//            for (PsiField psiField : psiClass.getAllFields()) {
-//                if (config.getState().excludeFields.contains(psiField.getName())) {
-//                    continue;
-//                }
-//                fieldInfos.add(new FieldInfo(project,fieldInfo, psiField.getName(), psiField.getType(), DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));
-//            }
             return fieldInfos;
         }
         return new ArrayList<>();
+    }
+
+    private PsiReference getPsiReference(KtTypeReference ktTypeReference) {
+        PsiElement firstChild = ktTypeReference.getTypeElement().getFirstChild();
+        PsiReference referenceAt = firstChild.findReferenceAt(0);
+        return referenceAt;
     }
 
     private boolean needResolveChildren(PsiType psiType) {
@@ -382,7 +401,7 @@ public class FieldInfo {
             psiType = PsiUtil.extractIterableTypeParameter(psiType, false);
         }
         for (PsiType resolvedType : resolvedTypeSet) {
-            if (resolvedType.equals(psiType)) {
+            if (resolvedType != null && resolvedType.equals(psiType)) {
                 return false;
             }
         }
@@ -413,7 +432,7 @@ public class FieldInfo {
 //            ktTypeReference = PsiUtil.extractIterableTypeParameter(ktTypeReference, false);
         }
         for (PsiType resolvedType : resolvedTypeSet) {
-            if (resolvedType.equals(ktTypeReference)) {
+            if (resolvedType != null && resolvedType.equals(ktTypeReference)) {
                 return false;
             }
         }
@@ -426,7 +445,8 @@ public class FieldInfo {
         if (mapList.contains(presentableText)) {
             return true;
         }
-        return presentableText.startsWith("Map<") || presentableText.startsWith("HashMap<") || presentableText.startsWith("LinkedHashMap<");
+        return presentableText.startsWith("Map<") || presentableText.startsWith("HashMap<")
+                || presentableText.startsWith("LinkedHashMap<");
     }
 
     private boolean isMapType(KtTypeReference ktTypeReference) {
@@ -435,7 +455,8 @@ public class FieldInfo {
         if (mapList.contains(presentableText)) {
             return true;
         }
-        return presentableText.startsWith("Map<") || presentableText.startsWith("HashMap<") || presentableText.startsWith("LinkedHashMap<");
+        return presentableText.startsWith("Map<") || presentableText.startsWith("HashMap<")
+                || presentableText.startsWith("LinkedHashMap<");
     }
 
     private boolean containGeneric(String str) {
@@ -526,9 +547,11 @@ public class FieldInfo {
      * @return
      */
     private Map<PsiTypeParameter, PsiType> resolveGenerics(PsiType psiType) {
+        // 拆解参数类型中的泛型类
         PsiClassType psiClassType = (PsiClassType) psiType;
         PsiType[] parameters = psiClassType.getParameters();
 
+        // 拆解参数类型中的泛型 如 T、V
         PsiClass resolve = ((PsiClassType) psiType).resolve();
         PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
         int i = 0;
@@ -542,22 +565,34 @@ public class FieldInfo {
 
     /**
      * 提取泛型对应的PsiType
-     * @Todo
+     *
      * @param ktTypeReference
      * @return
+     * @Todo
      */
-    private Map<PsiTypeParameter, PsiType> resolveGenerics(KtTypeReference ktTypeReference) {
-//        PsiClassType psiClassType = (PsiClassType) ktTypeReference;
-//        PsiType[] parameters = psiClassType.getParameters();
-//
-//        PsiClass resolve = ((PsiClassType) ktTypeReference).resolve();
-//        PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
-//        int i = 0;
-        Map<PsiTypeParameter, PsiType> map = new HashMap<>();
-//        for (PsiTypeParameter typeParameter : typeParameters) {
-//            map.put(typeParameter, parameters[i]);
-//            i++;
-//        }
+    private Map<String, KtTypeReference> resolveGenerics(KtTypeReference ktTypeReference) {
+        // 拆解参数类型中的泛型类
+        List<KtTypeReference> typeArgumentsAsTypes = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes();
+
+        Map<String, KtTypeReference> map = new HashMap<>();
+        int i = 0;
+
+        PsiElement originClass = getPsiReference(ktTypeReference).resolve();
+        if (originClass instanceof PsiClass) {
+            PsiClass psiClass = (PsiClass) originClass;
+            PsiTypeParameter[] typeParameters = psiClass.getTypeParameters();
+            for (PsiTypeParameter typeParameter : typeParameters) {
+                map.put(typeParameter.getName(), typeArgumentsAsTypes.get(i));
+                i++;
+            }
+
+        } else {
+            KtClass ktClass = (KtClass) originClass;
+            for (KtTypeParameter typeParameter : ktClass.getTypeParameters()) {
+                map.put(typeParameter.getName(), typeArgumentsAsTypes.get(i));
+                i++;
+            }
+        }
         return map;
     }
 
@@ -567,12 +602,12 @@ public class FieldInfo {
      * @param psiType
      * @return
      */
-    private PsiType getTypeByGenerics(PsiType psiType) {
+    private PsiType getKtTypeByGenerics(PsiType psiType) {
         if (null == psiType) {
             return null;
         }
         if (this.parent != null) {
-            return this.parent.getTypeByGenerics(psiType);
+            return this.parent.getKtTypeByGenerics(psiType);
         }
         if (null != genericsMap) {
             for (PsiTypeParameter psiTypeParameter : genericsMap.keySet()) {
@@ -591,16 +626,16 @@ public class FieldInfo {
      * @return
      * @todo
      */
-    private KtTypeReference getTypeByGenerics(KtTypeReference ktTypeReference) {
+    private KtTypeReference getKtTypeByGenerics(KtTypeReference ktTypeReference) {
         if (null == ktTypeReference) {
             return null;
         }
         if (this.parent != null) {
-            return this.parent.getTypeByGenerics(ktTypeReference);
+            return this.parent.getKtTypeByGenerics(ktTypeReference);
         }
         if (null != ktGenericsMap) {
-            for (KtTypeReference psiTypeParameter : ktGenericsMap.keySet()) {
-                if (psiTypeParameter.getName().equals(ktTypeReference.getText())) {
+            for (String psiTypeParameter : ktGenericsMap.keySet()) {
+                if (psiTypeParameter.equals(ktTypeReference.getName())) {
                     return ktGenericsMap.get(psiTypeParameter);
                 }
             }
