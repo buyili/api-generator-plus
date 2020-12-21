@@ -6,6 +6,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
@@ -14,6 +15,7 @@ import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.util.AssertUtils;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
+import site.forgus.plugins.apigeneratorplus.util.KtUtil;
 
 import java.util.*;
 
@@ -35,6 +37,8 @@ public class FieldInfo {
     private KtTypeReference ktTypeReference;
     private List<KtAnnotationEntry> ktAnnotationEntries;
     private Map<String, KtTypeReference> ktGenericsMap;
+    private String typeText;
+    private String iterableTypeStr;
 
     @Override
     public boolean equals(Object o) {
@@ -62,6 +66,10 @@ public class FieldInfo {
         this(project, psiType, "", new PsiAnnotation[0]);
     }
 
+    public FieldInfo(Project project, KtTypeReference ktTypeReference) {
+        this(project, ktTypeReference, "", ktTypeReference.getAnnotationEntries());
+    }
+
     public FieldInfo(Project project, String name, PsiType psiType, String desc, PsiAnnotation[] annotations) {
         this.project = project;
         config = ServiceManager.getService(project, ApiGeneratorConfig.class);
@@ -77,6 +85,7 @@ public class FieldInfo {
         if (psiType != null) {
             if (FieldUtil.isNormalType(psiType)) {
                 paramType = TypeEnum.LITERAL;
+                this.setTypeText(psiType.getPresentableText());
             } else if (FieldUtil.isIterableType(psiType)) {
                 paramType = TypeEnum.ARRAY;
             } else {
@@ -104,9 +113,10 @@ public class FieldInfo {
         this.ktAnnotationEntries = annotations;
         this.ktGenericsMap = resolveGenerics(ktTypeReference);
         if (ktTypeReference != null) {
-            if (FieldUtil.isNormalType(ktTypeReference.getText())) {
+            if (FieldUtil.isNormalType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.LITERAL;
-            } else if (FieldUtil.isIterableType(ktTypeReference.getText())) {
+                this.setTypeText(KtUtil.getText(ktTypeReference));
+            } else if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.ARRAY;
             } else {
                 paramType = TypeEnum.OBJECT;
@@ -134,6 +144,7 @@ public class FieldInfo {
         if (psiType != null) {
             if (FieldUtil.isNormalType(psiType)) {
                 paramType = TypeEnum.LITERAL;
+                this.setTypeText(psiType.getPresentableText());
             } else if (FieldUtil.isIterableType(psiType)) {
                 paramType = TypeEnum.ARRAY;
             } else {
@@ -161,9 +172,10 @@ public class FieldInfo {
         this.ktAnnotationEntries = annotations;
         this.parent = parent;
         if (ktTypeReference != null) {
-            if (FieldUtil.isNormalType(ktTypeReference.getText())) {
+            if (FieldUtil.isNormalType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.LITERAL;
-            } else if (FieldUtil.isIterableType(ktTypeReference.getText())) {
+                this.setTypeText(KtUtil.getText(ktTypeReference));
+            } else if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.ARRAY;
             } else {
                 paramType = TypeEnum.OBJECT;
@@ -178,6 +190,10 @@ public class FieldInfo {
 
     public FieldInfo(Project project, PsiType psiType, String desc, PsiAnnotation[] annotations) {
         this(project, psiType.getPresentableText(), psiType, desc, annotations);
+    }
+
+    public FieldInfo(Project project, KtTypeReference psiType, String desc, List<KtAnnotationEntry> annotations) {
+        this(project, psiType.getText(), psiType, desc, annotations);
     }
 
     private String getParamName(String name, PsiAnnotation[] annotations) {
@@ -250,6 +266,9 @@ public class FieldInfo {
             if (FieldUtil.isIterableType(psiType)) {
                 PsiType iterableType = PsiUtil.extractIterableTypeParameter(psiType, false);
                 iterableType = getKtTypeByGenerics(iterableType);
+                if(iterableType != null){
+                    this.iterableTypeStr = iterableType.getPresentableText();
+                }
                 if (iterableType == null || FieldUtil.isNormalType(iterableType.getPresentableText())
                         || isMapType(iterableType)) {
                     return new ArrayList<>();
@@ -295,27 +314,26 @@ public class FieldInfo {
         if (ktTypeReference == null) {
             return new ArrayList<>();
         }
-        if (FieldUtil.isNormalType(ktTypeReference.getText())) {
+        if (FieldUtil.isNormalType(KtUtil.getText(ktTypeReference))) {
             //基础类或基础包装类没有子域
             return new ArrayList<>();
         }
         List<FieldInfo> fieldInfos = new ArrayList<>();
         if (ktTypeReference instanceof KtTypeReference) {
             //如果是集合类型
-            if (FieldUtil.isIterableType(ktTypeReference.getText())) {
-                List<KtTypeReference> typeArgumentsAsTypes = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes();
-                KtTypeReference iterableType = null;
-                for (KtTypeReference typeArgumentsAsType : typeArgumentsAsTypes) {
-                    iterableType = typeArgumentsAsType;
-                }
+            if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
+                KtTypeReference iterableType =  KtUtil.extractIterableTypeParameter(ktTypeReference);
                 iterableType = getKtTypeByGenerics(iterableType);
+                if(iterableType != null){
+                    this.iterableTypeStr = iterableType.getText();
+                }
                 if (iterableType == null || FieldUtil.isNormalType(iterableType.getText()) || isMapType(iterableType)) {
                     return new ArrayList<>();
                 }
                 return listChildrenKt(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType,
                         iterableType.getText(), "", new ArrayList<>()));
             }
-            String typeName = ktTypeReference.getText();
+            String typeName = KtUtil.getText(ktTypeReference);
             if (typeName.startsWith("Map")) {
                 fieldInfos.add(new FieldInfo(project, fieldInfo, null, typeName, "", new ArrayList<>()));
                 return fieldInfos;
@@ -450,7 +468,7 @@ public class FieldInfo {
     }
 
     private boolean isMapType(KtTypeReference ktTypeReference) {
-        String presentableText = ktTypeReference.getText();
+        String presentableText = KtUtil.getText(ktTypeReference);
         List<String> mapList = Arrays.asList("Map", "HashMap", "LinkedHashMap", "JSONObject");
         if (mapList.contains(presentableText)) {
             return true;
@@ -641,6 +659,43 @@ public class FieldInfo {
             }
         }
         return ktTypeReference;
+    }
+
+    public boolean containRequestBodyAnnotation() {
+        if (CollectionUtils.isNotEmpty(this.annotations)) {
+            for (PsiAnnotation annotation : annotations) {
+                if (annotation.getText().contains(WebAnnotation.RequestBody)) {
+                    return true;
+                }
+            }
+        }
+        if (CollectionUtils.isNotEmpty(this.ktAnnotationEntries)) {
+            for (KtAnnotationEntry ktAnnotationEntry : ktAnnotationEntries) {
+                if (ktAnnotationEntry.getText().contains(WebAnnotation.RequestBody)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public String getCanonicalText(){
+        if(psiType != null){
+            return psiType.getCanonicalText();
+        }
+        if(ktTypeReference != null){
+            PsiElement resolve = getPsiReference(ktTypeReference).resolve();
+            if(resolve instanceof PsiClass){
+                PsiClass psiClass = (PsiClass) resolve;
+                return psiClass.getQualifiedName();
+            }
+            if(resolve instanceof KtClass){
+                //@todo
+                KtClass ktClass = (KtClass) resolve;
+                System.out.println();
+            }
+        }
+        return "";
     }
 
 }

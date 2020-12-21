@@ -407,7 +407,7 @@ public class ApiGenerateAction extends AnAction {
             YApiPathVariable yApiPathVariable = new YApiPathVariable();
             yApiPathVariable.setName(getPathVariableName(pathVariable, fieldInfo.getName()));
             yApiPathVariable.setDesc(fieldInfo.getDesc());
-            yApiPathVariable.setExample(FieldUtil.getValue(fieldInfo.getPsiType()).toString());
+            yApiPathVariable.setExample(FieldUtil.getValue(fieldInfo).toString());
             yApiPathVariables.add(yApiPathVariable);
         }
         return yApiPathVariables;
@@ -571,7 +571,7 @@ public class ApiGenerateAction extends AnAction {
         YApiQuery query = new YApiQuery();
         query.setName(fieldInfo.getName());
         query.setDesc(generateDesc(fieldInfo));
-        Object value = FieldUtil.getValue(fieldInfo.getPsiType());
+        Object value = FieldUtil.getValue(fieldInfo);
         if (value != null) {
             query.setExample(value.toString());
         }
@@ -622,7 +622,7 @@ public class ApiGenerateAction extends AnAction {
             param.setType("file");
         }
         param.setDesc(fieldInfo.getDesc());
-        param.setExample(FieldUtil.getValue(fieldInfo.getPsiType()).toString());
+        param.setExample(FieldUtil.getValue(fieldInfo).toString());
         param.setRequired(convertRequired(fieldInfo.isRequire()));
         return param;
     }

@@ -8,6 +8,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.psi.*;
+import org.omg.CORBA.Request;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
@@ -143,7 +144,7 @@ public class MethodUtil {
         List<KtParameter> parameters = ktFunction.getValueParameterList().getParameters();
         for (KtParameter parameter : parameters) {
             KtTypeReference typeReference = parameter.getTypeReference();
-            String typeName = typeReference.getText();
+            String typeName = KtUtil.getText(typeReference);
             if (FieldUtil.isFileType(typeName)) {
                 return MediaType.MULTIPART_FORM_DATA;
             }
@@ -170,7 +171,7 @@ public class MethodUtil {
 
         for (FieldInfo item : list) {
             List<FieldInfo> children = item.getChildren();
-            int index = getIndexOnCanonicalClassNameList(item.getPsiType().getCanonicalText(), canonicalClassNameList);
+            int index = getIndexOnCanonicalClassNameList(item.getCanonicalText(), canonicalClassNameList);
             if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
                 if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
@@ -214,11 +215,44 @@ public class MethodUtil {
             if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(requestField.getChildren()));
             } else {
-                Object value = FieldUtil.getValue(requestField.getPsiType());
+                Object value = FieldUtil.getValue(requestField);
                 strings.add(new Object[]{requestField.getName(), value});
             }
         }
         return strings;
+    }
+
+    public static RequestMethodEnum getRequestMethod(String funStr) {
+        if (funStr.contains(WebAnnotation.RequestMapping)) {
+            if (funStr.contains(RequestMethodEnum.GET.name())) {
+                return RequestMethodEnum.GET;
+            }
+            if (funStr.contains(RequestMethodEnum.POST.name())) {
+                return RequestMethodEnum.POST;
+            }
+            if (funStr.contains(RequestMethodEnum.PUT.name())) {
+                return RequestMethodEnum.PUT;
+            }
+            if (funStr.contains(RequestMethodEnum.DELETE.name())) {
+                return RequestMethodEnum.DELETE;
+            }
+            if (funStr.contains(RequestMethodEnum.PATCH.name())) {
+                return RequestMethodEnum.PATCH;
+            }
+        }
+        if (funStr.contains(WebAnnotation.GetMapping)) {
+            return RequestMethodEnum.GET;
+        }
+        if (funStr.contains(WebAnnotation.PutMapping)) {
+            return RequestMethodEnum.PUT;
+        }
+        if (funStr.contains(WebAnnotation.DeleteMapping)) {
+            return RequestMethodEnum.DELETE;
+        }
+        if (funStr.contains(WebAnnotation.PatchMapping)) {
+            return RequestMethodEnum.PATCH;
+        }
+        return RequestMethodEnum.POST;
     }
 
 }

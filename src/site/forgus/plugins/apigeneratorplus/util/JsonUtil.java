@@ -24,7 +24,7 @@ public class JsonUtil {
 
     public static String buildPrettyJson(FieldInfo fieldInfo) {
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
-            return FieldUtil.getValue(fieldInfo.getPsiType()).toString();
+            return FieldUtil.getValue(fieldInfo).toString();
         }
         Map<String, Object> stringObjectMap = getStringObjectMap(fieldInfo.getChildren());
         if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
@@ -36,7 +36,7 @@ public class JsonUtil {
     public static String buildRawJson(FieldInfo fieldInfo) {
         Gson gson = new Gson();
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
-            return FieldUtil.getValue(fieldInfo.getPsiType()).toString();
+            return FieldUtil.getValue(fieldInfo).toString();
         }
         Map<String, Object> stringObjectMap = getStringObjectMap(fieldInfo.getChildren());
         if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
@@ -122,7 +122,7 @@ public class JsonUtil {
 
     private static void buildJsonValue(Map<String, Object> map, FieldInfo fieldInfo) {
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
-            map.put(fieldInfo.getName(), FieldUtil.getValue(fieldInfo.getPsiType()));
+            map.put(fieldInfo.getName(), FieldUtil.getValue(fieldInfo));
         }
         if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
             if (AssertUtils.isNotEmpty(fieldInfo.getChildren())) {

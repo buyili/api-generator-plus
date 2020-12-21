@@ -7,6 +7,7 @@ import com.intellij.psi.util.PsiUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
@@ -61,21 +62,35 @@ public class FieldUtil {
         genericList.add("V");
     }
 
-    public static Object getValue(PsiType psiType) {
-        if (isIterableType(psiType)) {
-            PsiType type = PsiUtil.extractIterableTypeParameter(psiType, false);
-            if (type == null) {
-                return "[]";
-            }
-            if (isNormalType(type)) {
-                Object obj = normalTypes.get(type.getPresentableText());
+//    public static Object getValue(PsiType psiType) {
+//        if (isIterableType(psiType)) {
+//            PsiType type = PsiUtil.extractIterableTypeParameter(psiType, false);
+//            if (type == null) {
+//                return "[]";
+//            }
+//            if (isNormalType(type)) {
+//                Object obj = normalTypes.get(type.getPresentableText());
+//                if (obj == null) {
+//                    return null;
+//                }
+//                return obj.toString() + "," + obj.toString();
+//            }
+//        }
+//        Object value = normalTypes.get(psiType.getPresentableText());
+//        return value == null ? "" : value;
+//    }
+
+    public static Object getValue(FieldInfo fieldInfo) {
+        if (TypeEnum.ARRAY == fieldInfo.getParamType()) {
+            if (isNormalType(fieldInfo.getIterableTypeStr())) {
+                Object obj = normalTypes.get(fieldInfo.getIterableTypeStr());
                 if (obj == null) {
                     return null;
                 }
                 return obj.toString() + "," + obj.toString();
             }
         }
-        Object value = normalTypes.get(psiType.getPresentableText());
+        Object value = normalTypes.get(fieldInfo.getTypeText());
         return value == null ? "" : value;
     }
 
@@ -109,6 +124,36 @@ public class FieldUtil {
             }
         }
         Object value = normalTypes.get(psiType.getPresentableText());
+        return value == null ? "" : keyName + "=" + value.toString();
+    }
+
+    /**
+     * copy as curl时，上传格式为application/x-www-form-urlencoded。
+     *
+     * @param fieldInfo
+     * @return
+     */
+    public static String getValueForCurl(FieldInfo fieldInfo, CURLSettingState state) {
+        String keyName = fieldInfo.getName();
+        if (TypeEnum.ARRAY == fieldInfo.getParamType()) {
+            if (isNormalType(fieldInfo.getIterableTypeStr())) {
+                Object obj = normalTypes.get(fieldInfo.getIterableTypeStr());
+                if (obj == null) {
+                    return null;
+                }
+                String arrayFormat = StringUtils.isNotEmpty(state.arrayFormat) ? state.arrayFormat : ArrayFormatEnum.repeat.name();
+                if (ArrayFormatEnum.indices.name().equals(arrayFormat)) {
+                    return keyName + "[0]=" + obj.toString() + "&" + keyName + "[1]=" + obj.toString();
+                } else if (ArrayFormatEnum.brackets.name().equals(arrayFormat)) {
+                    return keyName + "[]=" + obj.toString() + "&" + keyName + "[]=" + obj.toString();
+                } else if (ArrayFormatEnum.repeat.name().equals(arrayFormat)) {
+                    return keyName + "=" + obj.toString() + "&" + keyName + "=" + obj.toString();
+                } else if (ArrayFormatEnum.comma.name().equals(arrayFormat)) {
+                    return keyName + "=" + obj.toString() + "," + obj.toString();
+                }
+            }
+        }
+        Object value = normalTypes.get(fieldInfo.getTypeText());
         return value == null ? "" : keyName + "=" + value.toString();
     }
 
