@@ -5,7 +5,7 @@
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
-        <em>Api development tool, YApi api automatic generation; support Copy as cURL,</em><br><br>
+        <h3>Api development tool, YApi api automatic generation; support Copy as cURL,</h3><br><br>
         Features：<br>
         <ul>
           <li>Javadoc-based analysis,no additional annotations.</li>
