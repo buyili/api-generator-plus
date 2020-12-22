@@ -117,7 +117,7 @@ public class FieldInfo {
 //        this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
         this.ktAnnotationEntries = annotations;
-        this.ktGenericsMap = resolveGenerics(ktTypeReference);
+        this.ktGenericsMap = resolveKtGenerics(ktTypeReference);
         if (ktTypeReference != null) {
             this.setTypeText(KtUtil.getText(ktTypeReference));
             String fqName = KtUtil.getFqName(ktTypeReference);
@@ -602,9 +602,10 @@ public class FieldInfo {
 
     /**
      * 提取泛型对应的PsiType
-     * @deprecated as of JDK 1.0.5, replace by {@link #resolveJavaGenerics(PsiType)}
+     *
      * @param psiType
      * @return
+     * @deprecated as of JDK 1.0.5, replace by {@link #resolveJavaGenerics(PsiType)}
      */
     @Deprecated
     private Map<PsiTypeParameter, PsiType> resolveGenerics(PsiType psiType) {
@@ -648,7 +649,7 @@ public class FieldInfo {
      * @return
      * @Todo
      */
-    private Map<String, KtTypeReference> resolveGenerics(KtTypeReference ktTypeReference) {
+    private Map<String, KtTypeReference> resolveKtGenerics(KtTypeReference ktTypeReference) {
         // 拆解参数类型中的泛型类
         List<KtTypeReference> typeArgumentsAsTypes = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes();
 
@@ -680,17 +681,17 @@ public class FieldInfo {
      * @param psiType
      * @return
      */
-    private PsiType getKtTypeByGenerics(PsiType psiType) {
+    private PsiType getJavaTypeByGenerics(PsiType psiType) {
         if (null == psiType) {
             return null;
         }
         if (this.parent != null) {
-            return this.parent.getKtTypeByGenerics(psiType);
+            return this.parent.getJavaTypeByGenerics(psiType);
         }
-        if (null != genericsMap) {
-            for (PsiTypeParameter psiTypeParameter : genericsMap.keySet()) {
-                if (psiTypeParameter.getName().equals(psiType.getPresentableText())) {
-                    return genericsMap.get(psiTypeParameter);
+        if (null != javaGenericsMap) {
+            for (String keyStr : javaGenericsMap.keySet()) {
+                if (keyStr.equals(psiType.getPresentableText())) {
+                    return javaGenericsMap.get(keyStr);
                 }
             }
         }
