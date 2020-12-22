@@ -106,8 +106,8 @@ public class MethodUtil {
         return false;
     }
 
-    public static boolean isGetMethod(List<KtAnnotation> annotations) {
-        for (KtAnnotation annotation : annotations) {
+    public static boolean isGetMethod(List<KtAnnotationEntry> annotations) {
+        for (KtAnnotationEntry annotation : annotations) {
             if (annotation.getText().contains("GetMapping") || annotation.getText().contains("GET")) {
                 return true;
             }
@@ -138,7 +138,7 @@ public class MethodUtil {
     }
 
     public static MediaType getMediaType(KtFunction ktFunction) {
-        if (isGetMethod(ktFunction.getAnnotations())) {
+        if (isGetMethod(ktFunction.getAnnotationEntries())) {
             return null;
         }
         List<KtParameter> parameters = ktFunction.getValueParameterList().getParameters();

@@ -39,6 +39,7 @@ public class FieldInfo {
     private KtTypeReference ktTypeReference;
     private List<KtAnnotationEntry> ktAnnotationEntries;
     private Map<String, KtTypeReference> ktGenericsMap;
+    private String canonicalText;
     private String typeText;
     private String iterableTypeStr;
 
@@ -85,9 +86,10 @@ public class FieldInfo {
         this.annotations = Arrays.asList(annotations);
         this.genericsMap = resolveGenerics(psiType);
         if (psiType != null) {
+            this.setTypeText(psiType.getPresentableText());
+            this.setCanonicalText(psiType.getCanonicalText());
             if (FieldUtil.isNormalType(psiType)) {
                 paramType = TypeEnum.LITERAL;
-                this.setTypeText(psiType.getPresentableText());
             } else if (FieldUtil.isIterableType(psiType)) {
                 paramType = TypeEnum.ARRAY;
             } else {
@@ -115,9 +117,11 @@ public class FieldInfo {
         this.ktAnnotationEntries = annotations;
         this.ktGenericsMap = resolveGenerics(ktTypeReference);
         if (ktTypeReference != null) {
+            this.setTypeText(KtUtil.getText(ktTypeReference));
+            String fqName = KtUtil.getFqName(ktTypeReference);
+            this.setCanonicalText(fqName);
             if (FieldUtil.isNormalType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.LITERAL;
-                this.setTypeText(KtUtil.getText(ktTypeReference));
             } else if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.ARRAY;
             } else {
@@ -144,9 +148,10 @@ public class FieldInfo {
         this.annotations = Arrays.asList(annotations);
         this.parent = parent;
         if (psiType != null) {
+            this.setTypeText(psiType.getPresentableText());
+            this.setCanonicalText(psiType.getCanonicalText());
             if (FieldUtil.isNormalType(psiType)) {
                 paramType = TypeEnum.LITERAL;
-                this.setTypeText(psiType.getPresentableText());
             } else if (FieldUtil.isIterableType(psiType)) {
                 paramType = TypeEnum.ARRAY;
             } else {
@@ -164,6 +169,7 @@ public class FieldInfo {
                      List<KtAnnotationEntry> annotations) {
         this.project = project;
         config = ServiceManager.getService(project, ApiGeneratorConfig.class);
+        // @todo
 //        RequireAndRange requireAndRange = getRequireAndRange(annotations);
         String fieldName = getParamName(name, annotations);
         this.name = fieldName == null ? "N/A" : fieldName;
@@ -174,9 +180,11 @@ public class FieldInfo {
         this.ktAnnotationEntries = annotations;
         this.parent = parent;
         if (ktTypeReference != null) {
+            this.setTypeText(KtUtil.getText(ktTypeReference));
+            String fqName = KtUtil.getFqName(ktTypeReference);
+            this.setCanonicalText(fqName);
             if (FieldUtil.isNormalType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.LITERAL;
-                this.setTypeText(KtUtil.getText(ktTypeReference));
             } else if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
                 paramType = TypeEnum.ARRAY;
             } else {
@@ -194,8 +202,8 @@ public class FieldInfo {
         this(project, psiType.getPresentableText(), psiType, desc, annotations);
     }
 
-    public FieldInfo(Project project, KtTypeReference psiType, String desc, List<KtAnnotationEntry> annotations) {
-        this(project, psiType.getText(), psiType, desc, annotations);
+    public FieldInfo(Project project, KtTypeReference ktTypeReference, String desc, List<KtAnnotationEntry> annotations) {
+        this(project, ktTypeReference.getText(), ktTypeReference, desc, annotations);
     }
 
     private String getParamName(String name, PsiAnnotation[] annotations) {
@@ -268,7 +276,7 @@ public class FieldInfo {
             if (FieldUtil.isIterableType(psiType)) {
                 PsiType iterableType = PsiUtil.extractIterableTypeParameter(psiType, false);
                 iterableType = getKtTypeByGenerics(iterableType);
-                if(iterableType != null){
+                if (iterableType != null) {
                     this.iterableTypeStr = iterableType.getPresentableText();
                 }
                 if (iterableType == null || FieldUtil.isNormalType(iterableType.getPresentableText())
@@ -324,9 +332,9 @@ public class FieldInfo {
         if (ktTypeReference instanceof KtTypeReference) {
             //如果是集合类型
             if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
-                KtTypeReference iterableType =  KtUtil.extractIterableTypeParameter(ktTypeReference);
+                KtTypeReference iterableType = KtUtil.extractIterableTypeParameter(ktTypeReference);
                 iterableType = getKtTypeByGenerics(iterableType);
-                if(iterableType != null){
+                if (iterableType != null) {
                     this.iterableTypeStr = iterableType.getText();
                 }
                 if (iterableType == null || FieldUtil.isNormalType(iterableType.getText()) || isMapType(iterableType)) {
@@ -681,17 +689,17 @@ public class FieldInfo {
         return false;
     }
 
-    public String getCanonicalText(){
-        if(psiType != null){
+    public String getCanonicalText() {
+        if (psiType != null) {
             return psiType.getCanonicalText();
         }
-        if(ktTypeReference != null){
+        if (ktTypeReference != null) {
             PsiElement resolve = getPsiReference(ktTypeReference).resolve();
-            if(resolve instanceof PsiClass){
+            if (resolve instanceof PsiClass) {
                 PsiClass psiClass = (PsiClass) resolve;
                 return psiClass.getQualifiedName();
             }
-            if(resolve instanceof KtClass){
+            if (resolve instanceof KtClass) {
                 //@todo
                 KtClass ktClass = (KtClass) resolve;
                 System.out.println();

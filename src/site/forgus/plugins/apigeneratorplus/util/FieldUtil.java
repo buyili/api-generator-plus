@@ -211,7 +211,7 @@ public class FieldUtil {
         List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
         for (FieldInfo item : items) {
             List<FieldInfo> children = item.getChildren();
-            int index = getIndexOnCanonicalClassNameList(item.getPsiType().getCanonicalText(), canonicalClassNameList);
+            int index = getIndexOnCanonicalClassNameList(item.getCanonicalText(), canonicalClassNameList);
             if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
                 if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {

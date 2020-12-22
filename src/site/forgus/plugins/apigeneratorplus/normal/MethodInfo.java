@@ -46,6 +46,7 @@ public class MethodInfo implements Serializable {
     private String methodPath;
     private String classPath;
     private String funStr;
+    private List<String> classAnnotationTexts;
 
     private List<String> excludeParamTypes = Arrays.asList("RedirectAttributes", "HttpServletRequest", "HttpServletResponse");
 
@@ -64,6 +65,13 @@ public class MethodInfo implements Serializable {
         }
         this.setPackageName(PsiUtil.getPackageName(psiClass));
         this.setClassName(psiClass.getName());
+
+        List<String> classAnnotationTexts = new ArrayList<>();
+        for (PsiAnnotation annotation : psiClass.getAnnotations()) {
+            classAnnotationTexts.add(annotation.getText());
+        }
+        this.setClassAnnotationTexts(classAnnotationTexts);
+
         this.setParamStr(psiMethod.getParameterList().getText());
         this.setMethodName(psiMethod.getName());
         this.setRequestFields(listParamFieldInfos(psiMethod));
@@ -96,6 +104,12 @@ public class MethodInfo implements Serializable {
         this.setPackageName(ktClass.getFqName().toString());
         this.setClassName(ktClass.getName());
 
+        List<String> classAnnotationTexts = new ArrayList<>();
+        for (KtAnnotationEntry annotationEntry : ktClass.getAnnotationEntries()) {
+            classAnnotationTexts.add(annotationEntry.getText());
+        }
+        this.setClassAnnotationTexts(classAnnotationTexts);
+
         KtTypeReference returnTypeReference = ktFunction.getTypeReference();
         if (returnTypeReference != null) {
             this.setReturnStr(returnTypeReference.getText());
@@ -109,6 +123,15 @@ public class MethodInfo implements Serializable {
 
     public boolean containRequestBodyAnnotation() {
         return funStr.contains(WebAnnotation.RequestBody);
+    }
+
+    public boolean containRestControllerAnnotation() {
+        for (String annotationText : classAnnotationTexts) {
+            if(annotationText.contains(WebAnnotation.RestController)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
