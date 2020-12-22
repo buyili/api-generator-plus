@@ -245,7 +245,7 @@ public class ApiGenerateAction extends AnAction {
 
         boolean uploadSuccess = false;
         for (PsiElement psiElement : ktClass.getBody().getChildren()) {
-            if(psiElement instanceof KtFunction){
+            if (psiElement instanceof KtFunction) {
                 KtFunction method = (KtFunction) psiElement;
                 if (hasMappingAnnotation(method)) {
                     uploadToYApi(project, method);
@@ -462,31 +462,34 @@ public class ApiGenerateAction extends AnAction {
         if (containingClass == null) {
             return null;
         }
-        PsiAnnotation controller = null;
-        PsiAnnotation classRequestMapping = null;
-        for (PsiAnnotation annotation : containingClass.getAnnotations()) {
-            String text = annotation.getText();
-            if (text.endsWith(WebAnnotation.Controller)) {
-                controller = annotation;
-            } else if (text.contains(WebAnnotation.RequestMapping)) {
-                classRequestMapping = annotation;
-            }
-        }
-        if (controller == null) {
+//        PsiAnnotation controller = null;
+//        PsiAnnotation classRequestMapping = null;
+//        for (PsiAnnotation annotation : containingClass.getAnnotations()) {
+//            String text = annotation.getText();
+//            if (text.endsWith(WebAnnotation.Controller)) {
+//                controller = annotation;
+//            } else if (text.contains(WebAnnotation.RequestMapping)) {
+//                classRequestMapping = annotation;
+//            }
+//        }
+//        if (controller == null) {
+//            NotificationUtil.warnNotify("Invalid Class File!", project);
+//            return null;
+//        }
+        MethodInfo methodInfo = new MethodInfo(psiMethod);
+        if (!methodInfo.containControllerAnnotation()) {
             NotificationUtil.warnNotify("Invalid Class File!", project);
             return null;
         }
-        MethodInfo methodInfo = new MethodInfo(psiMethod);
-        PsiAnnotation methodMapping = getMethodMapping(psiMethod);
         YApiInterface yApiInterface = new YApiInterface();
         yApiInterface.setToken(config.getState().projectToken);
-        yApiInterface.setPath(buildPath(classRequestMapping, methodMapping));
+        yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
         // 多模块项目，模块对应token等信息
         YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(psiMethod);
         yApiInterface.setToken(yApiProjectConfigInfo.getToken());
-        yApiInterface.setPath(yApiProjectConfigInfo.getBasePath().concat(yApiInterface.getPath()));
+        yApiInterface.setPath(PathUtil.pathResolve(yApiProjectConfigInfo.getBasePath(), yApiInterface.getPath()));
 
-        RequestMethodEnum requestMethodEnum = getMethodFromAnnotation(methodMapping);
+        RequestMethodEnum requestMethodEnum = methodInfo.getRequestMethod();
         yApiInterface.setMethod(requestMethodEnum.name());
         List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
         MediaType mediaType = methodInfo.getMediaType();
@@ -546,13 +549,17 @@ public class ApiGenerateAction extends AnAction {
 //            return null;
 //        }
         MethodInfo methodInfo = new MethodInfo(ktFunction);
+        if (!methodInfo.containControllerAnnotation()) {
+            NotificationUtil.warnNotify("Invalid Class File!", project);
+            return null;
+        }
         YApiInterface yApiInterface = new YApiInterface();
         yApiInterface.setToken(config.getState().projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
         // 多模块项目，模块对应token等信息
         YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(methodInfo.getPackageName());
         yApiInterface.setToken(yApiProjectConfigInfo.getToken());
-        yApiInterface.setPath(yApiProjectConfigInfo.getBasePath().concat(yApiInterface.getPath()));
+        yApiInterface.setPath(PathUtil.pathResolve(yApiProjectConfigInfo.getBasePath(), yApiInterface.getPath()));
 
         RequestMethodEnum requestMethodEnum = methodInfo.getRequestMethod();
         yApiInterface.setMethod(requestMethodEnum.name());
@@ -648,6 +655,7 @@ public class ApiGenerateAction extends AnAction {
         return methodDesc;
     }
 
+    //@todo
     private String getMethodDesc(KtFunction ktFunction) {
         KtBlockExpression bodyBlockExpression = ktFunction.getBodyBlockExpression();
 //        String methodDesc = ktFunction.getText().replace(Objects.nonNull(ktFunction.getBody()) ? ktFunction.getBody().getText() : "", "");
@@ -663,14 +671,25 @@ public class ApiGenerateAction extends AnAction {
         for (FieldInfo fieldInfo : requestFields) {
             List<PsiAnnotation> annotations = fieldInfo.getAnnotations();
             PsiAnnotation pathVariable = getPathVariableAnnotation(annotations);
-            if (pathVariable == null) {
-                continue;
+            if (pathVariable != null) {
+                YApiPathVariable yApiPathVariable = new YApiPathVariable();
+                yApiPathVariable.setName(getPathVariableName(pathVariable, fieldInfo.getName()));
+                yApiPathVariable.setDesc(fieldInfo.getDesc());
+                yApiPathVariable.setExample(FieldUtil.getValue(fieldInfo).toString());
+                yApiPathVariables.add(yApiPathVariable);
             }
-            YApiPathVariable yApiPathVariable = new YApiPathVariable();
-            yApiPathVariable.setName(getPathVariableName(pathVariable, fieldInfo.getName()));
-            yApiPathVariable.setDesc(fieldInfo.getDesc());
-            yApiPathVariable.setExample(FieldUtil.getValue(fieldInfo).toString());
-            yApiPathVariables.add(yApiPathVariable);
+
+            // Kotlin
+            List<KtAnnotationEntry> ktAnnotationEntries = fieldInfo.getKtAnnotationEntries();
+            KtAnnotationEntry ktAnnotationEntry = FieldUtil.findKtAnnotationByName(ktAnnotationEntries,
+                    WebAnnotation.PathVariable);
+            if (ktAnnotationEntry != null) {
+                YApiPathVariable yApiPathVariable = new YApiPathVariable();
+                yApiPathVariable.setName(getPathVariableName(ktAnnotationEntry, fieldInfo.getName()));
+                yApiPathVariable.setDesc(fieldInfo.getDesc());
+                yApiPathVariable.setExample(FieldUtil.getValue(fieldInfo).toString());
+                yApiPathVariables.add(yApiPathVariable);
+            }
         }
         return yApiPathVariables;
     }
@@ -686,6 +705,37 @@ public class ApiGenerateAction extends AnAction {
                 String name = psiNameValuePair.getName();
                 if (name == null || "value".equals(name) || "name".equals(name)) {
                     return literalValue;
+                }
+            }
+        }
+        return fieldName;
+    }
+
+    private String getPathVariableName(KtAnnotationEntry ktAnnotationEntry, String fieldName) {
+        KtValueArgumentList valueArgumentList = ktAnnotationEntry.getValueArgumentList();
+        if (valueArgumentList != null) {
+            for (KtValueArgument ktValueArgument : valueArgumentList.getArguments()) {
+                if (ktValueArgument.getArgumentName() == null) {
+                    return ktValueArgument.getText().replace("\"", "");
+                }
+                if ("value".equals(ktValueArgument.getArgumentName().getText())
+                        || "name".equals(ktValueArgument.getArgumentName().getText())) {
+                    KtExpression argumentExpression = ktValueArgument.getArgumentExpression();
+                    String text = null;
+                    if (argumentExpression == null) {
+                        return "";
+                    }
+                    if (argumentExpression instanceof KtCollectionLiteralExpression) {
+                        KtCollectionLiteralExpression collectionLiteralExpression =
+                                (KtCollectionLiteralExpression) argumentExpression;
+                        List<KtExpression> innerExpressions = collectionLiteralExpression.getInnerExpressions();
+                        if (CollectionUtils.isNotEmpty(innerExpressions)) {
+                            text = innerExpressions.get(0).getText();
+                        }
+                    } else {
+                        text = argumentExpression.getText();
+                    }
+                    return text == null ? "" : text.replace("\"", "");
                 }
             }
         }
@@ -828,7 +878,7 @@ public class ApiGenerateAction extends AnAction {
             return queries;
         }
         for (FieldInfo fieldInfo : requestFields) {
-            if (notQuery(fieldInfo.getAnnotations(), requestMethodEnum)) {
+            if (notQuery(fieldInfo)) {
                 continue;
             }
             if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
@@ -847,12 +897,8 @@ public class ApiGenerateAction extends AnAction {
         return queries;
     }
 
-    private boolean notQuery(List<PsiAnnotation> annotations, RequestMethodEnum requestMethodEnum) {
-        if (getPathVariableAnnotation(annotations) != null) {
-            return true;
-        }
-        return FieldUtil.findAnnotationByName(annotations, WebAnnotation.RequestBody) != null;
-//                || !RequestMethodEnum.GET.equals(requestMethodEnum);
+    private boolean notQuery(FieldInfo fieldInfo) {
+        return fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestBodyAnnotation();
     }
 
     private YApiQuery buildYApiQuery(FieldInfo fieldInfo) {
@@ -884,7 +930,7 @@ public class ApiGenerateAction extends AnAction {
     private List<YApiForm> listYApiForms(List<FieldInfo> requestFields) {
         List<YApiForm> yApiForms = new ArrayList<>();
         for (FieldInfo fieldInfo : requestFields) {
-            if (getPathVariableAnnotation(fieldInfo.getAnnotations()) != null) {
+            if (fieldInfo.containPathVariableAnnotation()) {
                 continue;
             }
             if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
@@ -1099,7 +1145,7 @@ public class ApiGenerateAction extends AnAction {
             }
         }
         Model pomModel = getPomModel(project);
-        try (Writer md = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (apiDoc,true),
+        try (Writer md = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(apiDoc, true),
                 StandardCharsets.UTF_8))) {
             md.write("## " + fileName + "\n");
             md.write("## 功能介绍\n");
@@ -1168,7 +1214,7 @@ public class ApiGenerateAction extends AnAction {
             }
         }
         Model pomModel = getPomModel(project);
-        try (Writer md = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (apiDoc,true),
+        try (Writer md = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(apiDoc, true),
                 StandardCharsets.UTF_8))) {
             md.write("## " + fileName + "\n");
             md.write("## 功能介绍\n");

@@ -34,7 +34,9 @@ public class FieldInfo {
     private FieldInfo parent;
     private List<PsiAnnotation> annotations;
     private Project project;
+    @Deprecated
     private Map<PsiTypeParameter, PsiType> genericsMap;
+    private Map<String, PsiType> javaGenericsMap;
 
     private KtTypeReference ktTypeReference;
     private List<KtAnnotationEntry> ktAnnotationEntries;
@@ -84,7 +86,7 @@ public class FieldInfo {
         this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
         this.annotations = Arrays.asList(annotations);
-        this.genericsMap = resolveGenerics(psiType);
+        this.javaGenericsMap = resolveJavaGenerics(psiType);
         if (psiType != null) {
             this.setTypeText(psiType.getPresentableText());
             this.setCanonicalText(psiType.getCanonicalText());
@@ -274,19 +276,33 @@ public class FieldInfo {
         if (psiType instanceof PsiClassReferenceType) {
             //如果是集合类型
             if (FieldUtil.isIterableType(psiType)) {
-                PsiType iterableType = PsiUtil.extractIterableTypeParameter(psiType, false);
-                iterableType = getKtTypeByGenerics(iterableType);
-                if (iterableType != null) {
-                    this.iterableTypeStr = iterableType.getPresentableText();
-                }
-                if (iterableType == null || FieldUtil.isNormalType(iterableType.getPresentableText())
-                        || isMapType(iterableType)) {
-                    return new ArrayList<>();
-                }
-                return listChildren(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType.getPresentableText(),
-                        iterableType, "", new PsiAnnotation[0]));
+                psiType = PsiUtil.extractIterableTypeParameter(psiType, false);
             }
             String typeName = psiType.getPresentableText();
+            // 如果是泛型
+            if (FieldUtil.isGenericType(typeName)) {
+                Object tempType = getTypeByGenerics(typeName);
+                if (tempType != null) {
+                    if (tempType instanceof PsiType) {
+                        PsiType genericType = (PsiType) tempType;
+                        this.iterableTypeStr = genericType.getPresentableText();
+                        if (FieldUtil.isNormalType(genericType.getPresentableText()) || isMapType(genericType)) {
+                            return new ArrayList<>();
+                        }
+                        return listChildren(new FieldInfo(fieldInfo.getProject(), fieldInfo, genericType.getPresentableText(),
+                                genericType, "", new PsiAnnotation[0]));
+                    } else if (tempType instanceof KtTypeReference) {
+                        KtTypeReference genericType = (KtTypeReference) tempType;
+                        this.iterableTypeStr = genericType.getText();
+                        if (FieldUtil.isNormalType(genericType.getText()) || isMapType(genericType)) {
+                            return new ArrayList<>();
+                        }
+                        return listChildrenKt(new FieldInfo(fieldInfo.getProject(), fieldInfo, genericType,
+                                genericType.getText(), "", new ArrayList<>()));
+                    }
+                }
+                return Collections.emptyList();
+            }
             if (typeName.startsWith("Map")) {
                 fieldInfos.add(new FieldInfo(project, fieldInfo, typeName, null, "", new PsiAnnotation[0]));
                 return fieldInfos;
@@ -332,18 +348,34 @@ public class FieldInfo {
         if (ktTypeReference instanceof KtTypeReference) {
             //如果是集合类型
             if (FieldUtil.isIterableType(KtUtil.getText(ktTypeReference))) {
-                KtTypeReference iterableType = KtUtil.extractIterableTypeParameter(ktTypeReference);
-                iterableType = getKtTypeByGenerics(iterableType);
-                if (iterableType != null) {
-                    this.iterableTypeStr = iterableType.getText();
-                }
-                if (iterableType == null || FieldUtil.isNormalType(iterableType.getText()) || isMapType(iterableType)) {
-                    return new ArrayList<>();
-                }
-                return listChildrenKt(new FieldInfo(fieldInfo.getProject(), fieldInfo, iterableType,
-                        iterableType.getText(), "", new ArrayList<>()));
+                ktTypeReference = KtUtil.extractIterableTypeParameter(ktTypeReference);
             }
+
             String typeName = KtUtil.getText(ktTypeReference);
+            // 如果是泛型
+            if (FieldUtil.isGenericType(typeName)) {
+                Object tempType = getTypeByGenerics(typeName);
+                if (tempType != null) {
+                    if (tempType instanceof PsiType) {
+                        PsiType genericType = (PsiType) tempType;
+                        this.iterableTypeStr = genericType.getPresentableText();
+                        if (FieldUtil.isNormalType(genericType.getPresentableText()) || isMapType(genericType)) {
+                            return new ArrayList<>();
+                        }
+                        return listChildren(new FieldInfo(fieldInfo.getProject(), fieldInfo, genericType.getPresentableText(),
+                                genericType, "", new PsiAnnotation[0]));
+                    } else if (tempType instanceof KtTypeReference) {
+                        KtTypeReference genericType = (KtTypeReference) tempType;
+                        this.iterableTypeStr = genericType.getText();
+                        if (FieldUtil.isNormalType(genericType.getText()) || isMapType(genericType)) {
+                            return new ArrayList<>();
+                        }
+                        return listChildrenKt(new FieldInfo(fieldInfo.getProject(), fieldInfo, genericType,
+                                genericType.getText(), "", new ArrayList<>()));
+                    }
+                }
+                return Collections.emptyList();
+            }
             if (typeName.startsWith("Map")) {
                 fieldInfos.add(new FieldInfo(project, fieldInfo, null, typeName, "", new ArrayList<>()));
                 return fieldInfos;
@@ -570,10 +602,11 @@ public class FieldInfo {
 
     /**
      * 提取泛型对应的PsiType
-     *
+     * @deprecated as of JDK 1.0.5, replace by {@link #resolveJavaGenerics(PsiType)}
      * @param psiType
      * @return
      */
+    @Deprecated
     private Map<PsiTypeParameter, PsiType> resolveGenerics(PsiType psiType) {
         // 拆解参数类型中的泛型类
         PsiClassType psiClassType = (PsiClassType) psiType;
@@ -586,6 +619,23 @@ public class FieldInfo {
         Map<PsiTypeParameter, PsiType> map = new HashMap<>();
         for (PsiTypeParameter typeParameter : typeParameters) {
             map.put(typeParameter, parameters[i]);
+            i++;
+        }
+        return map;
+    }
+
+    private Map<String, PsiType> resolveJavaGenerics(PsiType psiType) {
+        // 拆解参数类型中的泛型类
+        PsiClassType psiClassType = (PsiClassType) psiType;
+        PsiType[] parameters = psiClassType.getParameters();
+
+        // 拆解参数类型中的泛型 如 T、V
+        PsiClass resolve = ((PsiClassType) psiType).resolve();
+        PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
+        int i = 0;
+        Map<String, PsiType> map = new HashMap<>();
+        for (PsiTypeParameter typeParameter : typeParameters) {
+            map.put(typeParameter.getName(), parameters[i]);
             i++;
         }
         return map;
@@ -647,6 +697,30 @@ public class FieldInfo {
         return psiType;
     }
 
+    private Object getTypeByGenerics(String genericName) {
+        if (StringUtils.isBlank(genericName)) {
+            return null;
+        }
+        if (this.parent != null) {
+            return this.parent.getTypeByGenerics(genericName);
+        }
+        if (null != javaGenericsMap) {
+            for (String genericKey : javaGenericsMap.keySet()) {
+                if (genericKey.equals(genericName)) {
+                    return javaGenericsMap.get(genericKey);
+                }
+            }
+        }
+        if (null != ktGenericsMap) {
+            for (String genericKey : ktGenericsMap.keySet()) {
+                if (genericKey.equals(genericName)) {
+                    return ktGenericsMap.get(genericKey);
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * 根据泛型获取对应的PsiType
      *
@@ -682,6 +756,24 @@ public class FieldInfo {
         if (CollectionUtils.isNotEmpty(this.ktAnnotationEntries)) {
             for (KtAnnotationEntry ktAnnotationEntry : ktAnnotationEntries) {
                 if (ktAnnotationEntry.getText().contains(WebAnnotation.RequestBody)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean containPathVariableAnnotation() {
+        if (CollectionUtils.isNotEmpty(this.annotations)) {
+            for (PsiAnnotation annotation : annotations) {
+                if (annotation.getText().contains(WebAnnotation.PathVariable)) {
+                    return true;
+                }
+            }
+        }
+        if (CollectionUtils.isNotEmpty(this.ktAnnotationEntries)) {
+            for (KtAnnotationEntry ktAnnotationEntry : ktAnnotationEntries) {
+                if (ktAnnotationEntry.getText().contains(WebAnnotation.PathVariable)) {
                     return true;
                 }
             }

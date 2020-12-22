@@ -7,6 +7,7 @@ import com.intellij.psi.util.PsiUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.kotlin.psi.KtAnnotationEntry;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
@@ -193,11 +194,27 @@ public class FieldUtil {
         return isNormalType(psiType.getPresentableText());
     }
 
+    public static boolean isGenericType(String typeName) {
+        return genericList.contains(typeName);
+    }
+
     public static PsiAnnotation findAnnotationByName(List<PsiAnnotation> annotations, String text) {
         if (annotations == null) {
             return null;
         }
         for (PsiAnnotation annotation : annotations) {
+            if (annotation.getText().contains(text)) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    public static KtAnnotationEntry findKtAnnotationByName(List<KtAnnotationEntry> annotations, String text) {
+        if (annotations == null) {
+            return null;
+        }
+        for (KtAnnotationEntry annotation : annotations) {
             if (annotation.getText().contains(text)) {
                 return annotation;
             }

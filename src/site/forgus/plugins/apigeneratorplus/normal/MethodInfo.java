@@ -133,6 +133,14 @@ public class MethodInfo implements Serializable {
         }
         return false;
     }
+    public boolean containControllerAnnotation() {
+        for (String annotationText : classAnnotationTexts) {
+            if(annotationText.contains(WebAnnotation.Controller)){
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * @param ktFunction
@@ -140,7 +148,38 @@ public class MethodInfo implements Serializable {
      * @todo
      */
     private String extraClassPathKt(KtFunction ktFunction) {
-        return null;
+        KtClass ktClass = (KtClass) ktFunction.getParent().getParent();
+        for (KtAnnotationEntry annotationEntry : ktClass.getAnnotationEntries()) {
+            if (annotationEntry.getText().contains("Mapping")) {
+                KtValueArgumentList valueArgumentList = annotationEntry.getValueArgumentList();
+                if (valueArgumentList != null) {
+                    for (KtValueArgument ktValueArgument : valueArgumentList.getArguments()) {
+                        if (ktValueArgument.getArgumentName() == null) {
+                            return ktValueArgument.getText().replace("\"", "");
+                        }
+                        if ("value".equals(ktValueArgument.getArgumentName().getText())) {
+                            KtExpression argumentExpression = ktValueArgument.getArgumentExpression();
+                            String text = null;
+                            if (argumentExpression == null) {
+                                return "";
+                            }
+                            if (argumentExpression instanceof KtCollectionLiteralExpression) {
+                                KtCollectionLiteralExpression collectionLiteralExpression =
+                                        (KtCollectionLiteralExpression) argumentExpression;
+                                List<KtExpression> innerExpressions = collectionLiteralExpression.getInnerExpressions();
+                                if (CollectionUtils.isNotEmpty(innerExpressions)) {
+                                    text = innerExpressions.get(0).getText();
+                                }
+                            } else {
+                                text = argumentExpression.getText();
+                            }
+                            return text == null ? "" : text.replace("\"", "");
+                        }
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     private String extraMethodPathKt(KtFunction ktFunction) {
@@ -220,7 +259,7 @@ public class MethodInfo implements Serializable {
         String path = "";
         for (PsiAnnotation annotation : Objects.requireNonNull(psiMethod.getContainingClass()).getAnnotations()) {
             if (annotation.getText().contains("Mapping")) {
-                classPath = getPathFromAnnotation(annotation);
+                path = getPathFromAnnotation(annotation);
                 break;
             }
         }
