@@ -1,11 +1,14 @@
 package site.forgus.plugins.apigeneratorplus;
 
 import com.google.common.base.Strings;
+import com.intellij.ide.highlighter.JavaClassFileType;
+import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -29,6 +32,7 @@ import site.forgus.plugins.apigeneratorplus.curl.Assert;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
+import site.forgus.plugins.apigeneratorplus.icons.SdkIcons;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.util.*;
@@ -701,10 +705,17 @@ public class ApiGenerateAction extends AnAction {
     }
 
     @Override
-    public void update(AnActionEvent e) {
+    public void update(AnActionEvent event) {
         //perform action if and only if EDITOR != null
-        boolean enabled = e.getData(CommonDataKeys.EDITOR) != null;
-        e.getPresentation().setEnabledAndVisible(enabled);
+        Editor editor = event.getData(CommonDataKeys.EDITOR);
+        boolean enabled = false;
+        PsiFile psiFile = event.getData(CommonDataKeys.PSI_FILE);
+        FileType fileType = psiFile.getFileType();
+        if (editor != null && fileType instanceof JavaFileType) {
+            enabled = true;
+        }
+        event.getPresentation().setEnabledAndVisible(enabled);
+        event.getPresentation().setIcon(SdkIcons.Logo);
     }
 
     private String getDirPath(Project project) {

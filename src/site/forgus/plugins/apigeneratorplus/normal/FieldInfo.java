@@ -1,5 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.normal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -29,6 +30,7 @@ public class FieldInfo {
     private String desc;
     private TypeEnum paramType;
     private List<FieldInfo> children;
+    @JsonIgnore
     private FieldInfo parent;
     private List<PsiAnnotation> annotations;
     private Project project;
