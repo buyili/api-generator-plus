@@ -172,12 +172,12 @@ public class CurlUtils {
         MethodInfo methodInfo = null;
         if (language instanceof KotlinLanguage) {
             KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
-            Assert.notNull(ktFunction, "KtFunction must not be null");
+            Assert.notNull(ktFunction, "The cursor is not placed in the method area");
             methodInfo = new MethodInfo(ktFunction);
             System.out.println();
         } else {
             PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
-            Assert.notNull(selectedMethod, "PsiMethod must not be null");
+            Assert.notNull(selectedMethod, "The cursor is not placed in the method area");
             methodInfo = new MethodInfo(selectedMethod);
         }
 

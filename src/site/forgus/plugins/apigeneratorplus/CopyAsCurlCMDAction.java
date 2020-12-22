@@ -2,10 +2,12 @@ package site.forgus.plugins.apigeneratorplus;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 
 /**
  * @author lmx 2020/11/11 14:19
@@ -28,6 +30,9 @@ public class CopyAsCurlCMDAction extends AnAction {
             curlUtils.copyAsCUrl(actionEvent, CUrlClientType.CMD);
         } catch (BizException e) {
             e.printStackTrace();
+            if (StringUtils.isNotBlank(e.getMessage())) {
+                NotificationUtil.errorNotify(e.getMessage());
+            }
         }
     }
 
