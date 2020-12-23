@@ -7,6 +7,9 @@ import com.intellij.psi.util.PsiUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.kotlin.psi.KtAnnotationEntry;
+import org.jetbrains.kotlin.psi.KtTypeReference;
+import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
@@ -26,6 +29,8 @@ public class FieldUtil {
 
     public static final List<String> fileList = Arrays.asList("MultipartFile", "CommonsMultipartFile", "MockMultipartFile",
             "StandardMultipartFile");
+
+    public static final List<String> mapTypeList = Arrays.asList("Map", "HashMap", "LinkedHashMap", "JSONObject");
 
 
     static {
@@ -61,21 +66,35 @@ public class FieldUtil {
         genericList.add("V");
     }
 
-    public static Object getValue(PsiType psiType) {
-        if (isIterableType(psiType)) {
-            PsiType type = PsiUtil.extractIterableTypeParameter(psiType, false);
-            if (type == null) {
-                return "[]";
-            }
-            if (isNormalType(type)) {
-                Object obj = normalTypes.get(type.getPresentableText());
+//    public static Object getValue(PsiType psiType) {
+//        if (isIterableType(psiType)) {
+//            PsiType type = PsiUtil.extractIterableTypeParameter(psiType, false);
+//            if (type == null) {
+//                return "[]";
+//            }
+//            if (isNormalType(type)) {
+//                Object obj = normalTypes.get(type.getPresentableText());
+//                if (obj == null) {
+//                    return null;
+//                }
+//                return obj.toString() + "," + obj.toString();
+//            }
+//        }
+//        Object value = normalTypes.get(psiType.getPresentableText());
+//        return value == null ? "" : value;
+//    }
+
+    public static Object getValue(FieldInfo fieldInfo) {
+        if (TypeEnum.ARRAY == fieldInfo.getParamType()) {
+            if (isNormalType(fieldInfo.getIterableTypeStr())) {
+                Object obj = normalTypes.get(fieldInfo.getIterableTypeStr());
                 if (obj == null) {
                     return null;
                 }
                 return obj.toString() + "," + obj.toString();
             }
         }
-        Object value = normalTypes.get(psiType.getPresentableText());
+        Object value = normalTypes.get(fieldInfo.getTypeText());
         return value == null ? "" : value;
     }
 
@@ -112,6 +131,36 @@ public class FieldUtil {
         return value == null ? "" : keyName + "=" + value.toString();
     }
 
+    /**
+     * copy as curl时，上传格式为application/x-www-form-urlencoded。
+     *
+     * @param fieldInfo
+     * @return
+     */
+    public static String getValueForCurl(FieldInfo fieldInfo, CURLSettingState state) {
+        String keyName = fieldInfo.getName();
+        if (TypeEnum.ARRAY == fieldInfo.getParamType()) {
+            if (isNormalType(fieldInfo.getIterableTypeStr())) {
+                Object obj = normalTypes.get(fieldInfo.getIterableTypeStr());
+                if (obj == null) {
+                    return null;
+                }
+                String arrayFormat = StringUtils.isNotEmpty(state.arrayFormat) ? state.arrayFormat : ArrayFormatEnum.repeat.name();
+                if (ArrayFormatEnum.indices.name().equals(arrayFormat)) {
+                    return keyName + "[0]=" + obj.toString() + "&" + keyName + "[1]=" + obj.toString();
+                } else if (ArrayFormatEnum.brackets.name().equals(arrayFormat)) {
+                    return keyName + "[]=" + obj.toString() + "&" + keyName + "[]=" + obj.toString();
+                } else if (ArrayFormatEnum.repeat.name().equals(arrayFormat)) {
+                    return keyName + "=" + obj.toString() + "&" + keyName + "=" + obj.toString();
+                } else if (ArrayFormatEnum.comma.name().equals(arrayFormat)) {
+                    return keyName + "=" + obj.toString() + "," + obj.toString();
+                }
+            }
+        }
+        Object value = normalTypes.get(fieldInfo.getTypeText());
+        return value == null ? "" : keyName + "=" + value.toString();
+    }
+
 
     public static boolean isNormalType(String typeName) {
         return normalTypes.containsKey(typeName);
@@ -121,7 +170,7 @@ public class FieldUtil {
         return fileList.contains(typeName);
     }
 
-    private static boolean isIterableType(String typeName) {
+    public static boolean isIterableType(String typeName) {
         if (iterableTypes.contains(typeName)) {
             return true;
         }
@@ -148,11 +197,44 @@ public class FieldUtil {
         return isNormalType(psiType.getPresentableText());
     }
 
+    public static boolean isGenericType(String typeName) {
+        return genericList.contains(typeName);
+    }
+
+    public static boolean isMapType(String typeText){
+        for (String mapType : mapTypeList) {
+            if(mapType.equals(typeText) || typeText.startsWith(mapType.concat("<"))){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isMapType(PsiType psiType){
+        return isMapType(psiType.getPresentableText());
+    }
+
+    public static boolean isMapType(KtTypeReference ktTypeReference){
+        return isMapType(KtUtil.getText(ktTypeReference));
+    }
+
     public static PsiAnnotation findAnnotationByName(List<PsiAnnotation> annotations, String text) {
         if (annotations == null) {
             return null;
         }
         for (PsiAnnotation annotation : annotations) {
+            if (annotation.getText().contains(text)) {
+                return annotation;
+            }
+        }
+        return null;
+    }
+
+    public static KtAnnotationEntry findKtAnnotationByName(List<KtAnnotationEntry> annotations, String text) {
+        if (annotations == null) {
+            return null;
+        }
+        for (KtAnnotationEntry annotation : annotations) {
             if (annotation.getText().contains(text)) {
                 return annotation;
             }
@@ -166,7 +248,7 @@ public class FieldUtil {
         List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
         for (FieldInfo item : items) {
             List<FieldInfo> children = item.getChildren();
-            int index = getIndexOnCanonicalClassNameList(item.getPsiType().getCanonicalText(), canonicalClassNameList);
+            int index = getIndexOnCanonicalClassNameList(item.getCanonicalText(), canonicalClassNameList);
             if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
                 if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {

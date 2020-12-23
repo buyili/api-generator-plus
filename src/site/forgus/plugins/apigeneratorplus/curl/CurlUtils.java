@@ -1,5 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.curl;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
@@ -24,6 +25,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.SystemIndependent;
+import org.jetbrains.kotlin.idea.KotlinLanguage;
+import org.jetbrains.kotlin.psi.KtFunction;
 import org.yaml.snakeyaml.Yaml;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
@@ -67,83 +70,90 @@ public class CurlUtils {
 
         PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
         Assert.notNull(referenceAt);
+        Language language = referenceAt.getLanguage();
+        MethodInfo methodInfo = null;
+        if (language instanceof KotlinLanguage) {
+            KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
+            Assert.notNull(ktFunction, "KtFunction must not be null");
+            methodInfo = new MethodInfo(ktFunction);
+            System.out.println();
+        } else {
+            PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+            Assert.notNull(selectedMethod, "PsiMethod must not be null");
+            methodInfo = new MethodInfo(selectedMethod);
+        }
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
-        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
-        if (selectedMethod != null) {
-            //            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
-            //            boolean postMethod = isPostMethod(selectedMethod);
-            MethodInfo methodInfo = new MethodInfo(selectedMethod);
-            String moduleName = getModuleName(editor, project);
-            checkHasModuleConfig(project, moduleName);
-            CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
-            Assert.notNull(curlModuleInfo, "no matching module configuration");
+        String moduleName = getModuleName(editor, project);
+        checkHasModuleConfig(project, moduleName);
+        CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
+        Assert.notNull(curlModuleInfo, "no matching module configuration");
 
-            String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
 
-            FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
-            FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
+        FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
+        FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
 
 
-            String input = getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo);
-            if (MethodUtil.isGetMethod(selectedMethod.getAnnotations())) {
-                input = input + getRequestParams(selectedMethod, methodInfo);
-            }
-            fetchRequestInfo.setInput(input);
-            // 访问接口
-            if (!isGetMethod(selectedMethod.getAnnotations())) {
-                // 非Get请求参数
-                //fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
-                initOptions.setBody(getRequestBody(selectedMethod, methodInfo));
-            }
+        String input = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+                MethodUtil.replacePathVariable(methodInfo));
 
-            PsiAnnotation methodMapping = getMethodMapping(selectedMethod);
-            Assert.notNull(methodMapping, "not specific annotation for mapping web requests ");
-            initOptions.setMethod(getMethodFromAnnotation(methodMapping).name());
-            // 添加header
-            Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
-            MediaType mediaType = MethodUtil.getMediaType(selectedMethod);
-            if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
-                headers.putAll(mediaType.getHeader());
-            }
-            initOptions.setHeaders(headers);
-
-
-            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
-                initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
-            }
-            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.cache)) {
-                initOptions.setCache(curlSettingState.fetchConfig.cache);
-            }
-            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.redirect)) {
-                initOptions.setRedirect(curlSettingState.fetchConfig.redirect);
-            }
-            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrer)) {
-                initOptions.setReferrer(curlSettingState.fetchConfig.referrer);
-            }
-            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrerPolicy)) {
-                initOptions.setReferrerPolicy(curlSettingState.fetchConfig.referrerPolicy);
-            }
-            if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.integrity)) {
-                initOptions.setIntegrity(curlSettingState.fetchConfig.integrity);
-            }
-
-            fetchRequestInfo.setInitOptions(initOptions);
-
-            String rawStr = fetchRequestInfo.toPrettyString();
-            if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-                List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
-                        curlSettingState.filterFieldInfo);
-                String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
-                fetchRequestInfo.setFormDataVal(formDataVal);
-                rawStr = fetchRequestInfo.toPrettyStringForFormData();
-            }
-            System.out.println(rawStr);
-            CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
-            NotificationUtil.infoNotify("已复制到剪切板", rawStr, project);
+        // 判斷是否是Get方法
+        if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
+            input = input + getRequestParams(methodInfo);
         }
+        fetchRequestInfo.setInput(input);
+        // 访问接口
+        if (RequestMethodEnum.GET != methodInfo.getRequestMethod()) {
+            // 非Get请求参数
+            //fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
+            initOptions.setBody(getRequestBody(methodInfo));
+        }
+
+        initOptions.setMethod(methodInfo.getRequestMethod().name());
+        // 添加header
+        Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
+        MediaType mediaType = methodInfo.getMediaType();
+        if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
+            headers.putAll(mediaType.getHeader());
+        }
+        initOptions.setHeaders(headers);
+
+
+        if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
+            initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
+        }
+        if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.cache)) {
+            initOptions.setCache(curlSettingState.fetchConfig.cache);
+        }
+        if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.redirect)) {
+            initOptions.setRedirect(curlSettingState.fetchConfig.redirect);
+        }
+        if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrer)) {
+            initOptions.setReferrer(curlSettingState.fetchConfig.referrer);
+        }
+        if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrerPolicy)) {
+            initOptions.setReferrerPolicy(curlSettingState.fetchConfig.referrerPolicy);
+        }
+        if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.integrity)) {
+            initOptions.setIntegrity(curlSettingState.fetchConfig.integrity);
+        }
+
+        fetchRequestInfo.setInitOptions(initOptions);
+
+        String rawStr = fetchRequestInfo.toPrettyString();
+        if (MediaType.MULTIPART_FORM_DATA == mediaType) {
+            List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                    curlSettingState.filterFieldInfo);
+            String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+            fetchRequestInfo.setFormDataVal(formDataVal);
+            rawStr = fetchRequestInfo.toPrettyStringForFormData();
+        }
+        System.out.println(rawStr);
+        CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
+        NotificationUtil.infoNotify("已复制到剪切板", rawStr, project);
     }
 
     public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
@@ -158,58 +168,63 @@ public class CurlUtils {
 
         PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
         Assert.notNull(referenceAt);
+        Language language = referenceAt.getLanguage();
+        MethodInfo methodInfo = null;
+        if (language instanceof KotlinLanguage) {
+            KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
+            Assert.notNull(ktFunction, "The cursor is not placed in the method area");
+            methodInfo = new MethodInfo(ktFunction);
+            System.out.println();
+        } else {
+            PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+            Assert.notNull(selectedMethod, "The cursor is not placed in the method area");
+            methodInfo = new MethodInfo(selectedMethod);
+        }
 
         PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
-        PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
-        if (selectedMethod != null) {
-            //            PsiAnnotation[] annotations = selectedMethod.getAnnotations();
-            //            boolean postMethod = isPostMethod(selectedMethod);
-            MethodInfo methodInfo = new MethodInfo(selectedMethod);
-            String moduleName = getModuleName(editor, project);
-            checkHasModuleConfig(project, moduleName);
-            CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
-            Assert.notNull(curlModuleInfo);
+        String moduleName = getModuleName(editor, project);
+        checkHasModuleConfig(project, moduleName);
+        CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
+        Assert.notNull(curlModuleInfo);
 
-            String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
-            StringBuilder stringBuilder = new StringBuilder("curl");
+        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        StringBuilder stringBuilder = new StringBuilder("curl");
 
-            PsiAnnotation methodMapping = getMethodMapping(selectedMethod);
-            Assert.notNull(methodMapping, "not specific annotation for mapping web requests ");
-            String method = getMethodFromAnnotation(methodMapping).name();
+        String method = methodInfo.getRequestMethod().name();
 
-            // 访问接口
-            stringBuilder.append(" '")
-                    .append(getBaseApi(port))
-                    .append(buildPath(selectedMethod, curlModuleInfo));
-            stringBuilder.append(getRequestParams(selectedMethod, methodInfo, cUrlClientType));
-            stringBuilder.append("'");
+        // 访问接口
+        stringBuilder.append(" '")
+                .append(getBaseApi(port))
+                .append(pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+                        MethodUtil.replacePathVariable(methodInfo)));
+        stringBuilder.append(getRequestParams(methodInfo, cUrlClientType));
+        stringBuilder.append("'");
 
-            stringBuilder.append(" -X ")
-                    .append(method)
-                    .append(" ");
+        stringBuilder.append(" -X ")
+                .append(method)
+                .append(" ");
 
-            if (!isGetMethod(selectedMethod.getAnnotations())) {
-                // 非Get请求参数
-                stringBuilder.append(getRequestBody(selectedMethod, methodInfo, cUrlClientType));
-            }
-
-            if (CollectionUtils.isNotEmpty(curlModuleInfo.getRequestHeaders())) {
-                for (Header requestHeader : curlModuleInfo.getRequestHeaders()) {
-                    stringBuilder.append(" -H '").append(requestHeader.getKey()).append(": ")
-                            .append(requestHeader.getValue()).append("'");
-                }
-            }
-
-            String curlStr = stringBuilder.toString();
-            if (CUrlClientType.CMD.equals(cUrlClientType)) {
-                curlStr = curlStr.replaceAll("'", "\"");
-            }
-            System.out.println(curlStr);
-            CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
-            NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
+        if (RequestMethodEnum.GET != methodInfo.getRequestMethod()) {
+            // 非Get请求参数
+            stringBuilder.append(getRequestBody(methodInfo, cUrlClientType));
         }
+
+        if (CollectionUtils.isNotEmpty(curlModuleInfo.getRequestHeaders())) {
+            for (Header requestHeader : curlModuleInfo.getRequestHeaders()) {
+                stringBuilder.append(" -H '").append(requestHeader.getKey()).append(": ")
+                        .append(requestHeader.getValue()).append("'");
+            }
+        }
+
+        String curlStr = stringBuilder.toString();
+        if (CUrlClientType.CMD.equals(cUrlClientType)) {
+            curlStr = curlStr.replaceAll("'", "\"");
+        }
+        System.out.println(curlStr);
+        CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
+        NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
     }
 
     public static void findModuleInfoAndSave(AnActionEvent actionEvent) {
@@ -536,13 +551,12 @@ public class CurlUtils {
     }
 
 
-    public String getRequestBody(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
-        StringUtil.showPsiMethod(psiMethod);
+    public String getRequestBody(MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         MediaType mediaType = methodInfo.getMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
-                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                if (requestField.containRequestBodyAnnotation()) {
                     StringBuilder stringBuilder = new StringBuilder();
                     stringBuilder.append(" -H 'Content-Type: application/json;charset=UTF-8'");
                     stringBuilder.append(" --data-binary '");
@@ -586,16 +600,15 @@ public class CurlUtils {
     /**
      * for Copy as Fetch
      *
-     * @param psiMethod
      * @param methodInfo
      * @return
      */
-    public String getRequestBody(PsiMethod psiMethod, MethodInfo methodInfo) {
-        StringUtil.showPsiMethod(psiMethod);
+    public String getRequestBody(MethodInfo methodInfo) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        if (containRequestBodyAnnotation(psiMethod)) {
+        MediaType mediaType = methodInfo.getMediaType();
+        if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
-                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                if (requestField.containRequestBodyAnnotation()) {
                     return JsonUtil.buildRawJson(requestField);
                 }
             }
@@ -610,17 +623,20 @@ public class CurlUtils {
         return "";
     }
 
-    public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo, CUrlClientType cUrlClientType) {
-        StringUtil.showPsiMethod(psiMethod);
-        boolean containRequestBodyAnnotation = containRequestBodyAnnotation(psiMethod);
-        if (!isGetMethod(psiMethod.getAnnotations()) && !containRequestBodyAnnotation) {
+    public String getRequestParams(MethodInfo methodInfo, CUrlClientType cUrlClientType) {
+        if (methodInfo.getRequestMethod() != RequestMethodEnum.GET && !methodInfo.containRequestBodyAnnotation()) {
             return "";
         }
+//        StringUtil.showPsiMethod(psiMethod);
+//        boolean containRequestBodyAnnotation = containRequestBodyAnnotation(psiMethod);
+//        if (!isGetMethod(psiMethod.getAnnotations()) && !containRequestBodyAnnotation) {
+//            return "";
+//        }
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         List<FieldInfo> filteredFields = new ArrayList<>(requestFields);
-        if (containRequestBodyAnnotation) {
+        if (methodInfo.containRequestBodyAnnotation()) {
             for (FieldInfo requestField : requestFields) {
-                if (containRequestBodyAnnotation(requestField.getAnnotations().toArray(new PsiAnnotation[0]))) {
+                if (requestField.containRequestBodyAnnotation()) {
                     filteredFields.remove(requestField);
                 }
             }
@@ -640,8 +656,13 @@ public class CurlUtils {
         return str;
     }
 
-    public String getRequestParams(PsiMethod psiMethod, MethodInfo methodInfo) {
-        StringUtil.showPsiMethod(psiMethod);
+    /**
+     * for Fetch
+     *
+     * @param methodInfo
+     * @return
+     */
+    public String getRequestParams(MethodInfo methodInfo) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         List<String> strings = generateKeyValue(requestFields);
         StringBuilder stringBuilder = new StringBuilder("?");
@@ -661,10 +682,14 @@ public class CurlUtils {
         }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
+            if (requestField.containPathVariableAnnotation()) {
+                continue;
+            }
             if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(filterChildrenFiled(requestField)));
             } else {
-                String value = FieldUtil.getValueForCurl(requestField.getName(), requestField.getPsiType(), curlSettingState);
+                String value = FieldUtil.getValueForCurl(requestField, curlSettingState);
+//                String value = FieldUtil.getValueForCurl(requestField.getName(), requestField.getPsiType(), curlSettingState);
                 if (StringUtils.isNotBlank(value)) {
                     strings.add(value);
                 }
@@ -684,7 +709,7 @@ public class CurlUtils {
         List<String> includeFiledList = filterFieldInfo.getIncludeFiledList();
         List<FieldInfo> children = fieldInfo.getChildren();
         List<String> excludeFiledList = filterFieldInfo.getExcludeFiledList();
-        int index = getIndexOnCanonicalClassNameList(fieldInfo.getPsiType().getCanonicalText(), canonicalClassNameList);
+        int index = getIndexOnCanonicalClassNameList(fieldInfo.getCanonicalText(), canonicalClassNameList);
         if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
             if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {

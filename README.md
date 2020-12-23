@@ -1,6 +1,9 @@
 # Generate Api Plus
 《Generate Api Plus》是在《Generate Api》基础上修改而来！！！
 传送门：[api-generator github地址](https://github.com/Forgus/api-generator)
+。增加多模块支持、泛型字段解析等功能
+
+新增功能 Copy as cURL；灵感来自于Chrome浏览器的Copy as cURL功能
 
 ## 简介
 《Generate Api Plus》是一款可以自动生成接口文档的IDEA插件。包括基于Spring注解的RESTful接口和用于定义dubbo api的普通接口。其中，RESTful接口将自动上传并托管在内网部署的YApi服务器上，而普通接口则以markdown文件的形式保存在指定目录。

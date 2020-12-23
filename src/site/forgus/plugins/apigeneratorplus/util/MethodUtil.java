@@ -5,8 +5,11 @@ import com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl;
 import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.kotlin.psi.*;
+import org.omg.CORBA.Request;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
@@ -104,6 +107,15 @@ public class MethodUtil {
         return false;
     }
 
+    public static boolean isGetMethod(List<KtAnnotationEntry> annotations) {
+        for (KtAnnotationEntry annotation : annotations) {
+            if (annotation.getText().contains("GetMapping") || annotation.getText().contains("GET")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static MediaType getMediaType(MethodInfo methodInfo) {
         return getMediaType(methodInfo.getPsiMethod());
     }
@@ -126,6 +138,24 @@ public class MethodUtil {
         return MediaType.APPLICATION_FORM_URLENCODED;
     }
 
+    public static MediaType getMediaType(KtFunction ktFunction) {
+        if (isGetMethod(ktFunction.getAnnotationEntries())) {
+            return null;
+        }
+        List<KtParameter> parameters = ktFunction.getValueParameterList().getParameters();
+        for (KtParameter parameter : parameters) {
+            KtTypeReference typeReference = parameter.getTypeReference();
+            String typeName = KtUtil.getText(typeReference);
+            if (FieldUtil.isFileType(typeName)) {
+                return MediaType.MULTIPART_FORM_DATA;
+            }
+            if (parameter.getText().contains(WebAnnotation.RequestBody)) {
+                return MediaType.APPLICATION_JSON;
+            }
+        }
+        return MediaType.APPLICATION_FORM_URLENCODED;
+    }
+
     public static int getIndexOnCanonicalClassNameList(String canonicalClassName, List<String> set) {
         for (String s : set) {
             if (canonicalClassName.startsWith(s)) {
@@ -142,7 +172,7 @@ public class MethodUtil {
 
         for (FieldInfo item : list) {
             List<FieldInfo> children = item.getChildren();
-            int index = getIndexOnCanonicalClassNameList(item.getPsiType().getCanonicalText(), canonicalClassNameList);
+            int index = getIndexOnCanonicalClassNameList(item.getCanonicalText(), canonicalClassNameList);
             if (CollectionUtils.isNotEmpty(canonicalClassNameList) && index != -1) {
 
                 if (includeFiledList.size() > index && StringUtils.isNotEmpty(includeFiledList.get(index))) {
@@ -166,7 +196,7 @@ public class MethodUtil {
 
     public static String getFormDataVal(List<FieldInfo> list) {
         StringBuilder stringBuilder = new StringBuilder("var formData = new FormData();\n");
-        List<Object[]> keyValues = generateKeyValue(list);
+        List<Object[]> keyValues = generateParamKeyValue(list);
         for (Object[] keyValue : keyValues) {
             stringBuilder.append("formData.append(\"")
                     .append(keyValue[0])
@@ -186,11 +216,67 @@ public class MethodUtil {
             if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(requestField.getChildren()));
             } else {
-                Object value = FieldUtil.getValue(requestField.getPsiType());
+                Object value = FieldUtil.getValue(requestField);
                 strings.add(new Object[]{requestField.getName(), value});
             }
         }
         return strings;
+    }
+
+    private static List<Object[]> generateParamKeyValue(List<FieldInfo> fieldInfoList) {
+        ArrayList<FieldInfo> tempList = new ArrayList<>(fieldInfoList);
+        CollectionUtils.filter(tempList, new Predicate() {
+            @Override
+            public boolean evaluate(Object o) {
+                FieldInfo fieldInfo = (FieldInfo) o;
+                return !fieldInfo.containPathVariableAnnotation() && !fieldInfo.containRequestBodyAnnotation();
+            }
+        });
+        return generateKeyValue(tempList);
+    }
+
+    public static RequestMethodEnum getRequestMethod(String funStr) {
+        if (funStr.contains(WebAnnotation.RequestMapping)) {
+            if (funStr.contains(RequestMethodEnum.GET.name())) {
+                return RequestMethodEnum.GET;
+            }
+            if (funStr.contains(RequestMethodEnum.POST.name())) {
+                return RequestMethodEnum.POST;
+            }
+            if (funStr.contains(RequestMethodEnum.PUT.name())) {
+                return RequestMethodEnum.PUT;
+            }
+            if (funStr.contains(RequestMethodEnum.DELETE.name())) {
+                return RequestMethodEnum.DELETE;
+            }
+            if (funStr.contains(RequestMethodEnum.PATCH.name())) {
+                return RequestMethodEnum.PATCH;
+            }
+        }
+        if (funStr.contains(WebAnnotation.GetMapping)) {
+            return RequestMethodEnum.GET;
+        }
+        if (funStr.contains(WebAnnotation.PutMapping)) {
+            return RequestMethodEnum.PUT;
+        }
+        if (funStr.contains(WebAnnotation.DeleteMapping)) {
+            return RequestMethodEnum.DELETE;
+        }
+        if (funStr.contains(WebAnnotation.PatchMapping)) {
+            return RequestMethodEnum.PATCH;
+        }
+        return RequestMethodEnum.POST;
+    }
+
+    public static String replacePathVariable(MethodInfo methodInfo) {
+        String methodPath = methodInfo.getMethodPath();
+        for (FieldInfo requestField : methodInfo.getRequestFields()) {
+            if (requestField.containPathVariableAnnotation()) {
+                methodPath = methodPath.replace("{" + requestField.getName() + "}",
+                        FieldUtil.getValue(requestField).toString());
+            }
+        }
+        return methodPath;
     }
 
 }

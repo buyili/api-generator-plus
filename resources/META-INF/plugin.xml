@@ -1,11 +1,11 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
-        <em>Api development tool, YApi api automatic generation; support Copy as cURL,</em><br><br>
+        <h3>Api development tool, YApi api automatic generation; support Copy as cURL,</h3><br><br>
         Features：<br>
         <ul>
           <li>Javadoc-based analysis,no additional annotations.</li>
@@ -132,6 +132,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.0.5</h3>
+        <h4>New features</h4>
+        <ul>
+          <li>
+            Kotlin language support
+          </li>
+        </ul>
         <h3>1.0.4</h3>
         <h4>Bug fixes</h4>
         <ul>
@@ -244,6 +251,9 @@
     <depends>com.intellij.modules.lang</depends>
     -->
 
+    <!-- Declare the default resource location for localizing menu strings -->
+    <resource-bundle>messages.ApiGeneratorPlusBundle</resource-bundle>
+
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
         <!--        <projectConfigurable instance="site.forgus.plugins.apigeneratorplus.config.ApiGeneratorSetting"/>-->
@@ -258,7 +268,9 @@
 
     <actions>
         <!-- Add your actions here -->
-        <group id="CopyAsCURLMenu" text="Copy as CURL" popup="true">
+        <group id="site.forgus.plugins.apigeneratorplus.CopyAsActionGroup"
+               class="site.forgus.plugins.apigeneratorplus.CopyAsActionGroup"
+               popup="true">
             <action id="site.forgus.plugins.apigeneratorplus.CopyIPAction"
                     class="site.forgus.plugins.apigeneratorplus.CopyIPAction"
                     text="Copy Current IP">
@@ -284,5 +296,6 @@
     </actions>
 
     <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
 
 </idea-plugin>
