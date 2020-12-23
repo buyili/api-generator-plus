@@ -5,105 +5,129 @@
   <title>Discription</title>
 </head>
 <body>
-<h3>1.0.4</h3>
-<h4>Bug fixes</h4>
+<h3>Api development tool, YApi api automatic generation; support Copy as cURL,</h3><br><br>
+Features：<br>
 <ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>Fixed curl and fetch syntax errors when content-type was multipart/form-data</li>
-    </ul>
+  <li>Javadoc-based analysis,no additional annotations.</li>
+  <li>Supporting field filtering, automatically ignoring the analysis of filtering fields.</li>
+  <li>Automatically identify classes, generate markdown documents or upload to Yapi.</li>
+  <li>Support list, set, collection and other data structures, and support nested generic parsing.</li>
+  <li>Support the parsing of common annotations such as @NotNull and @ResponseBody, and generate Yapi documents based on json5.
   </li>
 </ul>
-<h4>Bug 修复</h4>
+<br>
+Usage：<br>
 <ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>修复Content-Type为 multipart/form-data时curl、fetch语法错误</li>
-    </ul>
-  </li>
+  <li>Locate the cursor to the method area or class name, right-click Generate Api Plus.</li>
 </ul>
-<h3>1.0.3</h3>
-<h4>Bug fixes</h4>
+<br>
+<em>Support annotations：</em><br>
+javax.validation.constraints.Min<br>
+javax.validation.constraints.Max<br>
+javax.validation.constraints.NotNull<br>
+javax.validation.constraints.NotBlank<br>
+javax.validation.constraints.NotEmpty<br>
+javax.validation.constraints.Size<br>
+org.hibernate.validator.constraints.Length<br>
+org.hibernate.validator.constraints.Range<br>
+org.springframework.web.bind.annotation.Controller<br>
+org.springframework.web.bind.annotation.RestController<br>
+org.springframework.web.bind.annotation.RequestMapping<br>
+org.springframework.web.bind.annotation.GetMapping<br>
+org.springframework.web.bind.annotation.PutMapping<br>
+org.springframework.web.bind.annotation.DeleteMapping<br>
+org.springframework.web.bind.annotation.PatchMapping<br>
+org.springframework.web.bind.annotation.PathVariable<br>
+org.springframework.web.bind.annotation.RequestBody<br>
+org.springframework.web.bind.annotation.RequestParam<br>
+org.springframework.web.bind.annotation.ResponseBody<br><br>
+特性：<br>
 <ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>Fixed an error with a content-Type exception for the POST method without arguments</li>
-    </ul>
-  </li>
+  <li>基于javadoc解析，无代码入侵</li>
+  <li>支持字段过滤，自动忽略过滤字段的解析</li>
+  <li>自动识别类，生成markdown文档或上传到YApi</li>
+  <li>支持List、Set、Collection等数据结构，支持嵌套泛型解析</li>
+  <li>支持@NotNull、@ResponseBody等常用注解的解析，基于json5生成YApi文档</li>
 </ul>
-<h4>Bug 修复</h4>
+<br>
+用法：<br>
 <ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>修复POST方法没有参数时，content-type 异常的错误</li>
-    </ul>
-  </li>
+  <li>将光标定位到方法区域或者类名，鼠标右键单击"Generate Api Plus".</li>
 </ul>
-<h3>1.0.2</h3>
-<h4>New features</h4>
+<br>
+自定义配置项：<br>
+Preferences —> Other Settings —> Generate Api Plus Setting<br><br>
+<table border="1">
+  <tr>
+    <th align="left">配置项</th>
+    <th align="left">含义</th>
+  </tr>
+  <tr>
+    <td>Exclude Fields</td>
+    <td>过滤字段（多个字段以","分隔）</td>
+  </tr>
+  <tr>
+    <td>Save Directory</td>
+    <td>markdown文档保存目录（绝对路径）</td>
+  </tr>
+  <tr>
+    <td>Indent Style</td>
+    <td>二级字段缩进前缀</td>
+  </tr>
+  <tr>
+    <td>Overwrite exists docs</td>
+    <td>是否覆盖同名markdown文档</td>
+  </tr>
+  <tr>
+    <td>Extract filename from doc comments</td>
+    <td>是否从javadoc抽取文件名</td>
+  </tr>
+  <tr>
+    <td>YApi server url</td>
+    <td>YApi部署服务器地址</td>
+  </tr>
+  <tr>
+    <td>Project token</td>
+    <td>项目token</td>
+  </tr>
+  <tr>
+    <td>Default save category</td>
+    <td>默认保存分类</td>
+  </tr>
+  <tr>
+    <td>Classify API automatically</td>
+    <td>是否自动分类</td>
+  </tr>
+  <tr>
+    <td>Is Multiple Module Project</td>
+    <td>是否是多模块项目</td>
+  </tr>
+  <tr>
+    <td>Is Use Default Token</td>
+    <td>是否使用默认token</td>
+  </tr>
+</table>
+<br>
+<h1>Copy as cURL</h1>
+Features：<br>
 <ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>scan base path for module configuration</i></li>
-    </ul>
-  </li>
-  <li>
-    api generator plus
-    <ul>
-      <li>Support for custom rule filtering request fields</li>
-      <li>Support for matching YApi projects by module name</li>
-    </ul>
-  </li>
+  <li>right-click generator curl command</li>
 </ul>
-<h4>Bug fixes</h4>
+特性：<br>
 <ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>Fix that the method that contains the @RequestBody annotation does not generate the query parameter</li>
-      <li>Fix module header configuration error</i></li>
-    </ul>
-  </li>
+  <li>Generate the curl command with a key from the interface method, which can be executed on CMD /bash. Headers can be customized</li>
 </ul>
-<h4>新特性</h4>
-<ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>自动扫描模块信息时读取配置文件（application.yaml,application.yml,application.properties）中的上下文路径</i></li>
-    </ul>
-  </li>
-  <li>
-    api generator plus
-    <ul>
-      <li>支持自定义规则过滤请求字段</li>
-      <li>支持根据模块名匹配YApi项目</li>
-    </ul>
-  </li>
-</ul>
-<h4>Bug 修复</h4>
-<ul>
-  <li>
-    copy as curl
-    <ul>
-      <li>修复包含@RequestBody的方法没有生成Query参数</i></li>
-      <li>修复配置模块header时保存位置错误</i></li>
-    </ul>
-  </li>
-</ul>
-<em>1.0.1</em><br>
-<ul>
-  <li>Add the <i>Copy as fetch</i></li>
-</ul>
-<em>1.0.0</em><br>
-<ul>
-  <li>YApi Api automatic Generator</li>
-  <li>Copy as CUrl</li>
-</ul>
+<em>Compatible IDE versions:</em><br>
+2019.1.4+ <br><br>
+<p>
+  <a href="https://plugins.jetbrains.com/plugin/12785-api-generator">Api Generator</a>:&nbsp
+  <a href="https://github.com/Forgus/api-generator">GitHub</a>
+  |&nbsp<a href="https://github.com/Forgus/api-generator/issues">Issues</a>
+</p>
+<p>
+  Api Generator Plus:&nbsp
+  <a href="https://github.com/buyili/api-generator-plus.git">GitHub</a>
+  |&nbsp<a href="https://github.com/buyili/api-generator-plus/issues">Issues</a>
+</p>
 </body>
 </html>

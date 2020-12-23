@@ -4,6 +4,7 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiParameter;
+import org.jetbrains.kotlin.psi.KtParameter;
 
 /**
  * @author lmx 2020/11/12 17:05
@@ -43,5 +44,24 @@ public class StringUtil {
         }
         System.out.println("PsiParameter annotation----------------end");
     }
+
+    public static void showKtParameter(KtParameter ktParameter){
+        System.out.println("KtParameter");
+
+        System.out.println("ktParameter.getText()");
+        System.out.println(ktParameter.getText());
+        System.out.println();
+
+        System.out.println("ktParameter.getTypeReference().getText()");
+        System.out.println(ktParameter.getTypeReference().getText());
+        System.out.println();
+
+        System.out.println("ktParameter.getText()");
+        System.out.println(ktParameter.getText());
+        System.out.println();
+
+    }
+
+
 
 }

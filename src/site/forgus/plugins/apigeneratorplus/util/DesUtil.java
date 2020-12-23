@@ -9,7 +9,11 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.search.GlobalSearchScope;
+import org.jetbrains.kotlin.kdoc.psi.api.KDoc;
+import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag;
+import org.jetbrains.kotlin.psi.KtFunction;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -62,6 +66,44 @@ public class DesUtil {
             }
             return trimFirstAndLastChar(
                     psiDocComment.getText().split("@")[0]
+                            .replace("@description", "")
+                            .replace("@Description", "")
+                            .replace("Description", "")
+                            .replace("<br>", "\n")
+                            .replace(":", "")
+                            .replace("*", "")
+                            .replace("/", "")
+                            .replace("\n", " ")
+                            .replace("<p>", "\n")
+                            .replace("</p>", "\n")
+                            .replace("<li>", "\n")
+                            .replace("</li>", "\n")
+                            .replace("{", ""), ' '
+            );
+        }
+        return null;
+    }
+
+    /**
+     * 获得描述
+     *
+     * @param ktFunction the psi method target
+     * @return the description
+     */
+    public static String getDescription(KtFunction ktFunction) {
+        return getDescription(ktFunction.getDocComment());
+    }
+
+    public static String getDescription(KDoc kDoc) {
+        if (kDoc != null) {
+            List<KDocTag> descriptionTags = kDoc.getDefaultSection().findTagsByName("description");
+            for (KDocTag descriptionTag : descriptionTags) {
+                return trimFirstAndLastChar(descriptionTag.getText().replace("@description", "")
+                        .replace("@Description", "").replace("Description", "")
+                        .replace("<br>", "").replace(":", "").replace("*", "").replace("\n", " "), ' ');
+            }
+            return trimFirstAndLastChar(
+                    kDoc.getText().split("@")[0]
                             .replace("@description", "")
                             .replace("@Description", "")
                             .replace("Description", "")
