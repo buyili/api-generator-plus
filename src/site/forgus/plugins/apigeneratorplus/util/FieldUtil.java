@@ -8,6 +8,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.kotlin.psi.KtAnnotationEntry;
+import org.jetbrains.kotlin.psi.KtTypeReference;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
@@ -28,6 +29,8 @@ public class FieldUtil {
 
     public static final List<String> fileList = Arrays.asList("MultipartFile", "CommonsMultipartFile", "MockMultipartFile",
             "StandardMultipartFile");
+
+    public static final List<String> mapTypeList = Arrays.asList("Map", "HashMap", "LinkedHashMap", "JSONObject");
 
 
     static {
@@ -196,6 +199,23 @@ public class FieldUtil {
 
     public static boolean isGenericType(String typeName) {
         return genericList.contains(typeName);
+    }
+
+    public static boolean isMapType(String typeText){
+        for (String mapType : mapTypeList) {
+            if(mapType.equals(typeText) || typeText.startsWith(mapType.concat("<"))){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isMapType(PsiType psiType){
+        return isMapType(psiType.getPresentableText());
+    }
+
+    public static boolean isMapType(KtTypeReference ktTypeReference){
+        return isMapType(KtUtil.getText(ktTypeReference));
     }
 
     public static PsiAnnotation findAnnotationByName(List<PsiAnnotation> annotations, String text) {
