@@ -5,6 +5,7 @@ import com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl;
 import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.psi.*;
@@ -195,7 +196,7 @@ public class MethodUtil {
 
     public static String getFormDataVal(List<FieldInfo> list) {
         StringBuilder stringBuilder = new StringBuilder("var formData = new FormData();\n");
-        List<Object[]> keyValues = generateKeyValue(list);
+        List<Object[]> keyValues = generateParamKeyValue(list);
         for (Object[] keyValue : keyValues) {
             stringBuilder.append("formData.append(\"")
                     .append(keyValue[0])
@@ -220,6 +221,18 @@ public class MethodUtil {
             }
         }
         return strings;
+    }
+
+    private static List<Object[]> generateParamKeyValue(List<FieldInfo> fieldInfoList) {
+        ArrayList<FieldInfo> tempList = new ArrayList<>(fieldInfoList);
+        CollectionUtils.filter(tempList, new Predicate() {
+            @Override
+            public boolean evaluate(Object o) {
+                FieldInfo fieldInfo = (FieldInfo) o;
+                return !fieldInfo.containPathVariableAnnotation() && !fieldInfo.containRequestBodyAnnotation();
+            }
+        });
+        return generateKeyValue(tempList);
     }
 
     public static RequestMethodEnum getRequestMethod(String funStr) {
@@ -253,6 +266,17 @@ public class MethodUtil {
             return RequestMethodEnum.PATCH;
         }
         return RequestMethodEnum.POST;
+    }
+
+    public static String replacePathVariable(MethodInfo methodInfo) {
+        String methodPath = methodInfo.getMethodPath();
+        for (FieldInfo requestField : methodInfo.getRequestFields()) {
+            if (requestField.containPathVariableAnnotation()) {
+                methodPath = methodPath.replace("{" + requestField.getName() + "}",
+                        FieldUtil.getValue(requestField).toString());
+            }
+        }
+        return methodPath;
     }
 
 }

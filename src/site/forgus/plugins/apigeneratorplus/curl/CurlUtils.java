@@ -98,7 +98,7 @@ public class CurlUtils {
 
 
         String input = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
-                methodInfo.getMethodPath());
+                MethodUtil.replacePathVariable(methodInfo));
 
         // 判斷是否是Get方法
         if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
@@ -197,7 +197,8 @@ public class CurlUtils {
         // 访问接口
         stringBuilder.append(" '")
                 .append(getBaseApi(port))
-                .append(pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(), methodInfo.getMethodPath()));
+                .append(pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+                        MethodUtil.replacePathVariable(methodInfo)));
         stringBuilder.append(getRequestParams(methodInfo, cUrlClientType));
         stringBuilder.append("'");
 
@@ -551,7 +552,6 @@ public class CurlUtils {
 
 
     public String getRequestBody(MethodInfo methodInfo, CUrlClientType cUrlClientType) {
-//        StringUtil.showPsiMethod(psiMethod);
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
         MediaType mediaType = methodInfo.getMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
@@ -682,6 +682,9 @@ public class CurlUtils {
         }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
+            if (requestField.containPathVariableAnnotation()) {
+                continue;
+            }
             if (requestField.hasChildren()) {
                 strings.addAll(generateKeyValue(filterChildrenFiled(requestField)));
             } else {
