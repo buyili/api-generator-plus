@@ -102,12 +102,6 @@ public class DesUtil {
                         .replace("@Description", "").replace("Description", "")
                         .replace("<br>", "").replace(":", "").replace("*", "").replace("\n", " "), ' ');
             }
-//            PsiDocTag[] psiDocTags = kDoc.getTags();
-//            for (PsiDocTag psiDocTag : psiDocTags) {
-//                if (psiDocTag.getText().contains("@description") || psiDocTag.getText().contains("@Description") || psiDocTag.getText().toLowerCase().contains("description")) {
-//                    return trimFirstAndLastChar(psiDocTag.getText().replace("@description", "").replace("@Description", "").replace("Description", "").replace("<br>", "").replace(":", "").replace("*", "").replace("\n", " "), ' ');
-//                }
-//            }
             return trimFirstAndLastChar(
                     kDoc.getText().split("@")[0]
                             .replace("@description", "")

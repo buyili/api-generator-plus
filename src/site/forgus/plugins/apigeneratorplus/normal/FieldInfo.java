@@ -777,23 +777,4 @@ public class FieldInfo {
         return false;
     }
 
-//    public String getCanonicalText() {
-//        if (psiType != null) {
-//            return psiType.getCanonicalText();
-//        }
-//        if (ktTypeReference != null) {
-//            PsiElement resolve = getPsiReference(ktTypeReference).resolve();
-//            if (resolve instanceof PsiClass) {
-//                PsiClass psiClass = (PsiClass) resolve;
-//                return psiClass.getQualifiedName();
-//            }
-//            if (resolve instanceof KtClass) {
-//                //@todo
-//                KtClass ktClass = (KtClass) resolve;
-//                System.out.println();
-//            }
-//        }
-//        return "";
-//    }
-
 }

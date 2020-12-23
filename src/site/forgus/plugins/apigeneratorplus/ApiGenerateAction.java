@@ -523,7 +523,8 @@ public class ApiGenerateAction extends AnAction {
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
         yApiInterface.setReq_params(listYApiPathVariables(requestFields));
-        yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc() : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
+        yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
+                : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
 
 
         return yApiInterface;
@@ -598,7 +599,6 @@ public class ApiGenerateAction extends AnAction {
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
                 : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(ktFunction) + "</code> </pre>");
 
-
         return yApiInterface;
     }
 
@@ -655,15 +655,16 @@ public class ApiGenerateAction extends AnAction {
         return methodDesc;
     }
 
-    //@todo
     private String getMethodDesc(KtFunction ktFunction) {
-        KtBlockExpression bodyBlockExpression = ktFunction.getBodyBlockExpression();
-//        String methodDesc = ktFunction.getText().replace(Objects.nonNull(ktFunction.getBody()) ? ktFunction.getBody().getText() : "", "");
-//        if (!Strings.isNullOrEmpty(methodDesc)) {
-//            methodDesc = methodDesc.replace("<", "&lt;").replace(">", "&gt;");
-//        }
-//        return methodDesc;
-        return "";
+        KDoc docComment = ktFunction.getDocComment();
+        if (docComment == null) {
+            return "";
+        }
+        String methodDesc = docComment.getText();
+        if (!Strings.isNullOrEmpty(methodDesc)) {
+            methodDesc = methodDesc.replace("<", "&lt;").replace(">", "&gt;");
+        }
+        return methodDesc;
     }
 
     private List<YApiPathVariable> listYApiPathVariables(List<FieldInfo> requestFields) {

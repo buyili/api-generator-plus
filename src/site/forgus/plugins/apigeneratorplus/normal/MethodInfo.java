@@ -145,7 +145,6 @@ public class MethodInfo implements Serializable {
     /**
      * @param ktFunction
      * @return
-     * @todo
      */
     private String extraClassPathKt(KtFunction ktFunction) {
         KtClass ktClass = (KtClass) ktFunction.getParent().getParent();
