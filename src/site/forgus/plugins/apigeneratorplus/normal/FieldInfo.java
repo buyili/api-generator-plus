@@ -172,13 +172,12 @@ public class FieldInfo {
                      List<KtAnnotationEntry> annotations) {
         this.project = project;
         config = ServiceManager.getService(project, ApiGeneratorConfig.class);
-        // @todo
-//        RequireAndRange requireAndRange = getRequireAndRange(annotations);
+        RequireAndRange requireAndRange = getRequireAndRange(annotations);
         String fieldName = getParamName(name, annotations);
         this.name = fieldName == null ? "N/A" : fieldName;
         this.ktTypeReference = ktTypeReference;
-//        this.require = requireAndRange.isRequire();
-//        this.range = requireAndRange.getRange();
+        this.require = requireAndRange.isRequire();
+        this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
         this.ktAnnotationEntries = annotations;
         this.parent = parent;
@@ -579,6 +578,75 @@ public class FieldInfo {
         return new RequireAndRange(require, range);
     }
 
+    private RequireAndRange getRequireAndRange(List<KtAnnotationEntry> annotations) {
+        if (annotations.size() == 0) {
+            return RequireAndRange.instance();
+        }
+        boolean require = false;
+        String min = "";
+        String max = "";
+        String range = "N/A";
+        for (KtAnnotationEntry annotation : annotations) {
+            if (isParamRequired(annotation)) {
+                require = true;
+                break;
+            }
+        }
+        for (KtAnnotationEntry annotation : annotations) {
+            String qualifiedName = annotation.getText();
+            if (qualifiedName.contains("Length") || qualifiedName.contains("Range") || qualifiedName.contains("Size")) {
+                KtValueArgumentList valueArgumentList = annotation.getValueArgumentList();
+                if (valueArgumentList != null) {
+                    for (KtValueArgument argument : valueArgumentList.getArguments()) {
+                        if ("min".equals(argument.getName())) {
+                            min = argument.getArgumentExpression().getName();
+                        }
+                        break;
+                    }
+                }
+            }
+            if (qualifiedName.contains("Min")) {
+                KtValueArgumentList valueArgumentList = annotation.getValueArgumentList();
+                if (valueArgumentList != null) {
+                    for (KtValueArgument argument : valueArgumentList.getArguments()) {
+                        if ("value".equals(argument.getName())) {
+                            min = argument.getArgumentExpression().getName();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        for (KtAnnotationEntry annotation : annotations) {
+            String qualifiedName = annotation.getText();
+            if (qualifiedName.contains("Length") || qualifiedName.contains("Range") || qualifiedName.contains("Size")) {
+                KtValueArgumentList valueArgumentList = annotation.getValueArgumentList();
+                if (valueArgumentList != null) {
+                    for (KtValueArgument argument : valueArgumentList.getArguments()) {
+                        if ("max".equals(argument.getName())) {
+                            min = argument.getArgumentExpression().getName();
+                        }
+                    }
+                }
+            }
+            if (qualifiedName.contains("Max")) {
+                KtValueArgumentList valueArgumentList = annotation.getValueArgumentList();
+                if (valueArgumentList != null) {
+                    for (KtValueArgument argument : valueArgumentList.getArguments()) {
+                        if ("value".equals(argument.getName())) {
+                            min = argument.getArgumentExpression().getName();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        if (StringUtils.isNotEmpty(min) || StringUtils.isNotEmpty(max)) {
+            range = "[" + min + "," + max + "]";
+        }
+        return new RequireAndRange(require, range);
+    }
+
     private boolean isParamRequired(PsiAnnotation annotation) {
         String annotationText = annotation.getText();
         if (annotationText.contains(WebAnnotation.RequestParam)) {
@@ -586,6 +654,22 @@ public class FieldInfo {
             for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
                 if ("required".equals(psiNameValuePair.getName()) && "false".equals(psiNameValuePair.getLiteralValue())) {
                     return false;
+                }
+            }
+            return true;
+        }
+        return requiredTexts.contains(annotationText.split("\\(")[0]);
+    }
+
+    private boolean isParamRequired(KtAnnotationEntry annotation) {
+        String annotationText = annotation.getText();
+        if (annotationText.contains(WebAnnotation.RequestParam)) {
+            KtValueArgumentList valueArgumentList = annotation.getValueArgumentList();
+            if (valueArgumentList != null) {
+                for (KtValueArgument argument : valueArgumentList.getArguments()) {
+                    if ("required".equals(argument.getName()) && "false".equals(argument.getArgumentExpression())) {
+                        return false;
+                    }
                 }
             }
             return true;
