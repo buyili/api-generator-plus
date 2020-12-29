@@ -1,12 +1,10 @@
 package site.forgus.plugins.apigeneratorplus.normal;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
-import gherkin.lexer.Fi;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -14,10 +12,7 @@ import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
-import site.forgus.plugins.apigeneratorplus.util.AssertUtils;
-import site.forgus.plugins.apigeneratorplus.util.DesUtil;
-import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
-import site.forgus.plugins.apigeneratorplus.util.KtUtil;
+import site.forgus.plugins.apigeneratorplus.util.*;
 
 import java.util.*;
 
@@ -31,7 +26,6 @@ public class FieldInfo {
     private String desc;
     private TypeEnum paramType;
     private List<FieldInfo> children;
-    @JsonIgnore
     private FieldInfo parent;
     private List<PsiAnnotation> annotations;
     private Project project;
@@ -316,7 +310,7 @@ public class FieldInfo {
                         continue;
                     }
                     fieldInfos.add(new FieldInfo(project, fieldInfo, outField.getName(), type,
-                            DesUtil.getDescription(outField.getDocComment()), outField.getAnnotations()));
+                            DesUtil.getDescription(outField.getDocComment()), ClassUtil.getAnnotations(outField)));
                 }
                 return fieldInfos;
             }
@@ -329,7 +323,7 @@ public class FieldInfo {
                     continue;
                 }
                 fieldInfos.add(new FieldInfo(project, fieldInfo, psiField.getName(), psiField.getType(),
-                        DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));
+                        DesUtil.getDescription(psiField.getDocComment()), ClassUtil.getAnnotations(psiField)));
             }
             return fieldInfos;
         }
@@ -396,7 +390,7 @@ public class FieldInfo {
                         continue;
                     }
                     fieldInfos.add(new FieldInfo(project, fieldInfo, outField.getName(), type,
-                            DesUtil.getDescription(outField.getDocComment()), outField.getAnnotations()));
+                            DesUtil.getDescription(outField.getDocComment()), ClassUtil.getAnnotations(outField)));
                 }
             } else if (fieldClass instanceof KtClass) {
                 KtClass ktClass = (KtClass) fieldClass;

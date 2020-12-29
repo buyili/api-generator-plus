@@ -24,7 +24,6 @@ import lombok.extern.log4j.Log4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.SystemIndependent;
 import org.jetbrains.kotlin.idea.KotlinLanguage;
 import org.jetbrains.kotlin.psi.KtFunction;
 import org.yaml.snakeyaml.Yaml;
@@ -265,13 +264,19 @@ public class CurlUtils {
     private String buildPath(PsiMethod psiMethod, CURLModuleInfo info) {
         String classPath = "";
         String methodPath = "";
-        for (PsiAnnotation annotation : Objects.requireNonNull(psiMethod.getContainingClass()).getAnnotations()) {
-            if (annotation.getText().contains("Mapping")) {
-                classPath = getPathFromAnnotation(annotation);
-                break;
+        PsiClass containingClass = psiMethod.getContainingClass();
+        if (containingClass != null) {
+            PsiModifierList modifierList = containingClass.getModifierList();
+            if (modifierList != null) {
+                for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+                    if (annotation.getText().contains("Mapping")) {
+                        classPath = getPathFromAnnotation(annotation);
+                        break;
+                    }
+                }
             }
         }
-        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+        for (PsiAnnotation annotation : psiMethod.getModifierList().getAnnotations()) {
             if (annotation.getText().contains("Mapping")) {
                 methodPath = getPathFromAnnotation(annotation);
                 break;
@@ -330,7 +335,7 @@ public class CurlUtils {
     }
 
     private PsiAnnotation getMethodMapping(PsiMethod psiMethod) {
-        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+        for (PsiAnnotation annotation : psiMethod.getModifierList().getAnnotations()) {
             String text = annotation.getText();
             if (text.contains("Mapping")) {
                 return annotation;
@@ -475,10 +480,13 @@ public class CurlUtils {
     }
 
     private boolean haveControllerAnnotation(PsiClass psiClass) {
-        PsiAnnotation[] annotations = psiClass.getAnnotations();
-        for (PsiAnnotation annotation : annotations) {
-            if (annotation.getText().contains(WebAnnotation.Controller)) {
-                return true;
+        PsiModifierList modifierList = psiClass.getModifierList();
+        if (null != modifierList) {
+            PsiAnnotation[] annotations = modifierList.getAnnotations();
+            for (PsiAnnotation annotation : annotations) {
+                if (annotation.getText().contains(WebAnnotation.Controller)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -525,7 +533,7 @@ public class CurlUtils {
     }
 
     public boolean isPostMethod(PsiMethod psiMethod) {
-        PsiAnnotation[] annotations = psiMethod.getAnnotations();
+        PsiAnnotation[] annotations = psiMethod.getModifierList().getAnnotations();
         for (PsiAnnotation annotation : annotations) {
             if (annotation.getText().contains(WebAnnotation.PostMapping)) {
                 return true;
@@ -629,7 +637,7 @@ public class CurlUtils {
         }
 //        StringUtil.showPsiMethod(psiMethod);
 //        boolean containRequestBodyAnnotation = containRequestBodyAnnotation(psiMethod);
-//        if (!isGetMethod(psiMethod.getAnnotations()) && !containRequestBodyAnnotation) {
+//        if (!isGetMethod(psiMethod.getModifierList().getAnnotations()) && !containRequestBodyAnnotation) {
 //            return "";
 //        }
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
@@ -747,7 +755,7 @@ public class CurlUtils {
     }
 
     private boolean containRequestBodyAnnotation(PsiMethod psiMethod) {
-        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
+        if (containRequestBodyAnnotation(psiMethod.getModifierList().getAnnotations())) {
             return true;
         }
         for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
@@ -760,7 +768,7 @@ public class CurlUtils {
 
 
     public static String findPort(Module module) {
-        @SystemIndependent String path = module.getModuleFilePath();
+        String path = module.getModuleFilePath();
 
         String configFilePath = "";
         String key = "server.port";
@@ -771,7 +779,7 @@ public class CurlUtils {
             log.info(configFilePath);
             VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
             Yaml yaml = new Yaml();
-            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Map<String, String> yamlMap = yaml.loadAs(virtualFile.getInputStream(), Map.class);
             Object valueByKey = getValueByKey(key, "", yamlMap);
             String tempVal = String.valueOf(valueByKey);
             if (StringUtils.isNotBlank(tempVal)) {
@@ -786,7 +794,7 @@ public class CurlUtils {
             log.info(configFilePath);
             VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
             Yaml yaml = new Yaml();
-            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Map<String, String> yamlMap = yaml.loadAs(virtualFile.getInputStream(), Map.class);
             Object valueByKey = getValueByKey(key, "", yamlMap);
             String tempVal = String.valueOf(valueByKey);
             if (StringUtils.isNotBlank(tempVal)) {
@@ -814,7 +822,7 @@ public class CurlUtils {
 
 
     public static String findContextPath(Module module) {
-        @SystemIndependent String path = module.getModuleFilePath();
+        String path = module.getModuleFilePath();
 
         String configFilePath = "";
         String key = "server.servlet.context-path";
@@ -825,7 +833,7 @@ public class CurlUtils {
             log.info(configFilePath);
             VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
             Yaml yaml = new Yaml();
-            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Map<String, String> yamlMap = yaml.loadAs(virtualFile.getInputStream(), Map.class);
             Object valueByKey = getValueByKey(key, "", yamlMap);
             String tempVal = String.valueOf(valueByKey);
             if (StringUtils.isNotBlank(tempVal)) {
@@ -840,7 +848,7 @@ public class CurlUtils {
             log.info(configFilePath);
             VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(configFilePath);
             Yaml yaml = new Yaml();
-            Map<String, String> yamlMap = yaml.load(virtualFile.getInputStream());
+            Map<String, String> yamlMap = yaml.loadAs(virtualFile.getInputStream(), Map.class);
             Object valueByKey = getValueByKey(key, "", yamlMap);
             String tempVal = String.valueOf(valueByKey);
             if (StringUtils.isNotBlank(tempVal)) {

@@ -243,7 +243,7 @@
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="191.0"/>
+    <idea-version since-build="171"/>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
@@ -259,10 +259,11 @@
         <!--        <projectConfigurable instance="site.forgus.plugins.apigeneratorplus.config.ApiGeneratorSetting"/>-->
         <projectService serviceImplementation="site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig"/>
 
-        <projectConfigurable instance="site.forgus.plugins.apigeneratorplus.setting.GroupSettingConfigurable">
+        <projectConfigurable parentId="tools" instance="site.forgus.plugins.apigeneratorplus.setting.GroupSettingConfigurable">
             <configurable instance="site.forgus.plugins.apigeneratorplus.config.ApiGeneratorSetting"/>
             <configurable instance="site.forgus.plugins.apigeneratorplus.setting.CURLSettingConfigurable"/>
         </projectConfigurable>
+
         <projectService serviceImplementation="site.forgus.plugins.apigeneratorplus.setting.CURLSettingState"/>
     </extensions>
 

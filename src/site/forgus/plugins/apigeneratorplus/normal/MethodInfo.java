@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.name.FqName;
 import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
+import site.forgus.plugins.apigeneratorplus.util.ClassUtil;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.MethodUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
@@ -63,11 +64,11 @@ public class MethodInfo implements Serializable {
         if (psiClass == null) {
             return;
         }
-        this.setPackageName(PsiUtil.getPackageName(psiClass));
+        this.setPackageName(ClassUtil.getPackageName(psiClass));
         this.setClassName(psiClass.getName());
 
         List<String> classAnnotationTexts = new ArrayList<>();
-        for (PsiAnnotation annotation : psiClass.getAnnotations()) {
+        for (PsiAnnotation annotation : ClassUtil.getAnnotations(psiClass)) {
             classAnnotationTexts.add(annotation.getText());
         }
         this.setClassAnnotationTexts(classAnnotationTexts);
@@ -247,7 +248,7 @@ public class MethodInfo implements Serializable {
                     psiParameter.getName(),
                     psiType,
                     paramNameDescMap.get(psiParameter.getName()),
-                    psiParameter.getAnnotations()
+                    ClassUtil.getAnnotations(psiParameter)
             );
             fieldInfoList.add(fieldInfo);
         }
@@ -256,7 +257,7 @@ public class MethodInfo implements Serializable {
 
     private String extraClassPath(PsiMethod psiMethod) {
         String path = "";
-        for (PsiAnnotation annotation : Objects.requireNonNull(psiMethod.getContainingClass()).getAnnotations()) {
+        for (PsiAnnotation annotation : ClassUtil.getAnnotations(psiMethod.getContainingClass())) {
             if (annotation.getText().contains("Mapping")) {
                 path = getPathFromAnnotation(annotation);
                 break;
@@ -267,7 +268,7 @@ public class MethodInfo implements Serializable {
 
     private String extraMethodPath(PsiMethod psiMethod) {
         String methodPath = "";
-        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+        for (PsiAnnotation annotation : psiMethod.getModifierList().getAnnotations()) {
             if (annotation.getText().contains("Mapping")) {
                 methodPath = getPathFromAnnotation(annotation);
                 break;

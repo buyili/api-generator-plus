@@ -507,7 +507,7 @@ public class ApiGenerateAction extends AnAction {
         PsiDocComment classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
         yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getDesc());
-        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
+        if (containRequestBodyAnnotation(psiMethod.getModifierList().getAnnotations())) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         } else if (MediaType.MULTIPART_FORM_DATA == mediaType) {
@@ -517,8 +517,8 @@ public class ApiGenerateAction extends AnAction {
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
 //            yApiInterface.setRes_body("");
         }
-        if (containResponseBodyAnnotation(psiMethod.getAnnotations())
-                || containRestControllerAnnotation(containingClass.getAnnotations())) {
+        if (containResponseBodyAnnotation(psiMethod.getModifierList().getAnnotations())
+                || ClassUtil.containRestControllerAnnotation(containingClass)) {
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
@@ -1006,7 +1006,7 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private PsiAnnotation getMethodMapping(PsiMethod psiMethod) {
-        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+        for (PsiAnnotation annotation : psiMethod.getModifierList().getAnnotations()) {
             String text = annotation.getText();
             if (text.contains("Mapping")) {
                 return annotation;
@@ -1016,7 +1016,7 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private boolean hasMappingAnnotation(PsiMethod method) {
-        PsiAnnotation[] annotations = method.getAnnotations();
+        PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
         for (PsiAnnotation annotation : annotations) {
             if (annotation.getText().contains("Mapping")) {
                 return true;
@@ -1035,10 +1035,13 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private boolean haveControllerAnnotation(PsiClass psiClass) {
-        PsiAnnotation[] annotations = psiClass.getAnnotations();
-        for (PsiAnnotation annotation : annotations) {
-            if (annotation.getText().contains(WebAnnotation.Controller)) {
-                return true;
+        PsiModifierList modifierList = psiClass.getModifierList();
+        if (null != modifierList) {
+            PsiAnnotation[] annotations = modifierList.getAnnotations();
+            for (PsiAnnotation annotation : annotations) {
+                if (annotation.getText().contains(WebAnnotation.Controller)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -1124,7 +1127,8 @@ public class ApiGenerateAction extends AnAction {
             if (config.getState().excludeFieldNames.contains(psiField.getName())) {
                 continue;
             }
-            fieldInfos.add(new FieldInfo(psiClass.getProject(), psiField.getName(), psiField.getType(), DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));
+            fieldInfos.add(new FieldInfo(psiClass.getProject(), psiField.getName(), psiField.getType(),
+                    DesUtil.getDescription(psiField.getDocComment()), ClassUtil.getAnnotations(psiField)));
         }
         return fieldInfos;
     }

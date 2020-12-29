@@ -38,7 +38,7 @@ public class MethodUtil {
 
     @Nullable
     public static PsiAnnotation getRequestMapping(PsiMethod psiMethod) {
-        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+        for (PsiAnnotation annotation : psiMethod.getModifierList().getAnnotations()) {
             String text = annotation.getText();
             if (text.contains("Mapping")) {
                 return annotation;
@@ -121,7 +121,7 @@ public class MethodUtil {
     }
 
     public static MediaType getMediaType(PsiMethod psiMethod) {
-        if (isGetMethod(psiMethod.getAnnotations())) {
+        if (isGetMethod(psiMethod.getModifierList().getAnnotations())) {
             return null;
         }
         for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
@@ -129,9 +129,12 @@ public class MethodUtil {
             if (FieldUtil.isFileType(typeName)) {
                 return MediaType.MULTIPART_FORM_DATA;
             }
-            for (PsiAnnotation annotation : parameter.getAnnotations()) {
-                if (annotation.getText().contains(WebAnnotation.RequestBody)) {
-                    return MediaType.APPLICATION_JSON;
+            PsiModifierList modifierList = parameter.getModifierList();
+            if (null != modifierList) {
+                for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+                    if (annotation.getText().contains(WebAnnotation.RequestBody)) {
+                        return MediaType.APPLICATION_JSON;
+                    }
                 }
             }
         }

@@ -1,9 +1,8 @@
 package site.forgus.plugins.apigeneratorplus.util;
 
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiNameValuePair;
-import com.intellij.psi.PsiParameter;
+import com.intellij.psi.*;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.psi.KtParameter;
 
 /**
@@ -19,6 +18,22 @@ public class StringUtil {
         return "Unnameed (" + nameNumber + ")";
     }
 
+    @NotNull
+    @Contract(pure = true)
+    public static String getPackageName(@NotNull String fqName) {
+        return getPackageName(fqName, '.');
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    public static String getPackageName(@NotNull String fqName, char separator) {
+        int lastPointIdx = fqName.lastIndexOf(separator);
+        if (lastPointIdx >= 0) {
+            return fqName.substring(0, lastPointIdx);
+        }
+        return "";
+    }
+
     public static void showPsiNameValuePair(PsiNameValuePair psiNameValuePair){
         System.out.println(psiNameValuePair.getName());
         System.out.println(psiNameValuePair.getValue());
@@ -29,7 +44,7 @@ public class StringUtil {
 //        Gson gson = new Gson();
         System.out.println(psiMethod.getName());
         System.out.println("PsiAnnotation annotation----------------");
-        for (PsiAnnotation annotation : psiMethod.getAnnotations()) {
+        for (PsiAnnotation annotation : psiMethod.getModifierList().getAnnotations()) {
             //结果示例 @RequestMapping(value = "/test", method = RequestMethod.GET)
             System.out.println(annotation.getText());
         }
@@ -38,8 +53,11 @@ public class StringUtil {
         for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
             //结果示例： QueryDto queryDto
             System.out.println(parameter.getText());
-            for (PsiAnnotation annotation : parameter.getAnnotations()) {
-                System.out.println("annotation text:                " + annotation.getText());
+            PsiModifierList modifierList = parameter.getModifierList();
+            if(modifierList != null) {
+                for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+                    System.out.println("annotation text:                " + annotation.getText());
+                }
             }
         }
         System.out.println("PsiParameter annotation----------------end");

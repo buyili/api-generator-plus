@@ -32,9 +32,9 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextField baseApiTextField;
 
     CURLModuleInfoUI curlModuleInfoUI;
-    JBTextArea canonicalClassNameTextFields;
-    JBTextArea includeFiledTextFields;
-    JBTextArea excludeFieldTextFields;
+    JTextArea canonicalClassNameTextFields;
+    JTextArea includeFiledTextFields;
+    JTextArea excludeFieldTextFields;
     JBTextField arrayFormatTextFields;
     JBCheckBox excludeChildrenCheckBox;
 
@@ -72,9 +72,9 @@ public class CURLSettingConfigurable implements Configurable {
     @Override
     public JComponent createComponent() {
         baseApiTextField = new JBTextField(oldState.baseApi);
-        canonicalClassNameTextFields = new JBTextArea(oldState.filterFieldInfo.canonicalClassName, 3, 0);
-        includeFiledTextFields = new JBTextArea(oldState.filterFieldInfo.includeFiled, 3, 0);
-        excludeFieldTextFields = new JBTextArea(oldState.filterFieldInfo.excludeField, 3, 0);
+        canonicalClassNameTextFields = new JTextArea(oldState.filterFieldInfo.canonicalClassName, 3, 0);
+        includeFiledTextFields = new JTextArea(oldState.filterFieldInfo.includeFiled, 3, 0);
+        excludeFieldTextFields = new JTextArea(oldState.filterFieldInfo.excludeField, 3, 0);
         arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
         excludeChildrenCheckBox = new JBCheckBox("", oldState.filterFieldInfo.excludeChildren);
 
