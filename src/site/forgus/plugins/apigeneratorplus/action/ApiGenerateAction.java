@@ -1,4 +1,4 @@
-package site.forgus.plugins.apigeneratorplus;
+package site.forgus.plugins.apigeneratorplus.action;
 
 import com.google.common.base.Strings;
 import com.intellij.ide.highlighter.JavaClassFileType;

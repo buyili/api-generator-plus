@@ -1,4 +1,4 @@
-package site.forgus.plugins.apigeneratorplus;
+package site.forgus.plugins.apigeneratorplus.action;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -13,7 +13,7 @@ import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
  * @author lmx 2020/11/11 14:19
  */
 
-public class CopyAsCurlCMDAction extends AnAction {
+public class CopyAsCurlBashAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         try {
@@ -27,7 +27,7 @@ public class CopyAsCurlCMDAction extends AnAction {
 //            return;
 //        }
             CurlUtils curlUtils = new CurlUtils();
-            curlUtils.copyAsCUrl(actionEvent, CUrlClientType.CMD);
+            curlUtils.copyAsCUrl(actionEvent, CUrlClientType.BASH);
         } catch (BizException e) {
             e.printStackTrace();
             if (StringUtils.isNotBlank(e.getMessage())) {

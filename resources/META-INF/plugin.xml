@@ -268,27 +268,31 @@
 
     <actions>
         <!-- Add your actions here -->
-        <group id="site.forgus.plugins.apigeneratorplus.CopyAsActionGroup"
-               class="site.forgus.plugins.apigeneratorplus.CopyAsActionGroup"
+        <group id="site.forgus.plugins.apigeneratorplus.action.CopyAsActionGroup"
+               class="site.forgus.plugins.apigeneratorplus.action.CopyAsActionGroup"
                popup="true">
-            <action id="site.forgus.plugins.apigeneratorplus.CopyIPAction"
-                    class="site.forgus.plugins.apigeneratorplus.CopyIPAction"
+            <action id="site.forgus.plugins.apigeneratorplus.action.CopyIPAction"
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyIPAction"
                     text="Copy Current IP">
             </action>
-            <action id="CopyAsFetchAction" class="site.forgus.plugins.apigeneratorplus.CopyAsFetchAction"
+            <action id="site.forgus.plugins.apigeneratorplus.action.CopyRestfulUriAction"
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyRestfulUriAction"
+                    text="Copy RESTful Uri">
+            </action>
+            <action id="CopyAsFetchAction" class="site.forgus.plugins.apigeneratorplus.action.CopyAsFetchAction"
                     text="Copy as Fetch"/>
-            <action id="site.forgus.plugins.apigeneratorplus.CopyAsCurlCMDAction"
-                    class="site.forgus.plugins.apigeneratorplus.CopyAsCurlCMDAction" text="Copy as CURL (Cmd)">
+            <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction"
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction" text="Copy as CURL (Cmd)">
             </action>
-            <action id="site.forgus.plugins.apigeneratorplus.CopyAsCurlBashAction"
-                    class="site.forgus.plugins.apigeneratorplus.CopyAsCurlBashAction" text="Copy as CURL (Bash)">
+            <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlBashAction"
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlBashAction" text="Copy as CURL (Bash)">
             </action>
-            <action class="site.forgus.plugins.apigeneratorplus.GenerateModuleNamesAction"
-                    text="Generate Project Modules">
+            <action class="site.forgus.plugins.apigeneratorplus.action.GenerateModuleNamesAction"
+                    text="Scan Project Modules And Save">
             </action>
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </group>
-        <action class="site.forgus.plugins.apigeneratorplus.ApiGenerateAction"
+        <action class="site.forgus.plugins.apigeneratorplus.action.ApiGenerateAction"
                 text="Generate Api Plus"
                 description="Generate Api for target code.">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
