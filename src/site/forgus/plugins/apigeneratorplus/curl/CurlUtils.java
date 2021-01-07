@@ -153,7 +153,7 @@ public class CurlUtils {
         }
         System.out.println(rawStr);
         CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
-        NotificationUtil.infoNotify("已复制到剪切板", rawStr, project);
+        NotificationUtil.infoNotify("Copy as Fetch", "已复制到剪切板", rawStr, project);
     }
 
     public void copyAsCUrl(@NotNull AnActionEvent actionEvent, CUrlClientType cUrlClientType) {
@@ -224,7 +224,51 @@ public class CurlUtils {
         }
         System.out.println(curlStr);
         CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
-        NotificationUtil.infoNotify("已复制到剪切板", curlStr, project);
+        NotificationUtil.infoNotify("copy as curl(" + cUrlClientType.name() + ")", "已复制到剪切板", curlStr, project);
+    }
+
+    public void copyAsRestfulUri(@NotNull AnActionEvent actionEvent) {
+        Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
+        Assert.notNull(editor);
+
+        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+        Assert.notNull(psiFile);
+
+        Project project = actionEvent.getProject();
+        Assert.notNull(project);
+
+        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+        Assert.notNull(referenceAt);
+        Language language = referenceAt.getLanguage();
+        MethodInfo methodInfo = null;
+        if (language instanceof KotlinLanguage) {
+            KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
+            Assert.notNull(ktFunction, "The cursor is not placed in the method area");
+            methodInfo = new MethodInfo(ktFunction);
+            System.out.println();
+        } else {
+            PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+            Assert.notNull(selectedMethod, "The cursor is not placed in the method area");
+            methodInfo = new MethodInfo(selectedMethod);
+        }
+
+        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+
+        String moduleName = getModuleName(editor, project);
+        checkHasModuleConfig(project, moduleName);
+        CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
+        Assert.notNull(curlModuleInfo);
+
+        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+
+        // 访问接口
+        String curlStr = getBaseApi(port) +
+                pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+                        MethodUtil.replacePathVariable(methodInfo));
+        System.out.println(curlStr);
+        CopyPasteManager.getInstance().setContents(new TextTransferable(curlStr));
+        NotificationUtil.infoNotify("Copy RESTful uri", "已复制到剪切板", curlStr, project);
     }
 
     public static void findModuleInfoAndSave(AnActionEvent actionEvent) {
@@ -241,7 +285,7 @@ public class CurlUtils {
             foundModuleInfoList.removeIf(curlModuleInfo -> info.getModuleName().equals(curlModuleInfo.getModuleName()));
         }
         state.moduleInfoList.addAll(foundModuleInfoList);
-        String message = MessageFormat.format("Generate project modules success!\n old modules: {0} \nadd modules: {1}",
+        String message = MessageFormat.format("Scan project modules and save success!\n old modules: {0} \nadd modules: {1}",
                 oldJson, JsonUtil.prettyJson.toJson(foundModuleInfoList));
         NotificationUtil.infoNotify(message, project);
     }

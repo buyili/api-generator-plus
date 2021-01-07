@@ -1,4 +1,4 @@
-package site.forgus.plugins.apigeneratorplus;
+package site.forgus.plugins.apigeneratorplus.action;
 
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.actionSystem.AnActionEvent;

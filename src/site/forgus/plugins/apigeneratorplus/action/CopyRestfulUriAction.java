@@ -1,7 +1,10 @@
-package site.forgus.plugins.apigeneratorplus;
+package site.forgus.plugins.apigeneratorplus.action;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.ide.CopyPasteManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.util.ui.TextTransferable;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
@@ -13,7 +16,8 @@ import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
  * @author lmx 2020/11/11 14:19
  */
 
-public class CopyAsCurlBashAction extends AnAction {
+public class CopyRestfulUriAction extends AnAction {
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         try {
@@ -27,13 +31,17 @@ public class CopyAsCurlBashAction extends AnAction {
 //            return;
 //        }
             CurlUtils curlUtils = new CurlUtils();
-            curlUtils.copyAsCUrl(actionEvent, CUrlClientType.BASH);
+            curlUtils.copyAsRestfulUri(actionEvent);
         } catch (BizException e) {
             e.printStackTrace();
             if (StringUtils.isNotBlank(e.getMessage())) {
                 NotificationUtil.errorNotify(e.getMessage());
             }
         }
+//        Project project = actionEvent.getProject();
+//        String baseApi = CurlUtils.getRealIP();
+//        CopyPasteManager.getInstance().setContents(new TextTransferable(baseApi));
+//        NotificationUtil.infoNotify("Native IP address：", baseApi, project);
     }
 
 }
