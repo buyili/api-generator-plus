@@ -716,9 +716,11 @@ public class FieldInfo {
         PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
         int i = 0;
         Map<String, PsiType> map = new HashMap<>();
-        for (PsiTypeParameter typeParameter : typeParameters) {
-            map.put(typeParameter.getName(), parameters[i]);
-            i++;
+        if (typeParameters.length == parameters.length) {
+            for (PsiTypeParameter typeParameter : typeParameters) {
+                map.put(typeParameter.getName(), parameters[i]);
+                i++;
+            }
         }
         return map;
     }
