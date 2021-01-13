@@ -4,9 +4,14 @@ import com.intellij.openapi.options.ConfigurableUi;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Splitter;
 import com.intellij.ui.DocumentAdapter;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.ListItemEditor;
 import com.intellij.util.ui.ListModelEditor;
 import org.jetbrains.annotations.NotNull;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.util.DeepCloneUtil;
+import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
+import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,6 +19,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,7 +122,12 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 
     @Override
     public void reset(@NotNull List<YApiProjectConfigInfo> settings) {
-        editor.reset(settings);
+        List<YApiProjectConfigInfo> cloneList = new ArrayList<>();
+        for (YApiProjectConfigInfo setting : settings) {
+            cloneList.add(setting.clone());
+        }
+//        List<YApiProjectConfigInfo> cloneList = ContainerUtil.copyList(settings);
+        editor.reset(cloneList);
     }
 
     @Override
@@ -139,10 +150,10 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 
         if (isModified(settings)) {
             List<YApiProjectConfigInfo> result = editor.apply();
-            if(result.size() == 0){
+            if (result.size() == 0) {
                 editor.reset(result);
             }
-            if(editor.isModified()){
+            if (editor.isModified()) {
                 // 解决   editor.reset(result);   后result被清空问题
                 List<YApiProjectConfigInfo> newList = new ArrayList<>(result);
                 editor.reset(newList);
@@ -152,6 +163,18 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
             YApiProjectConfigInfo item = editor.getSelected();
             if (item != null) {
                 itemPanel.setItem(editor.getMutable(item));
+            }
+
+            for (YApiProjectConfigInfo yApiProjectConfigInfo : result) {
+                try {
+                    YApiProject projectInfo = YApiSdk.getProjectInfo(oldState.yApiServerUrl, yApiProjectConfigInfo.getToken());
+                    yApiProjectConfigInfo.setProject(projectInfo);
+                } catch (BizException | IOException e) {
+                    e.printStackTrace();
+//                    itemPanel.setItem(yApiProjectConfigInfo);
+                    editor.getList().setSelectedIndex(result.indexOf(yApiProjectConfigInfo));
+                    throw new ConfigurationException(e.getMessage());
+                }
             }
 
             oldState.yApiProjectConfigInfoList = new ArrayList<>(result);
