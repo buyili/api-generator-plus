@@ -506,7 +506,7 @@ public class ApiGenerateAction extends AnAction {
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         PsiDocComment classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
-        yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getDesc());
+        yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
         if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
@@ -524,8 +524,26 @@ public class ApiGenerateAction extends AnAction {
         }
         yApiInterface.setReq_params(listYApiPathVariables(requestFields));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
-                : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(psiMethod) + "</code> </pre>");
+                : "<pre><code data-language=\"java\" class=\"java\">" + DesUtil.getInterfaceDesc(psiMethod) + "</code> </pre>");
 
+        if (config.ignoreResponse) {
+            yApiInterface.setRes_body(null);
+            yApiInterface.setRes_body_type(null);
+            yApiInterface.setRes_body_is_json_schema(null);
+        } else {
+            YApiInterface docInterface = methodInfo.getYApiInterface();
+            if (docInterface != null) {
+                if (StringUtils.isNotBlank(docInterface.getRes_body())) {
+                    yApiInterface.setRes_body(docInterface.getRes_body());
+                }
+                if (StringUtils.isNotBlank(docInterface.getRes_body_type())) {
+                    yApiInterface.setRes_body_type(docInterface.getRes_body_type());
+                }
+                if (null != docInterface.getRes_body_is_json_schema()) {
+                    yApiInterface.setRes_body_is_json_schema(docInterface.getRes_body_is_json_schema());
+                }
+            }
+        }
 
         return yApiInterface;
     }
@@ -579,7 +597,7 @@ public class ApiGenerateAction extends AnAction {
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         KDoc classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
-        yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getDesc());
+        yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
         if (methodInfo.containRequestBodyAnnotation()) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
@@ -590,14 +608,33 @@ public class ApiGenerateAction extends AnAction {
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
 //            yApiInterface.setRes_body("");
         }
-        if (methodInfo.containRequestBodyAnnotation()
+        if (methodInfo.containResponseBodyAnnotation()
                 || methodInfo.containRestControllerAnnotation()) {
 //            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
         yApiInterface.setReq_params(listYApiPathVariables(requestFields));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
-                : "<pre><code data-language=\"java\" class=\"java\">" + getMethodDesc(ktFunction) + "</code> </pre>");
+                : "<pre><code data-language=\"java\" class=\"java\">" + DesUtil.getInterfaceDesc(ktFunction) + "</code> </pre>");
+
+        if (config.ignoreResponse) {
+            yApiInterface.setRes_body(null);
+            yApiInterface.setRes_body_type(null);
+            yApiInterface.setRes_body_is_json_schema(null);
+        } else {
+            YApiInterface docInterface = methodInfo.getYApiInterface();
+            if (docInterface != null) {
+                if (StringUtils.isNotBlank(docInterface.getRes_body())) {
+                    yApiInterface.setRes_body(docInterface.getRes_body());
+                }
+                if (StringUtils.isNotBlank(docInterface.getRes_body_type())) {
+                    yApiInterface.setRes_body_type(docInterface.getRes_body_type());
+                }
+                if (null != docInterface.getRes_body_is_json_schema()) {
+                    yApiInterface.setRes_body_is_json_schema(docInterface.getRes_body_is_json_schema());
+                }
+            }
+        }
 
         return yApiInterface;
     }

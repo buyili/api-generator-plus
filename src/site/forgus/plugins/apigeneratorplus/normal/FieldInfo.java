@@ -68,12 +68,12 @@ public class FieldInfo {
 
     protected ApiGeneratorConfig config;
 
-    public FieldInfo(Project project, PsiType psiType) {
-        this(project, psiType, "", new PsiAnnotation[0]);
+    public FieldInfo(Project project, PsiType psiType, String desc) {
+        this(project, psiType, desc, new PsiAnnotation[0]);
     }
 
-    public FieldInfo(Project project, KtTypeReference ktTypeReference) {
-        this(project, ktTypeReference, "", ktTypeReference.getAnnotationEntries());
+    public FieldInfo(Project project, KtTypeReference ktTypeReference, String desc) {
+        this(project, ktTypeReference, desc, ktTypeReference.getAnnotationEntries());
     }
 
     public FieldInfo(Project project, String name, PsiType psiType, String desc, PsiAnnotation[] annotations) {

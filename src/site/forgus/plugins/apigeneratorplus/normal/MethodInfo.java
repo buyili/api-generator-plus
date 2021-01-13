@@ -4,20 +4,21 @@ import com.intellij.lang.Language;
 import com.intellij.psi.*;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
+import com.intellij.psi.javadoc.PsiDocTagValue;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc;
-import org.jetbrains.kotlin.kdoc.psi.impl.KDocSection;
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag;
-import org.jetbrains.kotlin.name.FqName;
 import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.MethodUtil;
+import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
+import site.forgus.plugins.apigeneratorplus.yapi.model.YApiInterface;
 
 import java.io.Serializable;
 import java.util.*;
@@ -28,9 +29,12 @@ public class MethodInfo implements Serializable {
 
     private static final String SLASH = "/";
 
+    private String title;
     private String desc;
     private String packageName;
     private String className;
+
+    // 返回类型文本
     private String returnStr;
     private String paramStr;
     private String methodName;
@@ -39,6 +43,7 @@ public class MethodInfo implements Serializable {
     private FieldInfo response;
     private PsiMethod psiMethod;
     private MediaType mediaType;
+    private YApiInterface yApiInterface;
 
     private Language language;
     private KtFunction ktFunction;
@@ -58,7 +63,8 @@ public class MethodInfo implements Serializable {
         this.setRequestMethod(MethodUtil.getRequestMethod(psiMethod.getText()));
         this.setMethodPath(extraMethodPath(psiMethod));
         this.setClassPath(extraClassPath(psiMethod));
-        this.setDesc(DesUtil.getDescription(psiMethod));
+        this.setDesc(DesUtil.getInterfaceDesc(psiMethod));
+        this.setTitle(DesUtil.getInterfaceTitle(psiMethod));
         PsiClass psiClass = psiMethod.getContainingClass();
         if (psiClass == null) {
             return;
@@ -79,12 +85,14 @@ public class MethodInfo implements Serializable {
         if (returnType != null) {
             this.setReturnStr(returnType.getPresentableText());
             if (!"void".equals(psiMethod.getReturnType().getPresentableText())) {
-                FieldInfo fieldInfo = new FieldInfo(psiMethod.getProject(), psiMethod.getReturnType());
+                FieldInfo fieldInfo = new FieldInfo(psiMethod.getProject(), psiMethod.getReturnType(),
+                        getReturnDesc(psiMethod.getDocComment()));
                 this.response = fieldInfo;
                 this.setResponseFields(fieldInfo.getChildren());
             }
         }
-
+        yApiInterface = buildDocYApiInterface(psiMethod.getDocComment());
+        System.out.println();
     }
 
     public MethodInfo(KtFunction ktFunction) {
@@ -98,7 +106,8 @@ public class MethodInfo implements Serializable {
         this.setRequestMethod(MethodUtil.getRequestMethod(ktFunction.getText()));
         this.setMethodPath(extraMethodPathKt(ktFunction));
         this.setClassPath(extraClassPathKt(ktFunction));
-        this.setDesc(DesUtil.getDescription(ktFunction));
+        this.setDesc(DesUtil.getInterfaceDesc(ktFunction));
+        this.setTitle(DesUtil.getInterfaceTitle(ktFunction));
 
         KtClass ktClass = (KtClass) ktFunction.getParent().getParent();
         this.setPackageName(ktClass.getFqName().toString());
@@ -114,28 +123,99 @@ public class MethodInfo implements Serializable {
         if (returnTypeReference != null) {
             this.setReturnStr(returnTypeReference.getText());
             if (!"void".equals(returnTypeReference.getText())) {
-                FieldInfo fieldInfo = new FieldInfo(ktFunction.getProject(), returnTypeReference);
+                FieldInfo fieldInfo = new FieldInfo(ktFunction.getProject(), returnTypeReference,
+                        getReturnDesc(ktFunction.getDocComment()));
                 this.response = fieldInfo;
                 this.setResponseFields(fieldInfo.getChildren());
             }
         }
+        yApiInterface = buildDocYApiInterface(ktFunction.getDocComment());
+        System.out.println();
+    }
+
+    private YApiInterface buildDocYApiInterface(PsiDocComment docComment) {
+        if (null == docComment) {
+            return null;
+        }
+        YApiInterface yApiInterface = new YApiInterface();
+        PsiDocTag[] tags = docComment.getTags();
+        for (PsiDocTag tag : tags) {
+            if ("res_body".equals(tag.getName())) {
+//                StringUtil.testTag(tag);
+                yApiInterface.setRes_body(tag.getText().replace("@res_body", "").replaceAll("\n *\\*", "\n"));
+            }
+            if ("res_body_type".equals(tag.getName())) {
+//                StringUtil.testTag(tag);
+                PsiDocTagValue valueElement = tag.getValueElement();
+                String type = null;
+                if (valueElement != null) {
+                    type = valueElement.getText();
+                }
+                yApiInterface.setRes_body_type(type);
+            }
+            if ("res_body_is_json_schema".equals(tag.getName())) {
+//                StringUtil.testTag(tag);
+                PsiDocTagValue valueElement = tag.getValueElement();
+                Boolean aBoolean = null;
+                if (valueElement != null) {
+                    try {
+                        aBoolean = Boolean.parseBoolean(valueElement.getText());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                yApiInterface.setRes_body_is_json_schema(aBoolean);
+            }
+        }
+        return yApiInterface;
+    }
+
+    private YApiInterface buildDocYApiInterface(KDoc kDoc) {
+        if (null == kDoc) {
+            return null;
+        }
+        YApiInterface yApiInterface = new YApiInterface();
+        List<KDocTag> resBodyTags = kDoc.getDefaultSection().findTagsByName("res_body");
+        for (KDocTag resBodyTag : resBodyTags) {
+            yApiInterface.setRes_body(DesUtil.getTagContent(resBodyTag.getContent()));
+        }
+        List<KDocTag> resBodyTypeTags = kDoc.getDefaultSection().findTagsByName("res_body_type");
+        for (KDocTag resBodyTag : resBodyTypeTags) {
+            yApiInterface.setRes_body_type(resBodyTag.getSubjectName());
+        }
+        List<KDocTag> resBodyIsJsonSchemaTags = kDoc.getDefaultSection().findTagsByName("res_body_is_json_schema");
+        for (KDocTag tag : resBodyIsJsonSchemaTags) {
+            Boolean aBoolean = null;
+            try {
+                aBoolean = Boolean.parseBoolean(tag.getSubjectName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            yApiInterface.setRes_body_is_json_schema(aBoolean);
+        }
+        return yApiInterface;
     }
 
     public boolean containRequestBodyAnnotation() {
         return funStr.contains(WebAnnotation.RequestBody);
     }
 
+    public boolean containResponseBodyAnnotation() {
+        return funStr.contains(WebAnnotation.ResponseBody);
+    }
+
     public boolean containRestControllerAnnotation() {
         for (String annotationText : classAnnotationTexts) {
-            if(annotationText.contains(WebAnnotation.RestController)){
+            if (annotationText.contains(WebAnnotation.RestController)) {
                 return true;
             }
         }
         return false;
     }
+
     public boolean containControllerAnnotation() {
         for (String annotationText : classAnnotationTexts) {
-            if(annotationText.contains(WebAnnotation.Controller)){
+            if (annotationText.contains(WebAnnotation.Controller)) {
                 return true;
             }
         }
@@ -329,9 +409,8 @@ public class MethodInfo implements Serializable {
         }
         List<KDocTag> kDocTags = docComment.getDefaultSection().findTagsByName("param");
         for (KDocTag kDocTag : kDocTags) {
-            String name = kDocTag.getName();
+//            StringUtil.testTag(kDocTag);
             String subjectName = kDocTag.getSubjectName();
-            String linkText = kDocTag.getSubjectLink().getLinkText();
             String content = kDocTag.getContent();
             paramDescMap.put(subjectName, content);
         }
@@ -354,6 +433,14 @@ public class MethodInfo implements Serializable {
             desc = desc + dataElements[i].getText();
         }
         return desc;
+    }
+
+    private String getReturnDesc(PsiDocComment docComment) {
+        return DesUtil.getTagContent(docComment, "return");
+    }
+
+    private String getReturnDesc(KDoc docComment) {
+        return DesUtil.getTagContent(docComment, "return");
     }
 
 }

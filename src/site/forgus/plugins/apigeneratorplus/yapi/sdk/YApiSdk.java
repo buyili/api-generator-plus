@@ -106,6 +106,7 @@ public class YApiSdk {
     public static YApiResponse saveInterface(String serverUrl, YApiInterface yApiInterface) throws IOException {
         System.out.println(JsonUtil.prettyJson.toJson(yApiInterface));
         String string = HttpUtil.doPost(serverUrl + SAVE_INTERFACE_URI, gson.toJson(yApiInterface));
+        System.out.println(MessageFormat.format("保存接口返回值: \n{0}", string));
         return gson.fromJson(string, YApiResponse.class);
     }
 
