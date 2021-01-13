@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
@@ -132,6 +132,16 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>1.0.7</h3>
+        <h4>Bug fixes</h4>
+        <ul>
+          <li>
+            api generator plus
+            <ul>
+              <li>Fixed Parameter description is not uploaded if it contains Spaces</li>
+            </ul>
+          </li>
+        </ul>
         <h3>1.0.6</h3>
         <h4>New features</h4>
         <ul>
