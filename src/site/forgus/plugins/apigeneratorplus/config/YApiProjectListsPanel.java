@@ -47,7 +47,7 @@ public class YApiProjectListsPanel {
                 || oldState.isMultiModule != isMultipleModuleProjectCheckBox.isSelected()
                 || oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected()
                 || oldState.matchWithModuleName != matchWithModuleNameCheckBox.isSelected()
-                 || yApiProjectListUI.isModified(oldState.yApiProjectConfigInfoList);
+                || yApiProjectListUI.isModified(oldState.yApiProjectConfigInfoList);
     }
 
     public void apply() throws ConfigurationException {

@@ -55,7 +55,7 @@ public class ClassUtil {
         return new PsiAnnotation[0];
     }
 
-    public static String getPackageName(PsiClass aClass){
+    public static String getPackageName(PsiClass aClass) {
         PsiClass topClass = getTopLevelClass(aClass);
         if (topClass != null) {
             String fqName = topClass.getQualifiedName();
@@ -66,7 +66,7 @@ public class ClassUtil {
 
         PsiFile file = aClass.getContainingFile();
         if (file instanceof PsiClassOwner) {
-            return ((PsiClassOwner)file).getPackageName();
+            return ((PsiClassOwner) file).getPackageName();
         }
 
         return null;

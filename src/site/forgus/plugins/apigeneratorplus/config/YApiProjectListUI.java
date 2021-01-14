@@ -139,10 +139,10 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 
         if (isModified(settings)) {
             List<YApiProjectConfigInfo> result = editor.apply();
-            if(result.size() == 0){
+            if (result.size() == 0) {
                 editor.reset(result);
             }
-            if(editor.isModified()){
+            if (editor.isModified()) {
                 // 解决   editor.reset(result);   后result被清空问题
                 List<YApiProjectConfigInfo> newList = new ArrayList<>(result);
                 editor.reset(newList);

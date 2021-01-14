@@ -34,13 +34,13 @@ public class StringUtil {
         return "";
     }
 
-    public static void showPsiNameValuePair(PsiNameValuePair psiNameValuePair){
+    public static void showPsiNameValuePair(PsiNameValuePair psiNameValuePair) {
         System.out.println(psiNameValuePair.getName());
         System.out.println(psiNameValuePair.getValue());
         System.out.println(psiNameValuePair.getValue().getText());
     }
 
-    public static void showPsiMethod(PsiMethod psiMethod){
+    public static void showPsiMethod(PsiMethod psiMethod) {
 //        Gson gson = new Gson();
         System.out.println(psiMethod.getName());
         System.out.println("PsiAnnotation annotation----------------");
@@ -54,7 +54,7 @@ public class StringUtil {
             //结果示例： QueryDto queryDto
             System.out.println(parameter.getText());
             PsiModifierList modifierList = parameter.getModifierList();
-            if(modifierList != null) {
+            if (modifierList != null) {
                 for (PsiAnnotation annotation : modifierList.getAnnotations()) {
                     System.out.println("annotation text:                " + annotation.getText());
                 }
@@ -63,7 +63,7 @@ public class StringUtil {
         System.out.println("PsiParameter annotation----------------end");
     }
 
-    public static void showKtParameter(KtParameter ktParameter){
+    public static void showKtParameter(KtParameter ktParameter) {
         System.out.println("KtParameter");
 
         System.out.println("ktParameter.getText()");
@@ -79,7 +79,6 @@ public class StringUtil {
         System.out.println();
 
     }
-
 
 
 }

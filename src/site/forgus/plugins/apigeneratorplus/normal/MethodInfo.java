@@ -128,15 +128,16 @@ public class MethodInfo implements Serializable {
 
     public boolean containRestControllerAnnotation() {
         for (String annotationText : classAnnotationTexts) {
-            if(annotationText.contains(WebAnnotation.RestController)){
+            if (annotationText.contains(WebAnnotation.RestController)) {
                 return true;
             }
         }
         return false;
     }
+
     public boolean containControllerAnnotation() {
         for (String annotationText : classAnnotationTexts) {
-            if(annotationText.contains(WebAnnotation.Controller)){
+            if (annotationText.contains(WebAnnotation.Controller)) {
                 return true;
             }
         }

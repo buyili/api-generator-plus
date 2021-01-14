@@ -36,10 +36,10 @@ public class KtUtil {
         PsiElement firstChild = ktTypeReference.getTypeElement().getFirstChild();
         PsiReference referenceAt = firstChild.findReferenceAt(0);
         PsiElement psiElement = referenceAt.resolve();
-        if(psiElement instanceof PsiClass){
+        if (psiElement instanceof PsiClass) {
             PsiClass psiClass = (PsiClass) psiElement;
             return psiClass.getQualifiedName();
-        }else {
+        } else {
             KtClass ktClass = (KtClass) psiElement;
             return ktClass.getFqName().toString();
         }

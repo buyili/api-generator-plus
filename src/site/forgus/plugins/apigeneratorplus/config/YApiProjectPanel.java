@@ -21,13 +21,13 @@ public class YApiProjectPanel {
         // TODO: place custom component creation code here
     }
 
-    public void setItem(@Nullable YApiProjectConfigInfo item){
-        if(item == null){
+    public void setItem(@Nullable YApiProjectConfigInfo item) {
+        if (item == null) {
             return;
         }
         tokenTextField.setText(item.getToken());
         YApiProject yApiProject = item.getProject();
-        if(yApiProject == null){
+        if (yApiProject == null) {
             return;
         }
         nameTextField.setText(yApiProject.getName());
