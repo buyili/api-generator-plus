@@ -4,8 +4,8 @@ public enum CUrlClientType {
 
     CMD, BASH;
 
-    public String getSymbolAnd(){
-        switch (this){
+    public String getSymbolAnd() {
+        switch (this) {
             case CMD:
                 return "^&";
             case BASH:

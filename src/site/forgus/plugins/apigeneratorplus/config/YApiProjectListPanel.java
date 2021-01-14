@@ -26,8 +26,16 @@ public class YApiProjectListPanel {
     private JPanel detailPanel;
 
 
-    public YApiProjectListPanel(@NotNull final CollectionListModel<YApiProjectConfigInfo> model) {
+    public YApiProjectListPanel() {
         actionsModel = new CollectionListModel<>();
+    }
+
+    public void setEditable(Boolean editable) {
+        nameTextField.setEditable(editable);
+        moduleNameTextField.setEditable(editable);
+        tokenTextField.setEditable(editable);
+        packageNameTextField.setEditable(editable);
+        basePathTextField.setEditable(editable);
     }
 
     public JPanel getPanel() {

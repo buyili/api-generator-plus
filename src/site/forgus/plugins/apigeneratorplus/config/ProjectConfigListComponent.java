@@ -12,7 +12,7 @@ import javax.swing.event.ListDataListener;
 public class ProjectConfigListComponent extends JBList<YApiProjectConfigInfo> {
 
 
-    protected class ProjectConfigListModel implements ListModel{
+    protected class ProjectConfigListModel implements ListModel {
         @Override
         public int getSize() {
             return 0;

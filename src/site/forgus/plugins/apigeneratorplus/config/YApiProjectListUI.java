@@ -113,7 +113,7 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
             editor.getModel().add(addList);
         });
 
-        itemPanel = new YApiProjectListPanel(editor.getModel());
+        itemPanel = new YApiProjectListPanel();
         itemPanel.nameTextField.getDocument().addDocumentListener(new DocumentAdapter() {
             @Override
             protected void textChanged(@NotNull DocumentEvent e) {
@@ -196,7 +196,7 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
                     try {
                         YApiProject projectInfo = YApiSdk.getProjectInfo(oldState.yApiServerUrl, yApiProjectConfigInfo.getToken());
                         yApiProjectConfigInfo.setProject(projectInfo);
-                    } catch (BizException | IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
 //                    itemPanel.setItem(yApiProjectConfigInfo);
                         editor.getList().setSelectedIndex(result.indexOf(yApiProjectConfigInfo));

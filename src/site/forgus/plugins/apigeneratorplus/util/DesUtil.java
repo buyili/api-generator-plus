@@ -263,14 +263,14 @@ public class DesUtil {
             String content = "";
             int i = 1;
             for (PsiElement descriptionElement : descriptionElements) {
-                    content = content.concat(descriptionElement.getText());
+                content = content.concat(descriptionElement.getText());
 //                if (i < 1) {
 //                }
 //                if (StringUtils.isNotBlank(descriptionElement.getText())) {
 //                    i--;
 //                }
             }
-            if(content.startsWith("\n")){
+            if (content.startsWith("\n")) {
                 content = content.replaceFirst("^.*?\n", "");
             }
             if (StringUtils.isBlank(content)) {
@@ -492,7 +492,7 @@ public class DesUtil {
         return "";
     }
 
-    public static String getSpace(String docText){
+    public static String getSpace(String docText) {
         String regex = "/\\*\\*\\n( *?)\\*";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(docText);

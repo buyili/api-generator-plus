@@ -279,7 +279,7 @@ public class MethodUtil {
         return methodPath;
     }
 
-    public static String getTagContent(String content){
+    public static String getTagContent(String content) {
         return content.replaceAll("\n *\\*", "\n");
     }
 

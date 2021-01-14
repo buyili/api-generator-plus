@@ -43,7 +43,7 @@ public class YApiSdk {
      * @throws IOException
      */
     @Nullable
-    public static YApiProject getProjectInfo(String serverUrl, String token) throws IOException {
+    public static YApiProject getProjectInfo(String serverUrl, String token) {
         Map<String, String> params = new HashMap<>();
         params.put("token", token);
         String responseStr = HttpUtil.doGet(serverUrl + PROJECT_INFO_URI, params);

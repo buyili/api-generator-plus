@@ -201,20 +201,20 @@ public class FieldUtil {
         return genericList.contains(typeName);
     }
 
-    public static boolean isMapType(String typeText){
+    public static boolean isMapType(String typeText) {
         for (String mapType : mapTypeList) {
-            if(mapType.equals(typeText) || typeText.startsWith(mapType.concat("<"))){
+            if (mapType.equals(typeText) || typeText.startsWith(mapType.concat("<"))) {
                 return true;
             }
         }
         return false;
     }
 
-    public static boolean isMapType(PsiType psiType){
+    public static boolean isMapType(PsiType psiType) {
         return isMapType(psiType.getPresentableText());
     }
 
-    public static boolean isMapType(KtTypeReference ktTypeReference){
+    public static boolean isMapType(KtTypeReference ktTypeReference) {
         return isMapType(KtUtil.getText(ktTypeReference));
     }
 
