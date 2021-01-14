@@ -17,7 +17,7 @@ public class ChooseYApiProjectDialog extends JDialog {
     private JComboBox comboBoxProject;
     private JPanel bodyPanel;
     private JPanel yapiProjectPanelWrap;
-    private YApiProjectPanel yapiProjectPanel;
+    private YApiProjectListPanel yApiProjectListPanel;
 
     private List<YApiProjectConfigInfo> list;
 
@@ -66,7 +66,7 @@ public class ChooseYApiProjectDialog extends JDialog {
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 YApiProjectConfigInfo info = (YApiProjectConfigInfo) value;
                 Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                setText(info.getToken());
+                setText(info.getName());
                 return component;
             }
         });
@@ -76,16 +76,17 @@ public class ChooseYApiProjectDialog extends JDialog {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     YApiProjectConfigInfo item = (YApiProjectConfigInfo) e.getItem();
                     exitCode = list.indexOf(item);
-                    yapiProjectPanel.setItem(item);
+                    yApiProjectListPanel.setItem(item);
                 }
             }
         });
 
         if (list.size() > 0) {
             exitCode = 0;
-            yapiProjectPanel.setItem(list.get(0));
+            yApiProjectListPanel.setItem(list.get(0));
         }
-        yapiProjectPanelWrap.add(yapiProjectPanel.getPanel());
+        yApiProjectListPanel.setEditable(false);
+        yapiProjectPanelWrap.add(yApiProjectListPanel.getPanel());
         setTitle("Choose YApi project");
     }
 
@@ -102,6 +103,8 @@ public class ChooseYApiProjectDialog extends JDialog {
 
     public static int showDialog(List<YApiProjectConfigInfo> list) {
         ChooseYApiProjectDialog dialog = new ChooseYApiProjectDialog(list);
+        dialog.setLocationByPlatform(true);
+        dialog.setLocation(500, 200);
         dialog.pack();
         dialog.setVisible(true);
         return dialog.exitCode;
@@ -126,6 +129,7 @@ public class ChooseYApiProjectDialog extends JDialog {
         info1.setProject(project1);
 
         ChooseYApiProjectDialog dialog = new ChooseYApiProjectDialog(Arrays.asList(info, info1));
+        dialog.setLocationByPlatform(true);
         dialog.pack();
         dialog.setVisible(true);
         System.exit(0);
@@ -134,6 +138,6 @@ public class ChooseYApiProjectDialog extends JDialog {
     private void createUIComponents() {
         // TODO: place custom component creation code here
         comboBoxProject = new ComboBox<>(list.toArray(new YApiProjectConfigInfo[0]));
-        yapiProjectPanel = new YApiProjectPanel();
+        yApiProjectListPanel = new YApiProjectListPanel();
     }
 }

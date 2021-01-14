@@ -28,6 +28,10 @@ public class YApiProjectPanel {
         tokenTextField.setText(item.getToken());
         YApiProject yApiProject = item.getProject();
         if (yApiProject == null) {
+            nameTextField.setText("");
+            idTextField.setText("");
+            descTextField.setText("");
+            basePathTextField.setText("");
             return;
         }
         nameTextField.setText(yApiProject.getName());

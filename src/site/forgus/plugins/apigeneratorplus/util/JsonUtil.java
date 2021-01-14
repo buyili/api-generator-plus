@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.util.PsiUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
@@ -24,7 +25,7 @@ public class JsonUtil {
 
     public static String buildPrettyJson(FieldInfo fieldInfo) {
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
-            return FieldUtil.getValue(fieldInfo).toString();
+            return prettyJson.toJson(FieldUtil.getValue(fieldInfo));
         }
         Map<String, Object> stringObjectMap = getStringObjectMap(fieldInfo.getChildren());
         if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
@@ -46,6 +47,12 @@ public class JsonUtil {
     }
 
     private static String buildJson5(String prettyJson, List<String> fieldDesc) {
+        if (!prettyJson.contains("{")) {
+            if (CollectionUtils.isNotEmpty(fieldDesc)) {
+                return prettyJson + "//" + fieldDesc.get(0);
+            }
+            return prettyJson;
+        }
         String[] split = prettyJson.split("\n");
         StringBuffer json5 = new StringBuffer();
         int index = 0;

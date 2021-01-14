@@ -43,7 +43,7 @@ public class YApiSdk {
      * @throws IOException
      */
     @Nullable
-    public static YApiProject getProjectInfo(String serverUrl, String token) throws IOException {
+    public static YApiProject getProjectInfo(String serverUrl, String token) {
         Map<String, String> params = new HashMap<>();
         params.put("token", token);
         String responseStr = HttpUtil.doGet(serverUrl + PROJECT_INFO_URI, params);
@@ -106,6 +106,7 @@ public class YApiSdk {
     public static YApiResponse saveInterface(String serverUrl, YApiInterface yApiInterface) throws IOException {
         System.out.println(JsonUtil.prettyJson.toJson(yApiInterface));
         String string = HttpUtil.doPost(serverUrl + SAVE_INTERFACE_URI, gson.toJson(yApiInterface));
+        System.out.println(MessageFormat.format("保存接口返回值: \n{0}", string));
         return gson.fromJson(string, YApiResponse.class);
     }
 

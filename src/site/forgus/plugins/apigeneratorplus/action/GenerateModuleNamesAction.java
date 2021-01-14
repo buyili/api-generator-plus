@@ -1,4 +1,4 @@
-package site.forgus.plugins.apigeneratorplus;
+package site.forgus.plugins.apigeneratorplus.action;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;

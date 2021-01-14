@@ -1,12 +1,27 @@
 package site.forgus.plugins.apigeneratorplus.config;
 
+import com.intellij.icons.AllIcons;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.options.ConfigurableUi;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.Splitter;
-import com.intellij.ui.DocumentAdapter;
+import com.intellij.ui.*;
+import com.intellij.ui.components.JBList;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.ListItemEditor;
-import com.intellij.util.ui.ListModelEditor;
+import com.intellij.util.ui.ListModelEditorBase;
+import com.intellij.util.ui.UIUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
+import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
+import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
+import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,6 +29,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +74,7 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
         }
     };
 
-    public final ListModelEditor<YApiProjectConfigInfo> editor = new ListModelEditor<>(itemEditor);
+    public final MyListModelEditor<YApiProjectConfigInfo> editor = new MyListModelEditor<>(itemEditor);
 
     private final JComponent component;
 
@@ -80,8 +96,24 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
                 }
             }
         });
+        editor.setRefreshAction(anActionButton -> {
+            Project project = GlobalVariable.getInstance().getProject();
+            List<CURLModuleInfo> foundList = CurlUtils.findModuleInfo(project);
+            List<YApiProjectConfigInfo> addList = new ArrayList<>();
+            List<YApiProjectConfigInfo> entries = editor.getModel().getItems();
+            for (YApiProjectConfigInfo entry : entries) {
+                foundList.removeIf(curlModuleInfo -> curlModuleInfo.getModuleName().equals(entry.getModuleName()));
+            }
+            for (CURLModuleInfo curlModuleInfo : foundList) {
+                YApiProjectConfigInfo info = new YApiProjectConfigInfo();
+                info.setName(curlModuleInfo.getModuleName());
+                info.setModuleName(curlModuleInfo.getModuleName());
+                addList.add(info);
+            }
+            editor.getModel().add(addList);
+        });
 
-        itemPanel = new YApiProjectListPanel(editor.getModel());
+        itemPanel = new YApiProjectListPanel();
         itemPanel.nameTextField.getDocument().addDocumentListener(new DocumentAdapter() {
             @Override
             protected void textChanged(@NotNull DocumentEvent e) {
@@ -116,7 +148,12 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 
     @Override
     public void reset(@NotNull List<YApiProjectConfigInfo> settings) {
-        editor.reset(settings);
+        List<YApiProjectConfigInfo> cloneList = new ArrayList<>();
+        for (YApiProjectConfigInfo setting : settings) {
+            cloneList.add(setting.clone());
+        }
+//        List<YApiProjectConfigInfo> cloneList = ContainerUtil.copyList(settings);
+        editor.reset(cloneList);
     }
 
     @Override
@@ -154,6 +191,20 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
                 itemPanel.setItem(editor.getMutable(item));
             }
 
+            for (YApiProjectConfigInfo yApiProjectConfigInfo : result) {
+                if (StringUtils.isNotBlank(yApiProjectConfigInfo.getToken())) {
+                    try {
+                        YApiProject projectInfo = YApiSdk.getProjectInfo(oldState.yApiServerUrl, yApiProjectConfigInfo.getToken());
+                        yApiProjectConfigInfo.setProject(projectInfo);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+//                    itemPanel.setItem(yApiProjectConfigInfo);
+                        editor.getList().setSelectedIndex(result.indexOf(yApiProjectConfigInfo));
+                        throw new ConfigurationException(e.getMessage());
+                    }
+                }
+            }
+
             oldState.yApiProjectConfigInfoList = new ArrayList<>(result);
 
         }
@@ -163,6 +214,103 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
     @Override
     public JComponent getComponent() {
         return component;
+    }
+
+
+    public static class MyListModelEditor<T> extends ListModelEditorBase<T> {
+        private final ToolbarDecorator toolbarDecorator;
+        protected boolean myRefreshActionEnabled;
+        protected AnActionButtonRunnable myRefreshAction;
+
+        private final JBList list = new JBList(model);
+
+        public MyListModelEditor(@NotNull ListItemEditor<T> itemEditor) {
+            super(itemEditor);
+
+            list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            list.setCellRenderer(new MyListCellRenderer());
+
+            toolbarDecorator = ToolbarDecorator.createDecorator(list, model)
+                    .setAddAction(button -> {
+                        if (!model.isEmpty()) {
+                            T lastItem = model.getElementAt(model.getSize() - 1);
+                            if (MyListModelEditor.this.itemEditor.isEmpty(lastItem)) {
+                                ScrollingUtil.selectItem(list, ContainerUtil.indexOfIdentity(model.getItems(), lastItem));
+                                return;
+                            }
+                        }
+
+                        T item = createElement();
+                        model.add(item);
+                        ScrollingUtil.selectItem(list, ContainerUtil.indexOfIdentity(model.getItems(), item));
+                    })
+                    .addExtraAction(new AnActionButton("Scan Module", AllIcons.Actions.Find) {
+
+                        @Override
+                        public void actionPerformed(@NotNull AnActionEvent e) {
+                            if (myRefreshActionEnabled) {
+                                myRefreshAction.run(this);
+                            }
+                        }
+                    })
+                    .setRemoveActionUpdater(e -> areSelectedItemsRemovable(list.getSelectionModel()));
+        }
+
+        public void setRefreshAction(AnActionButtonRunnable action) {
+            myRefreshActionEnabled = action != null;
+            myRefreshAction = action;
+        }
+
+        @NotNull
+        public MyListModelEditor<T> disableUpDownActions() {
+            toolbarDecorator.disableUpDownActions();
+            return this;
+        }
+
+        @NotNull
+        public JComponent createComponent() {
+            return toolbarDecorator.createPanel();
+        }
+
+        @NotNull
+        public JBList getList() {
+            return list;
+        }
+
+        @Nullable
+        public T getSelected() {
+            //noinspection unchecked
+            return (T) list.getSelectedValue();
+        }
+
+        @Override
+        public void reset(@NotNull List<T> items) {
+            super.reset(items);
+
+            // todo should we really do this?
+            //noinspection SSBasedInspection
+            SwingUtilities.invokeLater(() -> {
+                if (!model.isEmpty()) {
+                    list.setSelectedIndex(0);
+                }
+            });
+        }
+
+        private class MyListCellRenderer extends ColoredListCellRenderer {
+            @Override
+            protected void customizeCellRenderer(@NotNull JList list, Object value, int index, boolean selected, boolean hasFocus) {
+                setBackground(UIUtil.getListBackground(selected));
+                if (value != null) {
+                    //noinspection unchecked
+                    append((itemEditor.getName(((T) value))));
+                }
+            }
+        }
+
+        @Override
+        protected void removeEmptyItem(int i) {
+            ListUtil.removeIndices(getList(), new int[]{i});
+        }
     }
 }
 

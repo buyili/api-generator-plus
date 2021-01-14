@@ -2,19 +2,19 @@ package site.forgus.plugins.apigeneratorplus.util;
 
 import com.google.common.base.Strings;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.search.GlobalSearchScope;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc;
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag;
 import org.jetbrains.kotlin.psi.KtFunction;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 描述工具, 用于获取各种注释
@@ -57,11 +57,23 @@ public class DesUtil {
     }
 
     public static String getDescription(PsiDocComment psiDocComment) {
+        StringUtil.testDoc(psiDocComment);
         if (psiDocComment != null) {
             PsiDocTag[] psiDocTags = psiDocComment.getTags();
             for (PsiDocTag psiDocTag : psiDocTags) {
-                if (psiDocTag.getText().contains("@description") || psiDocTag.getText().contains("@Description") || psiDocTag.getText().toLowerCase().contains("description")) {
-                    return trimFirstAndLastChar(psiDocTag.getText().replace("@description", "").replace("@Description", "").replace("Description", "").replace("<br>", "").replace(":", "").replace("*", "").replace("\n", " "), ' ');
+                if (psiDocTag.getText().contains("@description") || psiDocTag.getText().contains("@Description")
+                        || psiDocTag.getText().toLowerCase().contains("description")) {
+                    return trimFirstAndLastChar(
+                            psiDocTag.getText()
+                                    .replace("@description", "")
+                                    .replace("@Description", "")
+                                    .replace("Description", "")
+                                    .replace("<br>", "")
+                                    .replace(":", "")
+                                    .replace("*", "")
+                                    .replace("\n", " ")
+                            , ' '
+                    );
                 }
             }
             return trimFirstAndLastChar(
@@ -78,7 +90,8 @@ public class DesUtil {
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
                             .replace("</li>", "\n")
-                            .replace("{", ""), ' '
+                            .replace("{", "")
+                    , ' '
             );
         }
         return null;
@@ -112,6 +125,222 @@ public class DesUtil {
                             .replace("*", "")
                             .replace("/", "")
                             .replace("\n", " ")
+                            .replace("<p>", "\n")
+                            .replace("</p>", "\n")
+                            .replace("<li>", "\n")
+                            .replace("</li>", "\n")
+                            .replace("{", ""), ' '
+            );
+        }
+        return null;
+    }
+
+    /**
+     * 获得YApi接口名称
+     *
+     * @param psiMethodTarget the psi method target
+     * @return the description
+     */
+    public static String getInterfaceTitle(PsiMethod psiMethodTarget) {
+        return getInterfaceTitle(psiMethodTarget.getDocComment());
+    }
+
+    public static String getInterfaceTitle(PsiDocComment psiDocComment) {
+        StringUtil.testDoc(psiDocComment);
+        if (psiDocComment != null) {
+            PsiElement[] descriptionElements = psiDocComment.getDescriptionElements();
+            for (PsiElement descriptionElement : descriptionElements) {
+                if (StringUtils.isNotBlank(descriptionElement.getText())) {
+                    return trimFirstAndLastChar(
+                            descriptionElement.getText()
+                                    .replace("@description", "")
+                                    .replace("@Description", "")
+                                    .replace("Description", "")
+                                    .replace("<br>", "")
+                                    .replace(":", "")
+                                    .replace("*", "")
+                                    .replace("\n", " ")
+                            , ' '
+                    );
+                }
+            }
+            String content = "";
+            if (StringUtils.isBlank(content)) {
+                PsiDocTag docTag = psiDocComment.findTagByName("description");
+                if (docTag != null) {
+                    content = docTag.getText();
+                }
+            }
+            if (StringUtils.isBlank(content)) {
+                PsiDocTag docTag = psiDocComment.findTagByName("Description");
+                if (docTag != null) {
+                    content = docTag.getText();
+                }
+            }
+            String title = content.split("\n")[0];
+            return trimFirstAndLastChar(
+                    title
+                            .replace("@description", "")
+                            .replace("@Description", "")
+                            .replace("Description", "")
+                            .replace("<br>", "\n")
+                            .replace(":", "")
+                            .replace("*", "")
+                            .replace("/", "")
+                            .replace("\n", " ")
+                            .replace("<p>", "\n")
+                            .replace("</p>", "\n")
+                            .replace("<li>", "\n")
+                            .replace("</li>", "\n")
+                            .replace("{", ""), ' '
+            );
+        }
+        return null;
+    }
+
+
+    /**
+     * 获得YApi接口名称
+     *
+     * @param ktFunction the psi method target
+     * @return the description
+     */
+    public static String getInterfaceTitle(KtFunction ktFunction) {
+        return getInterfaceTitle(ktFunction.getDocComment());
+    }
+
+    public static String getInterfaceTitle(KDoc kDoc) {
+        StringUtil.testDoc(kDoc);
+        if (kDoc != null) {
+            String content = kDoc.getDefaultSection().getContent();
+            if (StringUtils.isBlank(content)) {
+                KDocTag tag = kDoc.getDefaultSection().findTagByName("description");
+                if (tag != null) {
+                    content = tag.getContent();
+                }
+            }
+            if (StringUtils.isBlank(content)) {
+                KDocTag tag = kDoc.getDefaultSection().findTagByName("Description");
+                if (tag != null) {
+                    content = tag.getContent();
+                }
+            }
+            String title = content.split("\n")[0];
+            return trimFirstAndLastChar(
+                    title
+                            .replace("@description", "")
+                            .replace("@Description", "")
+                            .replace("Description", "")
+                            .replace("<br>", "\n")
+                            .replace(":", "")
+                            .replace("*", "")
+                            .replace("/", "")
+                            .replace("\n", " ")
+                            .replace("<p>", "\n")
+                            .replace("</p>", "\n")
+                            .replace("<li>", "\n")
+                            .replace("</li>", "\n")
+                            .replace("{", ""), ' '
+            );
+        }
+        return null;
+    }
+
+    /**
+     * 获得YApi接口描述
+     *
+     * @param psiMethodTarget the psi method target
+     * @return the description
+     */
+    public static String getInterfaceDesc(PsiMethod psiMethodTarget) {
+        return getInterfaceDesc(psiMethodTarget.getDocComment());
+    }
+
+    public static String getInterfaceDesc(PsiDocComment psiDocComment) {
+//        StringUtil.testDoc(psiDocComment);
+        if (psiDocComment != null) {
+            PsiElement[] descriptionElements = psiDocComment.getDescriptionElements();
+            String content = "";
+            int i = 1;
+            for (PsiElement descriptionElement : descriptionElements) {
+                content = content.concat(descriptionElement.getText());
+//                if (i < 1) {
+//                }
+//                if (StringUtils.isNotBlank(descriptionElement.getText())) {
+//                    i--;
+//                }
+            }
+            if (content.startsWith("\n")) {
+                content = content.replaceFirst("^.*?\n", "");
+            }
+            if (StringUtils.isBlank(content)) {
+                PsiDocTag docTag = psiDocComment.findTagByName("description");
+                if (docTag != null) {
+                    content = docTag.getText();
+                }
+            }
+            if (StringUtils.isBlank(content)) {
+                PsiDocTag docTag = psiDocComment.findTagByName("Description");
+                if (docTag != null) {
+                    content = docTag.getText();
+                }
+            }
+            String title = content.replaceFirst("^.*?\n", "");
+            return title
+                    .replace(getSpace(psiDocComment.getText()), "")
+                    .replace("@description", "")
+                    .replace("@Description", "")
+                    .replace("Description", "")
+                    .replace("<br>", "\n")
+                    .replace(":", "")
+                    .replace("*", "")
+                    .replace("/", "")
+                    .replace("<p>", "\n")
+                    .replace("</p>", "\n")
+                    .replace("<li>", "\n")
+                    .replace("</li>", "\n")
+                    .replace("{", "");
+        }
+        return null;
+    }
+
+
+    /**
+     * 获得YApi接口描述
+     *
+     * @param ktFunction the psi method target
+     * @return the description
+     */
+    public static String getInterfaceDesc(KtFunction ktFunction) {
+        return getInterfaceDesc(ktFunction.getDocComment());
+    }
+
+    public static String getInterfaceDesc(KDoc kDoc) {
+        StringUtil.testDoc(kDoc);
+        if (kDoc != null) {
+            String content = kDoc.getDefaultSection().getContent();
+            if (StringUtils.isBlank(content)) {
+                KDocTag tag = kDoc.getDefaultSection().findTagByName("description");
+                if (tag != null) {
+                    content = tag.getContent();
+                }
+            }
+            if (StringUtils.isBlank(content)) {
+                KDocTag tag = kDoc.getDefaultSection().findTagByName("Description");
+                if (tag != null) {
+                    content = tag.getContent();
+                }
+            }
+            String title = content.replaceFirst("^.*?\n", "");
+            return trimFirstAndLastChar(
+                    title
+                            .replace("@description", "")
+                            .replace("@Description", "")
+                            .replace("Description", "")
+                            .replace("<br>", "\n")
+                            .replace(":", "")
+                            .replace("*", "")
+                            .replace("/", "")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
@@ -219,5 +448,58 @@ public class DesUtil {
             }
         }
         return remark;
+    }
+
+    // 获取Tag描述
+    public static String getTagContent(String content) {
+        return content.replaceAll("\n *\\*", "\n");
+    }
+
+    /**
+     * 根据tag名称获取Tag描述
+     *
+     * @param docComment
+     * @param name
+     * @return
+     */
+    public static String getTagContent(PsiDocComment docComment, String name) {
+        if (null != docComment) {
+            for (PsiDocTag docTag : docComment.getTags()) {
+                if (name.equals(docTag.getName())) {
+                    return docTag.getText().replace("@" + name, "").replaceAll("\n *\\*", "\n");
+                }
+            }
+        }
+        return "";
+    }
+
+    /**
+     * 根据tag名称获取Tag描述
+     *
+     * @param kDoc
+     * @param name
+     * @return
+     */
+    public static String getTagContent(KDoc kDoc, String name) {
+        if (null != kDoc) {
+            List<KDocTag> kDocTags = kDoc.getDefaultSection().findTagsByName(name);
+            for (KDocTag kDocTag : kDocTags) {
+//            StringUtil.testTag(kDocTag);
+                String content = kDocTag.getContent();
+                return DesUtil.getTagContent(content);
+            }
+        }
+        return "";
+    }
+
+    public static String getSpace(String docText) {
+        String regex = "/\\*\\*\\n( *?)\\*";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(docText);
+        if (matcher.find()) {
+            String group = matcher.group(1);
+            return group;
+        }
+        return "";
     }
 }

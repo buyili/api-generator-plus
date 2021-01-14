@@ -24,6 +24,10 @@ public class NotificationUtil {
         Notifications.Bus.notify(notificationGroup.createNotification(title, null, message, NotificationType.INFORMATION), project);
     }
 
+    public static void infoNotify(String title, String subTitle, String message, Project project) {
+        Notifications.Bus.notify(notificationGroup.createNotification(title, subTitle, message, NotificationType.INFORMATION), project);
+    }
+
     public static void errorNotify(String title, String message, Project project) {
         Notifications.Bus.notify(notificationGroup.createNotification(title, null, message, NotificationType.ERROR), project);
     }
