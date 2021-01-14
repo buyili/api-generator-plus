@@ -31,6 +31,7 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
     public String projectId = "";
     public Boolean autoCat = false;
     public String defaultCat = "api_generator_plus";
+    public Boolean ignoreResponse = false;
 
     public Boolean isMultiModule = false;
     public Boolean isUseDefaultToken = false;

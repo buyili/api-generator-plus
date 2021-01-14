@@ -1,7 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.curl.enums;
 
 /**
- *qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'indices' })
+ * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'indices' })
  * // 'a[0]=b&a[1]=c'
  * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'brackets' })
  * // 'a[]=b&a[]=c'
@@ -18,8 +18,6 @@ public enum ArrayFormatEnum {
 
     repeat,
 
-    comma
-
-    ;
+    comma;
 
 }

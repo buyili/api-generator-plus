@@ -76,7 +76,7 @@ public class CurlUtils {
             KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
             Assert.notNull(ktFunction, "KtFunction must not be null");
             methodInfo = new MethodInfo(ktFunction);
-            System.out.println();
+//            System.out.println();
         } else {
             PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
             Assert.notNull(selectedMethod, "PsiMethod must not be null");
@@ -174,7 +174,7 @@ public class CurlUtils {
             KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
             Assert.notNull(ktFunction, "The cursor is not placed in the method area");
             methodInfo = new MethodInfo(ktFunction);
-            System.out.println();
+//            System.out.println();
         } else {
             PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
             Assert.notNull(selectedMethod, "The cursor is not placed in the method area");
@@ -245,7 +245,7 @@ public class CurlUtils {
             KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
             Assert.notNull(ktFunction, "The cursor is not placed in the method area");
             methodInfo = new MethodInfo(ktFunction);
-            System.out.println();
+//            System.out.println();
         } else {
             PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
             Assert.notNull(selectedMethod, "The cursor is not placed in the method area");

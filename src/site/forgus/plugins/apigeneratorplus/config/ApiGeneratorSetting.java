@@ -11,6 +11,7 @@ import com.intellij.util.ui.FormBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,6 +39,7 @@ public class ApiGeneratorSetting implements Configurable {
         oldState = ServiceManager.getService(project, ApiGeneratorConfig.class);
         yApiProjectListsPanel = new YApiProjectListsPanel(oldState);
         yApiProjectPanel = new YApiProjectPanel();
+        GlobalVariable.getInstance().setProject(project);
     }
 
     @Nls(capitalization = Nls.Capitalization.Title)

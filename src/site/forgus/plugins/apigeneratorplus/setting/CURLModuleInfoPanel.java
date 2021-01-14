@@ -80,7 +80,6 @@ public class CURLModuleInfoPanel {
     }
 
 
-
     protected class MyHeaderListTableWithButton extends ListTableWithButtons<Header> {
         @Override
         protected ListTableModel createListModel() {

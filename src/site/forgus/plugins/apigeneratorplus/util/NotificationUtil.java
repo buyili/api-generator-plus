@@ -9,8 +9,8 @@ import site.forgus.plugins.apigeneratorplus.icons.SdkIcons;
 
 public class NotificationUtil {
 
-    public static NotificationGroup notificationGroup = new NotificationGroup("Java2Json.NotificationGroup", NotificationDisplayType.BALLOON,
-            true, null, SdkIcons.Logo);
+    public static NotificationGroup notificationGroup = new NotificationGroup("Java2Json.NotificationGroup",
+            NotificationDisplayType.BALLOON, true, null, SdkIcons.Logo);
 
     public static void warnNotify(String message, Project project) {
         Notifications.Bus.notify(notificationGroup.createNotification(message, NotificationType.WARNING), project);

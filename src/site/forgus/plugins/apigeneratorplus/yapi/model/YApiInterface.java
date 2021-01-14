@@ -24,11 +24,11 @@ public class YApiInterface implements Serializable {
     private String path;
     private String status = YApiInterfaceStatusEnum.UNDONE.getValue();
     private String res_body_type = ResponseBodyTypeEnum.JSON.getValue();
-    private Boolean res_body_is_json_schema = false;
+    private Boolean res_body_is_json_schema;
     private String res_body = "";
     private Boolean switch_notice = false;
     private String message;
-    private String desc = "";
+    private String desc;
     private String method;
     private List<YApiPathVariable> req_params = new ArrayList<>();
     private String markdown = "";
