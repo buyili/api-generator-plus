@@ -6,6 +6,6 @@ import javax.swing.*;
 
 public class SdkIcons {
 
-    public static final Icon Logo = IconLoader.getIcon("/icons/logo.svg");
+    public static final Icon Logo = IconLoader.getIcon("/icons/logo.png");
 
 }
