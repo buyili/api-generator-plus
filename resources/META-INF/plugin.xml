@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
@@ -291,6 +291,8 @@
             <configurable instance="site.forgus.plugins.apigeneratorplus.setting.CURLSettingConfigurable"/>
         </projectConfigurable>
         <projectService serviceImplementation="site.forgus.plugins.apigeneratorplus.setting.CURLSettingState"/>
+        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"
+                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>
     </extensions>
 
     <actions>

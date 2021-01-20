@@ -2,6 +2,7 @@ package site.forgus.plugins.apigeneratorplus.util;
 
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiUtil;
 import com.intellij.util.containers.ContainerUtil;
@@ -9,11 +10,13 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.kotlin.psi.KtAnnotationEntry;
 import org.jetbrains.kotlin.psi.KtTypeReference;
+import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
 import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 
 import java.util.*;
 
@@ -31,6 +34,8 @@ public class FieldUtil {
             "StandardMultipartFile");
 
     public static final List<String> mapTypeList = Arrays.asList("Map", "HashMap", "LinkedHashMap", "JSONObject");
+
+    private static List<String> excludeParamTypes = Arrays.asList("RedirectAttributes", "HttpServletRequest", "HttpServletResponse");
 
 
     static {
@@ -276,6 +281,30 @@ public class FieldUtil {
             }
         }
         return -1;
+    }
+
+    public static List<PsiParameter> filterParameters(PsiParameter[] psiParameters) {
+        List<PsiParameter> psiParameterList = new ArrayList<>();
+        ApiGeneratorConfig apiConfig = GlobalVariable.getApiConfig();
+
+        for (PsiParameter psiParameter : psiParameters) {
+            PsiType psiType = psiParameter.getType();
+            if (excludeParamTypes.contains(psiType.getPresentableText())) {
+                continue;
+            }
+            boolean ignore = false;
+            for (String annotationName : apiConfig.excludeAnnotationNames) {
+                if (psiParameter.getText().contains(annotationName)) {
+                    ignore = true;
+                    break;
+                }
+            }
+            if (ignore) {
+                continue;
+            }
+            psiParameterList.add(psiParameter);
+        }
+        return psiParameterList;
     }
 }
 

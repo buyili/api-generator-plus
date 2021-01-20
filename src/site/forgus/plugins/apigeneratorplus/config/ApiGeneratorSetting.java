@@ -30,6 +30,7 @@ public class ApiGeneratorSetting implements Configurable {
     FilterFieldInfoPanel filterFieldInfoPanel;
 
     JBTextField excludeFields;
+    JBTextField excludeAnnotations;
 
 
     YApiProjectPanel yApiProjectPanel;
@@ -56,6 +57,7 @@ public class ApiGeneratorSetting implements Configurable {
 
         //normal setting
         excludeFields = new JBTextField(oldState.excludeFields);
+        excludeAnnotations = new JBTextField(oldState.excludeAnnotations);
         dirPathTextField = buildTextField(layout, oldState.dirPath);
         prefixTextField = buildTextField(layout, oldState.prefix);
         overwriteCheckBox = buildJBCheckBox(layout, "Overwrite exists docs", oldState.overwrite);
@@ -65,6 +67,7 @@ public class ApiGeneratorSetting implements Configurable {
 
         JPanel normalJPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFields, 1, false)
+                .addLabeledComponent(new JBLabel("Exclude Annotations:"), excludeAnnotations, 1, false)
                 .addLabeledComponent(new JBLabel("Save Directory:"), dirPathTextField, 1, false)
                 .addLabeledComponent(new JBLabel("Indent Style:"), prefixTextField, 1, false)
                 .addComponent(overwriteCheckBox)
@@ -127,6 +130,7 @@ public class ApiGeneratorSetting implements Configurable {
                 oldState.overwrite != overwriteCheckBox.isSelected() ||
                 !oldState.dirPath.equals(dirPathTextField.getText()) ||
                 !oldState.excludeFields.equals(excludeFields.getText()) ||
+                !oldState.excludeAnnotations.equals(excludeAnnotations.getText()) ||
                 filterFieldInfoPanel.isModified(oldState.filterFieldInfo) ||
                 yApiProjectListsPanel.isModified();
     }
@@ -136,9 +140,14 @@ public class ApiGeneratorSetting implements Configurable {
         oldState.excludeFields = excludeFields.getText();
         if (!StringUtils.isEmpty(excludeFields.getText())) {
             String[] split = excludeFields.getText().split(",");
-            for (String str : split) {
-                oldState.excludeFieldNames.add(str);
-            }
+            oldState.excludeFieldNames.addAll(Arrays.asList(split));
+        }
+        oldState.excludeAnnotations = excludeAnnotations.getText();
+        if (!StringUtils.isEmpty(excludeAnnotations.getText())) {
+            String text = excludeAnnotations.getText();
+            text = text.replaceAll(";", ",");
+            String[] split = text.split(",");
+            oldState.excludeAnnotationNames.addAll(Arrays.asList(split));
         }
         oldState.dirPath = dirPathTextField.getText();
         oldState.prefix = prefixTextField.getText();
@@ -154,6 +163,7 @@ public class ApiGeneratorSetting implements Configurable {
     @Override
     public void reset() {
         excludeFields.setText(oldState.excludeFields);
+        excludeAnnotations.setText(oldState.excludeAnnotations);
         dirPathTextField.setText(oldState.dirPath);
         prefixTextField.setText(oldState.prefix);
         cnFileNameCheckBox.setSelected(oldState.cnFileName);

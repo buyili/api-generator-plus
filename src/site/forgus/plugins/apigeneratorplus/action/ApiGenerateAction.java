@@ -41,6 +41,7 @@ import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.icons.SdkIcons;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 import site.forgus.plugins.apigeneratorplus.util.*;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestBodyTypeEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
@@ -79,6 +80,7 @@ public class ApiGenerateAction extends AnAction {
             if (project == null) {
                 return;
             }
+            GlobalVariable.getInstance().setProject(project);
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
 
             if (StringUtils.isBlank(config.yApiServerUrl)) {
@@ -831,7 +833,7 @@ public class ApiGenerateAction extends AnAction {
 
     private String getDefaultCatName() {
         String defaultCat = config.defaultCat;
-        return StringUtils.isEmpty(defaultCat) ? "api_generator" : defaultCat;
+        return StringUtils.isEmpty(defaultCat) ? "api_generator_plus" : defaultCat;
     }
 
     private String getClassCatName(PsiDocComment classDesc) {
