@@ -836,25 +836,25 @@ public class ApiGenerateAction extends AnAction {
         return StringUtils.isEmpty(defaultCat) ? "api_generator_plus" : defaultCat;
     }
 
-    private String getClassCatName(PsiDocComment classDesc) {
-        if (classDesc == null) {
-            return "";
-        }
-        return DesUtil.getDescription(classDesc).split(" ")[0];
-    }
-
-    private String getClassCatName(KDoc classDesc) {
-        if (classDesc == null) {
-            return "";
-        }
-        return DesUtil.getDescription(classDesc).split(" ")[0];
-    }
+//    private String getClassCatName(PsiDocComment classDesc) {
+//        if (classDesc == null) {
+//            return "";
+//        }
+//        return DesUtil.getDescription(classDesc).split(" ")[0];
+//    }
+//
+//    private String getClassCatName(KDoc classDesc) {
+//        if (classDesc == null) {
+//            return "";
+//        }
+//        return DesUtil.getDescription(classDesc).split(" ")[0];
+//    }
 
     private String getCatId(Map<String, YApiCat> catNameMap, PsiDocComment classDesc) throws IOException {
         String defaultCatName = getDefaultCatName();
         String catName;
         if (config.autoCat) {
-            String classCatName = getClassCatName(classDesc);
+            String classCatName = DesUtil.getInterfaceCatName(classDesc);
             catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
         } else {
             catName = defaultCatName;
@@ -872,7 +872,7 @@ public class ApiGenerateAction extends AnAction {
         String defaultCatName = getDefaultCatName();
         String catName;
         if (config.autoCat) {
-            String classCatName = getClassCatName(classDesc);
+            String classCatName = DesUtil.getInterfaceCatName(classDesc);
             catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
         } else {
             catName = defaultCatName;
@@ -886,12 +886,12 @@ public class ApiGenerateAction extends AnAction {
         return yApiResponse.getData().get_id().toString();
     }
 
-    private String getCatId(Map<String, YApiCat> catNameMap, KDoc classDesc, YApiProjectConfigInfo yApiProjectConfigInfo)
+    private String getCatId(Map<String, YApiCat> catNameMap, KDoc classKDoc, YApiProjectConfigInfo yApiProjectConfigInfo)
             throws IOException {
         String defaultCatName = getDefaultCatName();
         String catName;
         if (config.autoCat) {
-            String classCatName = getClassCatName(classDesc);
+            String classCatName = DesUtil.getInterfaceCatName(classKDoc);
             catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
         } else {
             catName = defaultCatName;

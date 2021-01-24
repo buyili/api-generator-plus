@@ -135,6 +135,37 @@ public class DesUtil {
         return null;
     }
 
+
+    /**
+     * 根据Class注释获取YApi分类名
+     * @param psiDocComment
+     * @return
+     */
+    public static String getInterfaceCatName(PsiDocComment psiDocComment) {
+        if(psiDocComment != null) {
+            String interfaceTitle = getInterfaceTitle(psiDocComment);
+            if (StringUtils.isNotBlank(interfaceTitle)) {
+                return interfaceTitle.replaceAll(" +", "_");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 根据Class注释获取YApi分类名
+     * @param kDoc
+     * @return
+     */
+    public static String getInterfaceCatName(KDoc kDoc) {
+        if(kDoc != null) {
+            String interfaceTitle = getInterfaceTitle(kDoc);
+            if (StringUtils.isNotBlank(interfaceTitle)) {
+                return interfaceTitle.replaceAll(" +", "_");
+            }
+        }
+        return null;
+    }
+
     /**
      * 获得YApi接口名称
      *
@@ -288,18 +319,19 @@ public class DesUtil {
             String title = content.replaceFirst("^.*?\n", "");
             return title
                     .replace(getSpace(psiDocComment.getText()), "")
-                    .replace("@description", "")
-                    .replace("@Description", "")
-                    .replace("Description", "")
-                    .replace("<br>", "\n")
-                    .replace(":", "")
-                    .replace("*", "")
-                    .replace("/", "")
-                    .replace("<p>", "\n")
-                    .replace("</p>", "\n")
-                    .replace("<li>", "\n")
-                    .replace("</li>", "\n")
-                    .replace("{", "");
+//                    .replace("@description", "")
+//                    .replace("@Description", "")
+//                    .replace("Description", "")
+//                    .replace("<br>", "\n")
+//                    .replace(":", "")
+//                    .replace("*", "")
+//                    .replace("/", "")
+//                    .replace("<p>", "\n")
+//                    .replace("</p>", "\n")
+//                    .replace("<li>", "\n")
+//                    .replace("</li>", "\n")
+//                    .replace("{", "")
+                    ;
         }
         return null;
     }
@@ -334,18 +366,20 @@ public class DesUtil {
             String title = content.replaceFirst("^.*?\n", "");
             return trimFirstAndLastChar(
                     title
-                            .replace("@description", "")
-                            .replace("@Description", "")
-                            .replace("Description", "")
-                            .replace("<br>", "\n")
-                            .replace(":", "")
-                            .replace("*", "")
-                            .replace("/", "")
-                            .replace("<p>", "\n")
-                            .replace("</p>", "\n")
-                            .replace("<li>", "\n")
-                            .replace("</li>", "\n")
-                            .replace("{", ""), ' '
+//                            .replace("@description", "")
+//                            .replace("@Description", "")
+//                            .replace("Description", "")
+//                            .replace("<br>", "\n")
+//                            .replace(":", "")
+//                            .replace("*", "")
+//                            .replace("/", "")
+//                            .replace("<p>", "\n")
+//                            .replace("</p>", "\n")
+//                            .replace("<li>", "\n")
+//                            .replace("</li>", "\n")
+//                            .replace("{", "")
+                            ,
+                    ' '
             );
         }
         return null;
