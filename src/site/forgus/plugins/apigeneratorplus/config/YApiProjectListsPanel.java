@@ -24,6 +24,7 @@ public class YApiProjectListsPanel {
     private JLabel projectIdLabel;
     private JCheckBox autoCatCheckBox;
     private JCheckBox ignoreResponseCheckBox;
+    private JCheckBox apiDoneCheckBox;
     YApiProjectListUI yApiProjectListUI;
 
     private ApiGeneratorConfig oldState;
@@ -46,6 +47,7 @@ public class YApiProjectListsPanel {
                 || !oldState.projectId.equals(projectIdLabel.getText())
                 || !oldState.defaultCat.equals(defaultCatTextField.getText())
                 || oldState.autoCat != autoCatCheckBox.isSelected()
+                || oldState.apiDone != apiDoneCheckBox.isSelected()
                 || oldState.ignoreResponse != ignoreResponseCheckBox.isSelected()
                 || oldState.isMultiModule != isMultipleModuleProjectCheckBox.isSelected()
                 || oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected()
@@ -72,6 +74,7 @@ public class YApiProjectListsPanel {
         oldState.projectId = projectIdLabel.getText();
         oldState.defaultCat = defaultCatTextField.getText();
         oldState.autoCat = autoCatCheckBox.isSelected();
+        oldState.apiDone = apiDoneCheckBox.isSelected();
         oldState.ignoreResponse = ignoreResponseCheckBox.isSelected();
         oldState.isMultiModule = isMultipleModuleProjectCheckBox.isSelected();
         oldState.isUseDefaultToken = isUseDefaultTokenCheckBox.isSelected();
@@ -86,6 +89,7 @@ public class YApiProjectListsPanel {
         projectIdLabel.setText(oldState.projectId);
         defaultCatTextField.setText(oldState.defaultCat);
         autoCatCheckBox.setSelected(oldState.autoCat);
+        apiDoneCheckBox.setSelected(oldState.apiDone);
         ignoreResponseCheckBox.setSelected(oldState.ignoreResponse);
         isMultipleModuleProjectCheckBox.setSelected(oldState.isMultiModule);
         isUseDefaultTokenCheckBox.setSelected(oldState.isUseDefaultToken);

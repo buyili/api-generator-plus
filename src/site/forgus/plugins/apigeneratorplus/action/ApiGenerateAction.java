@@ -45,6 +45,7 @@ import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 import site.forgus.plugins.apigeneratorplus.util.*;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestBodyTypeEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
+import site.forgus.plugins.apigeneratorplus.yapi.enums.YApiInterfaceStatusEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
@@ -496,6 +497,7 @@ public class ApiGenerateAction extends AnAction {
             return null;
         }
         YApiInterface yApiInterface = new YApiInterface();
+        yApiInterface.setStatus(config.apiDone ? YApiInterfaceStatusEnum.DONE.getValue() : YApiInterfaceStatusEnum.UNDONE.getValue());
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
         // 多模块项目，模块对应token等信息
