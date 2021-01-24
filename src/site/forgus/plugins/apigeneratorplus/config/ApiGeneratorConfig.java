@@ -21,7 +21,7 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
 
     public Set<String> excludeFieldNames = new HashSet<>();
     public String excludeFields = "serialVersionUID";
-    public String excludeAnnotations = "";
+    public String excludeAnnotations = "@CurrentId,@CurrentUserId;@CurrentMerchantId,";
     public Set<String> excludeAnnotationNames = new HashSet<>();
     public String dirPath = "";
     public String prefix = "└";
