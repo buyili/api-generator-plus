@@ -69,8 +69,8 @@ public class DesUtil {
                                     .replace("@Description", "")
                                     .replace("Description", "")
                                     .replace("<br>", "")
-                                    .replace(":", "")
-                                    .replace("*", "")
+//                                    .replace(":", "")
+//                                    .replace("*", "")
                                     .replace("\n", " ")
                             , ' '
                     );
@@ -82,15 +82,16 @@ public class DesUtil {
                             .replace("@Description", "")
                             .replace("Description", "")
                             .replace("<br>", "\n")
-                            .replace(":", "")
-                            .replace("*", "")
-                            .replace("/", "")
+//                            .replace(":", "")
+//                            .replace("*", "")
+//                            .replace("/", "")
                             .replace("\n", " ")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
                             .replace("</li>", "\n")
-                            .replace("{", "")
+//                            .replace("{", "")
+                            .replaceAll(" {3,}", "")
                     , ' '
             );
         }
@@ -111,9 +112,16 @@ public class DesUtil {
         if (kDoc != null) {
             List<KDocTag> descriptionTags = kDoc.getDefaultSection().findTagsByName("description");
             for (KDocTag descriptionTag : descriptionTags) {
-                return trimFirstAndLastChar(descriptionTag.getText().replace("@description", "")
-                        .replace("@Description", "").replace("Description", "")
-                        .replace("<br>", "").replace(":", "").replace("*", "").replace("\n", " "), ' ');
+                return trimFirstAndLastChar(descriptionTag.getText()
+                                .replace("@description", "")
+                                .replace("@Description", "")
+                                .replace("Description", "")
+                                .replace("<br>", "")
+//                                .replace(":", "")
+//                                .replace("*", "")
+                                .replace("\n", " ")
+                        , ' '
+                );
             }
             return trimFirstAndLastChar(
                     kDoc.getText().split("@")[0]
@@ -121,15 +129,16 @@ public class DesUtil {
                             .replace("@Description", "")
                             .replace("Description", "")
                             .replace("<br>", "\n")
-                            .replace(":", "")
-                            .replace("*", "")
-                            .replace("/", "")
+//                            .replace(":", "")
+//                            .replace("*", "")
+//                            .replace("/", "")
                             .replace("\n", " ")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
                             .replace("</li>", "\n")
-                            .replace("{", ""), ' '
+//                            .replace("{", "")
+                    , ' '
             );
         }
         return null;
@@ -138,11 +147,12 @@ public class DesUtil {
 
     /**
      * 根据Class注释获取YApi分类名
+     *
      * @param psiDocComment
      * @return
      */
     public static String getInterfaceCatName(PsiDocComment psiDocComment) {
-        if(psiDocComment != null) {
+        if (psiDocComment != null) {
             String interfaceTitle = getInterfaceTitle(psiDocComment);
             if (StringUtils.isNotBlank(interfaceTitle)) {
                 return interfaceTitle.replaceAll(" +", "_");
@@ -153,11 +163,12 @@ public class DesUtil {
 
     /**
      * 根据Class注释获取YApi分类名
+     *
      * @param kDoc
      * @return
      */
     public static String getInterfaceCatName(KDoc kDoc) {
-        if(kDoc != null) {
+        if (kDoc != null) {
             String interfaceTitle = getInterfaceTitle(kDoc);
             if (StringUtils.isNotBlank(interfaceTitle)) {
                 return interfaceTitle.replaceAll(" +", "_");
@@ -378,7 +389,7 @@ public class DesUtil {
 //                            .replace("<li>", "\n")
 //                            .replace("</li>", "\n")
 //                            .replace("{", "")
-                            ,
+                    ,
                     ' '
             );
         }
