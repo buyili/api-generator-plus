@@ -16,6 +16,7 @@ import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class ApiGeneratorSetting implements Configurable {
@@ -138,17 +139,23 @@ public class ApiGeneratorSetting implements Configurable {
     @Override
     public void apply() throws ConfigurationException {
         oldState.excludeFields = excludeFields.getText();
-        if (!StringUtils.isEmpty(excludeFields.getText())) {
-            String[] split = excludeFields.getText().split(",");
-            oldState.excludeFieldNames.addAll(Arrays.asList(split));
-        }
+//        if (!StringUtils.isEmpty(excludeFields.getText())) {
+//            String text = excludeFields.getText();
+//            text = text.replaceAll(";", ",");
+//            String[] split = text.split(",");
+//            oldState.excludeFieldNames.addAll(Arrays.asList(split));
+//        }else {
+//            oldState.excludeFieldNames = new HashSet<>();
+//        }
         oldState.excludeAnnotations = excludeAnnotations.getText();
-        if (!StringUtils.isEmpty(excludeAnnotations.getText())) {
-            String text = excludeAnnotations.getText();
-            text = text.replaceAll(";", ",");
-            String[] split = text.split(",");
-            oldState.excludeAnnotationNames.addAll(Arrays.asList(split));
-        }
+//        if (!StringUtils.isEmpty(excludeAnnotations.getText())) {
+//            String text = excludeAnnotations.getText();
+//            text = text.replaceAll(";", ",");
+//            String[] split = text.split(",");
+//            oldState.excludeAnnotationNames.addAll(Arrays.asList(split));
+//        }else {
+//            oldState.excludeAnnotationNames = new HashSet<>();
+//        }
         oldState.dirPath = dirPathTextField.getText();
         oldState.prefix = prefixTextField.getText();
         oldState.cnFileName = cnFileNameCheckBox.isSelected();

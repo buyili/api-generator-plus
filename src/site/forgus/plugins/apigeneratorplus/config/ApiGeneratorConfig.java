@@ -19,10 +19,10 @@ import java.util.Set;
 )
 public class ApiGeneratorConfig implements PersistentStateComponent<ApiGeneratorConfig> {
 
-    public Set<String> excludeFieldNames = new HashSet<>();
+//    public Set<String> excludeFieldNames = new HashSet<>();
     public String excludeFields = "serialVersionUID";
     public String excludeAnnotations = "@CurrentId,@CurrentUserId;@CurrentMerchantId,";
-    public Set<String> excludeAnnotationNames = new HashSet<>();
+//    public Set<String> excludeAnnotationNames = new HashSet<>();
     public String dirPath = "";
     public String prefix = "└";
     public Boolean cnFileName = false;
@@ -35,6 +35,8 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
     public Boolean apiDone = true;
     public String defaultCat = "api_generator_plus";
     public Boolean ignoreResponse = false;
+    public String tag = "";
+//    public Set<String> tags = new HashSet<>();
 
     public Boolean isMultiModule = false;
     public Boolean isUseDefaultToken = false;

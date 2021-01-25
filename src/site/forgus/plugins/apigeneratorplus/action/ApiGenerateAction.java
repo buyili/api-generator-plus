@@ -1,7 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.action;
 
 import com.google.common.base.Strings;
-import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
@@ -10,7 +9,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -49,12 +47,11 @@ import site.forgus.plugins.apigeneratorplus.yapi.enums.YApiInterfaceStatusEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
-import javax.print.attribute.standard.Media;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ApiGenerateAction extends AnAction {
 
@@ -497,6 +494,7 @@ public class ApiGenerateAction extends AnAction {
             return null;
         }
         YApiInterface yApiInterface = new YApiInterface();
+        yApiInterface.setTag(StringUtil.string2Set(config.tag));
         yApiInterface.setStatus(config.apiDone ? YApiInterfaceStatusEnum.DONE.getValue() : YApiInterfaceStatusEnum.UNDONE.getValue());
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
@@ -589,6 +587,7 @@ public class ApiGenerateAction extends AnAction {
             return null;
         }
         YApiInterface yApiInterface = new YApiInterface();
+        yApiInterface.setTag(StringUtil.string2Set(config.tag));
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
         // 多模块项目，模块对应token等信息
@@ -1174,7 +1173,7 @@ public class ApiGenerateAction extends AnAction {
     public List<FieldInfo> listFieldInfos(PsiClass psiClass) {
         List<FieldInfo> fieldInfos = new ArrayList<>();
         for (PsiField psiField : psiClass.getAllFields()) {
-            if (config.excludeFieldNames.contains(psiField.getName())) {
+            if (StringUtil.string2Set(config.excludeFields).contains(psiField.getName())) {
                 continue;
             }
             fieldInfos.add(new FieldInfo(psiClass.getProject(), psiField.getName(), psiField.getType(), DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));

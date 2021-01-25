@@ -293,7 +293,7 @@ public class FieldUtil {
                 continue;
             }
             boolean ignore = false;
-            for (String annotationName : apiConfig.excludeAnnotationNames) {
+            for (String annotationName : StringUtil.string2Set(apiConfig.excludeAnnotations)) {
                 if (psiParameter.getText().contains(annotationName)) {
                     ignore = true;
                     break;
