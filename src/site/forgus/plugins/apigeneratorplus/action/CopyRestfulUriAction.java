@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 
 /**
@@ -23,7 +24,8 @@ public class CopyRestfulUriAction extends AnAction {
         try {
 //        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
 //        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-//        Project project = actionEvent.getProject();
+            Project project = actionEvent.getProject();
+            GlobalVariable.getInstance().setProject(project);
 //        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
 //        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
 //        if (selectedClass == null) {

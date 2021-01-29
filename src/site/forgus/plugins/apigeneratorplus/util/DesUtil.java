@@ -61,23 +61,27 @@ public class DesUtil {
         if (psiDocComment != null) {
             PsiDocTag[] psiDocTags = psiDocComment.getTags();
             for (PsiDocTag psiDocTag : psiDocTags) {
-                if (psiDocTag.getText().contains("@description") || psiDocTag.getText().contains("@Description")
-                        || psiDocTag.getText().toLowerCase().contains("description")) {
+                String docTagText = psiDocTag.getText();
+                if (docTagText.contains("@description") || docTagText.contains("@Description")
+                        || docTagText.toLowerCase().contains("description")) {
                     return trimFirstAndLastChar(
-                            psiDocTag.getText()
+                            docTagText
                                     .replace("@description", "")
                                     .replace("@Description", "")
                                     .replace("Description", "")
                                     .replace("<br>", "")
 //                                    .replace(":", "")
 //                                    .replace("*", "")
+                                    .replaceAll("\n\t.*\\*", "")
+                                    .replaceAll("^/\\*\\*", "")
                                     .replace("\n", " ")
                             , ' '
                     );
                 }
             }
+            String text = psiDocComment.getText();
             return trimFirstAndLastChar(
-                    psiDocComment.getText().split("@")[0]
+                    text.split("@")[0]
                             .replace("@description", "")
                             .replace("@Description", "")
                             .replace("Description", "")
@@ -85,7 +89,8 @@ public class DesUtil {
 //                            .replace(":", "")
 //                            .replace("*", "")
 //                            .replace("/", "")
-                            .replace("\n", " ")
+                            .replaceAll("\n\t.*\\*", "")
+                            .replaceAll("^/\\*\\*", "")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
@@ -119,6 +124,8 @@ public class DesUtil {
                                 .replace("<br>", "")
 //                                .replace(":", "")
 //                                .replace("*", "")
+                                .replaceAll("\n\t.*\\*", "")
+                                .replaceAll("^/\\*\\*", "")
                                 .replace("\n", " ")
                         , ' '
                 );
@@ -132,7 +139,9 @@ public class DesUtil {
 //                            .replace(":", "")
 //                            .replace("*", "")
 //                            .replace("/", "")
-                            .replace("\n", " ")
+                            .replaceAll("\n\t.*\\*", "")
+                            .replaceAll("^/\\*\\*", "")
+//                            .replace("\n", " ")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
