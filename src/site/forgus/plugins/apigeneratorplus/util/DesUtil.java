@@ -80,17 +80,19 @@ public class DesUtil {
                 }
             }
             String text = psiDocComment.getText();
+
             return trimFirstAndLastChar(
                     text.split("@")[0]
                             .replace("@description", "")
                             .replace("@Description", "")
                             .replace("Description", "")
+                            .replaceAll("\n.*\\*/$", "")
+                            .replaceAll("\n.*\\*", "")
+                            .replaceAll("^/\\*\\*", "")
                             .replace("<br>", "\n")
 //                            .replace(":", "")
 //                            .replace("*", "")
 //                            .replace("/", "")
-                            .replaceAll("\n\t.*\\*", "")
-                            .replaceAll("^/\\*\\*", "")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
                             .replace("<li>", "\n")
@@ -135,12 +137,13 @@ public class DesUtil {
                             .replace("@description", "")
                             .replace("@Description", "")
                             .replace("Description", "")
+                            .replaceAll("\n.*\\*/$", "")
+                            .replaceAll("\n.*\\*", "")
+                            .replaceAll("^/\\*\\*", "")
                             .replace("<br>", "\n")
 //                            .replace(":", "")
 //                            .replace("*", "")
 //                            .replace("/", "")
-                            .replaceAll("\n\t.*\\*", "")
-                            .replaceAll("^/\\*\\*", "")
 //                            .replace("\n", " ")
                             .replace("<p>", "\n")
                             .replace("</p>", "\n")
