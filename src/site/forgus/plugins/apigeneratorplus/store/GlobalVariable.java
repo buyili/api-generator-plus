@@ -28,4 +28,9 @@ public class GlobalVariable {
         return ServiceManager.getService(globalVariable.getProject(), ApiGeneratorConfig.class);
     }
 
+    public static GlobalVariable setProject(Project project){
+        globalVariable.project = project;
+        return globalVariable;
+    }
+
 }
