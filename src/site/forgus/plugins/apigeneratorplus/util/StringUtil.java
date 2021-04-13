@@ -10,6 +10,10 @@ import org.jetbrains.kotlin.kdoc.psi.impl.KDocLink;
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag;
 import org.jetbrains.kotlin.psi.KtParameter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +28,15 @@ public class StringUtil {
     public static String getName() {
         nameNumber = nameNumber + 1;
         return "Unnameed (" + nameNumber + ")";
+    }
+
+    public static List<String> string2Set(String text) {
+        if (StringUtils.isNotBlank(text)) {
+            text = text.replaceAll(";", ",");
+            String[] split = text.split(",");
+            return Arrays.asList(split);
+        }
+        return new ArrayList<>();
     }
 
     public static void showPsiNameValuePair(PsiNameValuePair psiNameValuePair) {

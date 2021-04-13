@@ -32,5 +32,6 @@ public class YApiInterface implements Serializable {
     private String method;
     private List<YApiPathVariable> req_params = new ArrayList<>();
     private String markdown = "";
+    private List<String> tag = new ArrayList<>();
 
 }

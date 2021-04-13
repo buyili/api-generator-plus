@@ -1,7 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.action;
 
 import com.google.common.base.Strings;
-import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
@@ -10,7 +9,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -41,18 +39,19 @@ import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.icons.SdkIcons;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 import site.forgus.plugins.apigeneratorplus.util.*;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestBodyTypeEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
+import site.forgus.plugins.apigeneratorplus.yapi.enums.YApiInterfaceStatusEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.model.*;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
-import javax.print.attribute.standard.Media;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ApiGenerateAction extends AnAction {
 
@@ -79,6 +78,7 @@ public class ApiGenerateAction extends AnAction {
             if (project == null) {
                 return;
             }
+            GlobalVariable.getInstance().setProject(project);
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
 
             if (StringUtils.isBlank(config.yApiServerUrl)) {
@@ -494,6 +494,8 @@ public class ApiGenerateAction extends AnAction {
             return null;
         }
         YApiInterface yApiInterface = new YApiInterface();
+        yApiInterface.setTag(StringUtil.string2Set(config.tag));
+        yApiInterface.setStatus(config.apiDone ? YApiInterfaceStatusEnum.DONE.getValue() : YApiInterfaceStatusEnum.UNDONE.getValue());
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
         // 多模块项目，模块对应token等信息
@@ -585,6 +587,7 @@ public class ApiGenerateAction extends AnAction {
             return null;
         }
         YApiInterface yApiInterface = new YApiInterface();
+        yApiInterface.setTag(StringUtil.string2Set(config.tag));
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
         // 多模块项目，模块对应token等信息
@@ -831,28 +834,28 @@ public class ApiGenerateAction extends AnAction {
 
     private String getDefaultCatName() {
         String defaultCat = config.defaultCat;
-        return StringUtils.isEmpty(defaultCat) ? "api_generator" : defaultCat;
+        return StringUtils.isEmpty(defaultCat) ? "api_generator_plus" : defaultCat;
     }
 
-    private String getClassCatName(PsiDocComment classDesc) {
-        if (classDesc == null) {
-            return "";
-        }
-        return DesUtil.getDescription(classDesc).split(" ")[0];
-    }
-
-    private String getClassCatName(KDoc classDesc) {
-        if (classDesc == null) {
-            return "";
-        }
-        return DesUtil.getDescription(classDesc).split(" ")[0];
-    }
+//    private String getClassCatName(PsiDocComment classDesc) {
+//        if (classDesc == null) {
+//            return "";
+//        }
+//        return DesUtil.getDescription(classDesc).split(" ")[0];
+//    }
+//
+//    private String getClassCatName(KDoc classDesc) {
+//        if (classDesc == null) {
+//            return "";
+//        }
+//        return DesUtil.getDescription(classDesc).split(" ")[0];
+//    }
 
     private String getCatId(Map<String, YApiCat> catNameMap, PsiDocComment classDesc) throws IOException {
         String defaultCatName = getDefaultCatName();
         String catName;
         if (config.autoCat) {
-            String classCatName = getClassCatName(classDesc);
+            String classCatName = DesUtil.getInterfaceCatName(classDesc);
             catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
         } else {
             catName = defaultCatName;
@@ -870,7 +873,7 @@ public class ApiGenerateAction extends AnAction {
         String defaultCatName = getDefaultCatName();
         String catName;
         if (config.autoCat) {
-            String classCatName = getClassCatName(classDesc);
+            String classCatName = DesUtil.getInterfaceCatName(classDesc);
             catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
         } else {
             catName = defaultCatName;
@@ -884,12 +887,12 @@ public class ApiGenerateAction extends AnAction {
         return yApiResponse.getData().get_id().toString();
     }
 
-    private String getCatId(Map<String, YApiCat> catNameMap, KDoc classDesc, YApiProjectConfigInfo yApiProjectConfigInfo)
+    private String getCatId(Map<String, YApiCat> catNameMap, KDoc classKDoc, YApiProjectConfigInfo yApiProjectConfigInfo)
             throws IOException {
         String defaultCatName = getDefaultCatName();
         String catName;
         if (config.autoCat) {
-            String classCatName = getClassCatName(classDesc);
+            String classCatName = DesUtil.getInterfaceCatName(classKDoc);
             catName = StringUtils.isEmpty(classCatName) ? defaultCatName : classCatName;
         } else {
             catName = defaultCatName;
@@ -1170,7 +1173,7 @@ public class ApiGenerateAction extends AnAction {
     public List<FieldInfo> listFieldInfos(PsiClass psiClass) {
         List<FieldInfo> fieldInfos = new ArrayList<>();
         for (PsiField psiField : psiClass.getAllFields()) {
-            if (config.excludeFieldNames.contains(psiField.getName())) {
+            if (StringUtil.string2Set(config.excludeFields).contains(psiField.getName())) {
                 continue;
             }
             fieldInfos.add(new FieldInfo(psiClass.getProject(), psiField.getName(), psiField.getType(), DesUtil.getDescription(psiField.getDocComment()), psiField.getAnnotations()));

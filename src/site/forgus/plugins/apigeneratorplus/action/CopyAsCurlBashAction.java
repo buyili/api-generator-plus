@@ -2,11 +2,16 @@ package site.forgus.plugins.apigeneratorplus.action;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 
 /**
@@ -17,9 +22,10 @@ public class CopyAsCurlBashAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         try {
-//        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
-//        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-//        Project project = actionEvent.getProject();
+//            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
+//            PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+            Project project = actionEvent.getProject();
+            GlobalVariable.getInstance().setProject(project);
 //        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
 //        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
 //        if (selectedClass == null) {

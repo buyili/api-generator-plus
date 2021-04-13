@@ -1,4 +1,21 @@
 
+
+
+v1.0.7
+v1.0.7_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉Fixed Parameter description is not uploaded if it contains Spaces
+
+### New features
+
+- api generator plus
+    - 🎉🎉🎉Ignore update response data for YApi api
+    - 🎉🎉🎉Add annotation @res_body @res_body_is_json_schema @res_body_type
+
+
+
 v1.0.6
 ### New features
 - 🎉add copy RESTful uri

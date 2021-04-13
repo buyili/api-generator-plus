@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
+import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
 import site.forgus.plugins.apigeneratorplus.util.MethodUtil;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
@@ -317,11 +318,9 @@ public class MethodInfo implements Serializable {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
         Map<String, String> paramNameDescMap = getParamDescMap(psiMethod.getDocComment());
         PsiParameter[] psiParameters = psiMethod.getParameterList().getParameters();
-        for (PsiParameter psiParameter : psiParameters) {
+        List<PsiParameter> psiParameterList = FieldUtil.filterParameters(psiParameters);
+        for (PsiParameter psiParameter : psiParameterList) {
             PsiType psiType = psiParameter.getType();
-            if (excludeParamTypes.contains(psiType.getPresentableText())) {
-                continue;
-            }
             FieldInfo fieldInfo = new FieldInfo(
                     psiMethod.getProject(),
                     psiParameter.getName(),
@@ -331,6 +330,20 @@ public class MethodInfo implements Serializable {
             );
             fieldInfoList.add(fieldInfo);
         }
+//        for (PsiParameter psiParameter : psiParameters) {
+//            PsiType psiType = psiParameter.getType();
+//            if (excludeParamTypes.contains(psiType.getPresentableText())) {
+//                continue;
+//            }
+//            FieldInfo fieldInfo = new FieldInfo(
+//                    psiMethod.getProject(),
+//                    psiParameter.getName(),
+//                    psiType,
+//                    paramNameDescMap.get(psiParameter.getName()),
+//                    psiParameter.getAnnotations()
+//            );
+//            fieldInfoList.add(fieldInfo);
+//        }
         return fieldInfoList;
     }
 

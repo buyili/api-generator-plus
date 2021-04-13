@@ -7,6 +7,8 @@ import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * @author lmx 2020/12/2 13:52
@@ -24,6 +26,8 @@ public class YApiProjectListsPanel {
     private JLabel projectIdLabel;
     private JCheckBox autoCatCheckBox;
     private JCheckBox ignoreResponseCheckBox;
+    private JCheckBox apiDoneCheckBox;
+    private JTextField tagTextField;
     YApiProjectListUI yApiProjectListUI;
 
     private ApiGeneratorConfig oldState;
@@ -45,7 +49,9 @@ public class YApiProjectListsPanel {
                 || !oldState.projectToken.equals(tokenTextField.getText())
                 || !oldState.projectId.equals(projectIdLabel.getText())
                 || !oldState.defaultCat.equals(defaultCatTextField.getText())
+                || !oldState.tag.equals(tagTextField.getText())
                 || oldState.autoCat != autoCatCheckBox.isSelected()
+                || oldState.apiDone != apiDoneCheckBox.isSelected()
                 || oldState.ignoreResponse != ignoreResponseCheckBox.isSelected()
                 || oldState.isMultiModule != isMultipleModuleProjectCheckBox.isSelected()
                 || oldState.isUseDefaultToken != isUseDefaultTokenCheckBox.isSelected()
@@ -71,7 +77,17 @@ public class YApiProjectListsPanel {
         oldState.projectToken = tokenTextField.getText();
         oldState.projectId = projectIdLabel.getText();
         oldState.defaultCat = defaultCatTextField.getText();
+        oldState.tag = tagTextField.getText();
+//        if (!org.apache.commons.lang.StringUtils.isEmpty(tagTextField.getText())) {
+//            String text = tagTextField.getText();
+//            text = text.replaceAll(";", ",");
+//            String[] split = text.split(",");
+//            oldState.tags.addAll(Arrays.asList(split));
+//        }else {
+//            oldState.tags = new HashSet<>();
+//        }
         oldState.autoCat = autoCatCheckBox.isSelected();
+        oldState.apiDone = apiDoneCheckBox.isSelected();
         oldState.ignoreResponse = ignoreResponseCheckBox.isSelected();
         oldState.isMultiModule = isMultipleModuleProjectCheckBox.isSelected();
         oldState.isUseDefaultToken = isUseDefaultTokenCheckBox.isSelected();
@@ -85,7 +101,9 @@ public class YApiProjectListsPanel {
         tokenTextField.setText(oldState.projectToken);
         projectIdLabel.setText(oldState.projectId);
         defaultCatTextField.setText(oldState.defaultCat);
+        tagTextField.setText(oldState.tag);
         autoCatCheckBox.setSelected(oldState.autoCat);
+        apiDoneCheckBox.setSelected(oldState.apiDone);
         ignoreResponseCheckBox.setSelected(oldState.ignoreResponse);
         isMultipleModuleProjectCheckBox.setSelected(oldState.isMultiModule);
         isUseDefaultTokenCheckBox.setSelected(oldState.isUseDefaultToken);
