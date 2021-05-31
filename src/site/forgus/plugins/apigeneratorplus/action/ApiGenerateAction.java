@@ -78,7 +78,7 @@ public class ApiGenerateAction extends AnAction {
             if (project == null) {
                 return;
             }
-            GlobalVariable.getInstance().setProject(project);
+            GlobalVariable.setProject(project);
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
 
             if (StringUtils.isBlank(config.yApiServerUrl)) {

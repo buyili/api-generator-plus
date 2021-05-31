@@ -309,7 +309,11 @@ public class FieldInfo {
             }
             if (typeName.contains("<")) {
                 PsiClass outerClass = PsiUtil.resolveClassInType(psiType);
-                for (PsiField outField : outerClass.getAllFields()) {
+                if(outerClass == null){
+                    return Collections.emptyList();
+                }
+                PsiField[] allFields = outerClass.getAllFields();
+                for (PsiField outField : allFields) {
                     PsiType type = outField.getType();
                     if (config.getState().excludeFields.contains(outField.getName())) {
                         continue;
