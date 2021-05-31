@@ -148,6 +148,7 @@ public class FieldInfo {
         this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
         this.annotations = Arrays.asList(annotations);
+        this.javaGenericsMap = resolveJavaGenerics(psiType);
         this.parent = parent;
         if (psiType != null) {
             this.setTypeText(psiType.getPresentableText());
@@ -179,6 +180,7 @@ public class FieldInfo {
         this.range = requireAndRange.getRange();
         this.desc = desc == null ? "" : desc;
         this.ktAnnotationEntries = annotations;
+        this.ktGenericsMap = resolveKtGenerics(ktTypeReference);
         this.parent = parent;
         if (ktTypeReference != null) {
             this.setTypeText(KtUtil.getText(ktTypeReference));
@@ -309,7 +311,7 @@ public class FieldInfo {
             }
             if (typeName.contains("<")) {
                 PsiClass outerClass = PsiUtil.resolveClassInType(psiType);
-                if(outerClass == null){
+                if (outerClass == null) {
                     return Collections.emptyList();
                 }
                 PsiField[] allFields = outerClass.getAllFields();
@@ -710,13 +712,23 @@ public class FieldInfo {
     }
 
     private Map<String, PsiType> resolveJavaGenerics(PsiType psiType) {
+        // 当字段类型为long 而不是 Long 时，psiType类型为 PsiPrimitiveType，cast to PsiClassType时报错，所以直接返回空map
+        if (psiType instanceof PsiPrimitiveType) {
+            return Collections.emptyMap();
+        }
         // 拆解参数类型中的泛型类
         PsiClassType psiClassType = (PsiClassType) psiType;
         PsiType[] parameters = psiClassType.getParameters();
+        if (parameters.length <= 0) {
+            return Collections.emptyMap();
+        }
 
         // 拆解参数类型中的泛型 如 T、V
         PsiClass resolve = ((PsiClassType) psiType).resolve();
         PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
+        if (typeParameters.length <= 0) {
+            return Collections.emptyMap();
+        }
         int i = 0;
         Map<String, PsiType> map = new HashMap<>();
         if (typeParameters.length == parameters.length) {
@@ -788,21 +800,23 @@ public class FieldInfo {
             return null;
         }
         if (this.parent != null) {
+            Map<String, PsiType> parentGenericsMap = this.parent.javaGenericsMap;
+            if (null != parentGenericsMap) {
+                for (String genericKey : parentGenericsMap.keySet()) {
+                    if (genericKey.equals(genericName)) {
+                        return parentGenericsMap.get(genericKey);
+                    }
+                }
+            }
+            Map<String, KtTypeReference> parentKtGenericsMap = this.parent.ktGenericsMap;
+            if (null != parentKtGenericsMap) {
+                for (String genericKey : parentKtGenericsMap.keySet()) {
+                    if (genericKey.equals(genericName)) {
+                        return parentKtGenericsMap.get(genericKey);
+                    }
+                }
+            }
             return this.parent.getTypeByGenerics(genericName);
-        }
-        if (null != javaGenericsMap) {
-            for (String genericKey : javaGenericsMap.keySet()) {
-                if (genericKey.equals(genericName)) {
-                    return javaGenericsMap.get(genericKey);
-                }
-            }
-        }
-        if (null != ktGenericsMap) {
-            for (String genericKey : ktGenericsMap.keySet()) {
-                if (genericKey.equals(genericName)) {
-                    return ktGenericsMap.get(genericKey);
-                }
-            }
         }
         return null;
     }
