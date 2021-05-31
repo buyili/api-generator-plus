@@ -1,7 +1,29 @@
 
 
 
-v1.0.7
+##v1.0.9
+v1.0.9_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修复字段类型为long而不是Long时报错问题
+    - 🎉🎉🎉修复嵌套泛型导致idea卡死的问题 <a href="https://github.com/buyili/api-generator-plus/issues/4">(#4)</a>
+    - 🎉🎉🎉修复返回类型为ResponseEntity&lt;xx&gt;时，idea卡死的问题
+
+
+##v1.0.8
+v1.0.8_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉 Fixed throw exception on 2020.2+ issue [(#1)](https://github.com/buyili/api-generator-plus/issues/1)
+### New features
+- api generator plus
+    - ✨ Specify the tag for the interface
+    - 🎉 Custom interface state
+    
+
+##v1.0.7
 v1.0.7_IC171.469473
 
 ### Bug fixes
@@ -16,13 +38,13 @@ v1.0.7_IC171.469473
 
 
 
-v1.0.6
+##v1.0.6
 ### New features
 - 🎉add copy RESTful uri
 
 
 
-v1.0.5
+##v1.0.5
 ### Bug fixes
 - copy as curl
     - Fixed curl and fetch syntax errors when content-type was multipart/form-data

@@ -17,7 +17,6 @@ import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
 import site.forgus.plugins.apigeneratorplus.util.MethodUtil;
-import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 import site.forgus.plugins.apigeneratorplus.yapi.model.YApiInterface;
 
@@ -86,7 +85,14 @@ public class MethodInfo implements Serializable {
         if (returnType != null) {
             this.setReturnStr(returnType.getPresentableText());
             if (!"void".equals(psiMethod.getReturnType().getPresentableText())) {
-                FieldInfo fieldInfo = new FieldInfo(psiMethod.getProject(), psiMethod.getReturnType(),
+                PsiType responseType = returnType;
+                String canonicalText = returnType.getCanonicalText();
+                if (canonicalText.contains("org.springframework.http.ResponseEntity")) {
+                    PsiType[] parameters = ((PsiClassType) returnType).getParameters();
+                    responseType = parameters[0];
+                    System.out.println();
+                }
+                FieldInfo fieldInfo = new FieldInfo(psiMethod.getProject(), responseType,
                         getReturnDesc(psiMethod.getDocComment()));
                 this.response = fieldInfo;
                 this.setResponseFields(fieldInfo.getChildren());
