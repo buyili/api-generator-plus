@@ -41,8 +41,21 @@ public class FieldInfo {
     private KtTypeReference ktTypeReference;
     private List<KtAnnotationEntry> ktAnnotationEntries;
     private Map<String, KtTypeReference> ktGenericsMap;
+
+    /**
+     * 类的完整引用
+     * <p>For example, java.lang.String
+     */
     private String canonicalText;
     private String typeText;
+
+    /**
+     * 当字段类型为集合类型时，该字段为列表中的元素类型
+     * <pre>
+     *     private List<String> list;
+     * </pre>
+     * 该字段储存值为 "String"
+     */
     private String iterableTypeStr;
 
     @Override
@@ -280,6 +293,12 @@ public class FieldInfo {
                 psiType = PsiUtil.extractIterableTypeParameter(psiType, false);
             }
             String typeName = psiType.getPresentableText();
+            //如果是基础类或基础包装类返回空集合
+            if (FieldUtil.isNormalType(psiType.getPresentableText())) {
+                this.iterableTypeStr = typeName;
+                //基础类或基础包装类没有子域
+                return new ArrayList<>();
+            }
             // 如果是泛型
             if (FieldUtil.isGenericType(typeName)) {
                 Object tempType = getTypeByGenerics(typeName);
@@ -358,6 +377,12 @@ public class FieldInfo {
             }
 
             String typeName = KtUtil.getText(ktTypeReference);
+            //如果是基础类或基础包装类返回空集合
+            if (FieldUtil.isNormalType(typeName)) {
+                this.iterableTypeStr = typeName;
+                //基础类或基础包装类没有子域
+                return new ArrayList<>();
+            }
             // 如果是泛型
             if (FieldUtil.isGenericType(typeName)) {
                 Object tempType = getTypeByGenerics(typeName);
@@ -712,32 +737,31 @@ public class FieldInfo {
     }
 
     private Map<String, PsiType> resolveJavaGenerics(PsiType psiType) {
-        // 当字段类型为long 而不是 Long 时，psiType类型为 PsiPrimitiveType，cast to PsiClassType时报错，所以直接返回空map
-        if (psiType instanceof PsiPrimitiveType) {
-            return Collections.emptyMap();
-        }
-        // 拆解参数类型中的泛型类
-        PsiClassType psiClassType = (PsiClassType) psiType;
-        PsiType[] parameters = psiClassType.getParameters();
-        if (parameters.length <= 0) {
-            return Collections.emptyMap();
-        }
-
-        // 拆解参数类型中的泛型 如 T、V
-        PsiClass resolve = ((PsiClassType) psiType).resolve();
-        PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
-        if (typeParameters.length <= 0) {
-            return Collections.emptyMap();
-        }
-        int i = 0;
-        Map<String, PsiType> map = new HashMap<>();
-        if (typeParameters.length == parameters.length) {
-            for (PsiTypeParameter typeParameter : typeParameters) {
-                map.put(typeParameter.getName(), parameters[i]);
-                i++;
+        if (psiType instanceof PsiClassType) {
+            // 拆解参数类型中的泛型类
+            PsiClassType psiClassType = (PsiClassType) psiType;
+            PsiType[] parameters = psiClassType.getParameters();
+            if (parameters.length <= 0) {
+                return Collections.emptyMap();
             }
+
+            // 拆解参数类型中的泛型 如 T、V
+            PsiClass resolve = ((PsiClassType) psiType).resolve();
+            PsiTypeParameter[] typeParameters = resolve.getTypeParameters();
+            if (typeParameters.length <= 0) {
+                return Collections.emptyMap();
+            }
+            int i = 0;
+            Map<String, PsiType> map = new HashMap<>();
+            if (typeParameters.length == parameters.length) {
+                for (PsiTypeParameter typeParameter : typeParameters) {
+                    map.put(typeParameter.getName(), parameters[i]);
+                    i++;
+                }
+            }
+            return map;
         }
-        return map;
+        return Collections.emptyMap();
     }
 
     /**
@@ -749,6 +773,9 @@ public class FieldInfo {
     private Map<String, KtTypeReference> resolveKtGenerics(KtTypeReference ktTypeReference) {
         // 拆解参数类型中的泛型类
         List<KtTypeReference> typeArgumentsAsTypes = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes();
+        if (typeArgumentsAsTypes.size() <= 0) {
+            return Collections.emptyMap();
+        }
 
         Map<String, KtTypeReference> map = new HashMap<>();
         int i = 0;

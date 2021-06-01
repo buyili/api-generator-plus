@@ -1,6 +1,19 @@
 
 
 
+##v1.0.10
+v1.0.10_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修复类型转换异常 <a href="https://github.com/buyili/api-generator-plus/issues/6">(#6)</a>
+- copy as curl
+    - 🎉🎉🎉修复打开设置报错，保存后配置数据丢失等问题
+### New features
+- api generator plus
+    - ✨✨ 新增自定义Date、LocalDateTime、LocalDate、LocalTime返回值
+
+
 ##v1.0.9
 v1.0.9_IC171.469473
 
@@ -21,7 +34,7 @@ v1.0.8_IC171.469473
 - api generator plus
     - ✨ Specify the tag for the interface
     - 🎉 Custom interface state
-    
+
 
 ##v1.0.7
 v1.0.7_IC171.469473

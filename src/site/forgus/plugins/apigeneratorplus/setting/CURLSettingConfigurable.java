@@ -48,19 +48,20 @@ public class CURLSettingConfigurable implements Configurable {
     public CURLSettingConfigurable(Project project) {
         this.project = project;
         oldState = ServiceManager.getService(project, CURLSettingState.class);
-        for (CURLModuleInfo curlModuleInfo : oldState.moduleInfoList) {
-            if (curlModuleInfo.getHeaders() != null && curlModuleInfo.getHeaders().size() > 0) {
-                for (String[] header : curlModuleInfo.getHeaders()) {
-                    if (header.length == 2 && StringUtils.isNotBlank(header[0]) && StringUtils.isNotBlank(header[1])) {
-                        Header requestHeader = new Header();
-                        requestHeader.setKey(header[0]);
-                        requestHeader.setValue(header[1]);
-                        curlModuleInfo.getRequestHeaders().add(requestHeader);
-                    }
-                }
-            }
-            curlModuleInfo.setHeaders(null);
-        }
+
+        //for (CURLModuleInfo curlModuleInfo : oldState.moduleInfoList) {
+        //    if (curlModuleInfo.getHeaders() != null && curlModuleInfo.getHeaders().size() > 0) {
+        //        for (String[] header : curlModuleInfo.getHeaders()) {
+        //            if (header.length == 2 && StringUtils.isNotBlank(header[0]) && StringUtils.isNotBlank(header[1])) {
+        //                Header requestHeader = new Header();
+        //                requestHeader.setKey(header[0]);
+        //                requestHeader.setValue(header[1]);
+        //                curlModuleInfo.getRequestHeaders().add(requestHeader);
+        //            }
+        //        }
+        //    }
+        //    curlModuleInfo.setHeaders(null);
+        //}
     }
 
     @Override

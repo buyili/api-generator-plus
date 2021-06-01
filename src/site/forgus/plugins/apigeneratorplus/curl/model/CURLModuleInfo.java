@@ -7,10 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author lmx 2020/11/11 22:53
@@ -28,8 +25,8 @@ public class CURLModuleInfo implements Cloneable {
 
     private String contextPath = "";
 
-    @Deprecated
-    private List<String[]> headers = ContainerUtil.newArrayList();
+    //@Deprecated
+    //private List<String[]> headers = Collections.emptyList();
 
     /**
      * @since 1.0.2

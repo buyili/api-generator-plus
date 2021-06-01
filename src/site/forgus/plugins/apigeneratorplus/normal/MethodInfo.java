@@ -129,7 +129,7 @@ public class MethodInfo implements Serializable {
         KtTypeReference returnTypeReference = ktFunction.getTypeReference();
         if (returnTypeReference != null) {
             this.setReturnStr(returnTypeReference.getText());
-            if (!"void".equals(returnTypeReference.getText())) {
+            if (!"Void".equals(returnTypeReference.getText())) {
                 FieldInfo fieldInfo = new FieldInfo(ktFunction.getProject(), returnTypeReference,
                         getReturnDesc(ktFunction.getDocComment()));
                 this.response = fieldInfo;
