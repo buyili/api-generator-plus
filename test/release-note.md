@@ -1,6 +1,15 @@
 
 
 
+##v1.0.10
+v1.0.10_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修复字段类型为long而不是Long时报错问题
+    - 🎉🎉🎉修复类型转换异常 <a href="https://github.com/buyili/api-generator-plus/issues/6">(#6)</a>
+
+
 ##v1.0.9
 v1.0.9_IC171.469473
 
@@ -21,7 +30,7 @@ v1.0.8_IC171.469473
 - api generator plus
     - ✨ Specify the tag for the interface
     - 🎉 Custom interface state
-    
+
 
 ##v1.0.7
 v1.0.7_IC171.469473
