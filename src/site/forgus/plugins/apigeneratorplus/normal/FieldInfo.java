@@ -377,6 +377,12 @@ public class FieldInfo {
             }
 
             String typeName = KtUtil.getText(ktTypeReference);
+            //如果是基础类或基础包装类返回空集合
+            if (FieldUtil.isNormalType(typeName)) {
+                this.iterableTypeStr = typeName;
+                //基础类或基础包装类没有子域
+                return new ArrayList<>();
+            }
             // 如果是泛型
             if (FieldUtil.isGenericType(typeName)) {
                 Object tempType = getTypeByGenerics(typeName);
@@ -731,7 +737,7 @@ public class FieldInfo {
     }
 
     private Map<String, PsiType> resolveJavaGenerics(PsiType psiType) {
-        if(psiType instanceof PsiClassType) {
+        if (psiType instanceof PsiClassType) {
             // 拆解参数类型中的泛型类
             PsiClassType psiClassType = (PsiClassType) psiType;
             PsiType[] parameters = psiClassType.getParameters();
@@ -767,6 +773,9 @@ public class FieldInfo {
     private Map<String, KtTypeReference> resolveKtGenerics(KtTypeReference ktTypeReference) {
         // 拆解参数类型中的泛型类
         List<KtTypeReference> typeArgumentsAsTypes = ktTypeReference.getTypeElement().getTypeArgumentsAsTypes();
+        if (typeArgumentsAsTypes.size() <= 0) {
+            return Collections.emptyMap();
+        }
 
         Map<String, KtTypeReference> map = new HashMap<>();
         int i = 0;

@@ -24,6 +24,9 @@ public class JsonUtil {
     }
 
     public static String buildPrettyJson(FieldInfo fieldInfo) {
+        if (fieldInfo == null) {
+            return "";
+        }
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
             return prettyJson.toJson(FieldUtil.getValue(fieldInfo));
         }
@@ -35,6 +38,9 @@ public class JsonUtil {
     }
 
     public static String buildRawJson(FieldInfo fieldInfo) {
+        if (fieldInfo == null) {
+            return "";
+        }
         Gson gson = new Gson();
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
             return FieldUtil.getValue(fieldInfo).toString();
@@ -72,6 +78,9 @@ public class JsonUtil {
     }
 
     public static String buildJson5(FieldInfo fieldInfo) {
+        if (fieldInfo == null) {
+            return "";
+        }
         return buildJson5(buildPrettyJson(fieldInfo), buildFieldDescList(fieldInfo));
     }
 
