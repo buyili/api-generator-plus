@@ -6,8 +6,12 @@ v1.0.10_IC171.469473
 
 ### Bug fixes
 - api generator plus
-    - 🎉🎉🎉修复字段类型为long而不是Long时报错问题
     - 🎉🎉🎉修复类型转换异常 <a href="https://github.com/buyili/api-generator-plus/issues/6">(#6)</a>
+- copy as curl
+    - 🎉🎉🎉修复打开设置报错，保存后配置数据丢失等问题
+### New features
+- api generator plus
+    - ✨✨ 新增自定义Date、LocalDateTime、LocalDate、LocalTime返回值
 
 
 ##v1.0.9
