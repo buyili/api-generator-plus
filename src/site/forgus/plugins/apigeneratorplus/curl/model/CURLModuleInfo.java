@@ -25,8 +25,8 @@ public class CURLModuleInfo implements Cloneable {
 
     private String contextPath = "";
 
-    @Deprecated
-    private List<String[]> headers = Collections.emptyList();
+    //@Deprecated
+    //private List<String[]> headers = Collections.emptyList();
 
     /**
      * @since 1.0.2

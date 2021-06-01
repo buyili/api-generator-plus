@@ -48,6 +48,7 @@ public class CURLSettingConfigurable implements Configurable {
     public CURLSettingConfigurable(Project project) {
         this.project = project;
         oldState = ServiceManager.getService(project, CURLSettingState.class);
+
         //for (CURLModuleInfo curlModuleInfo : oldState.moduleInfoList) {
         //    if (curlModuleInfo.getHeaders() != null && curlModuleInfo.getHeaders().size() > 0) {
         //        for (String[] header : curlModuleInfo.getHeaders()) {
