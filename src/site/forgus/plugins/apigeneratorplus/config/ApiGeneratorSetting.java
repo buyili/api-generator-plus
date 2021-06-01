@@ -36,12 +36,13 @@ public class ApiGeneratorSetting implements Configurable {
 
     YApiProjectPanel yApiProjectPanel;
     YApiProjectListsPanel yApiProjectListsPanel;
+    FieldValueFormatPanel fieldValueFormatPanel;
 
     public ApiGeneratorSetting(Project project) {
         oldState = ServiceManager.getService(project, ApiGeneratorConfig.class);
         yApiProjectListsPanel = new YApiProjectListsPanel(oldState);
         yApiProjectPanel = new YApiProjectPanel();
-        GlobalVariable.getInstance().setProject(project);
+        GlobalVariable.setProject(project);
     }
 
     @Nls(capitalization = Nls.Capitalization.Title)
@@ -65,6 +66,7 @@ public class ApiGeneratorSetting implements Configurable {
         cnFileNameCheckBox = buildJBCheckBox(layout, "Extract filename from doc comments", oldState.cnFileName);
         filterFieldInfoPanel = new FilterFieldInfoPanel();
         filterFieldInfoPanel.setItem(oldState.filterFieldInfo);
+        fieldValueFormatPanel = new FieldValueFormatPanel(oldState);
 
         JPanel normalJPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFields, 1, false)
@@ -75,6 +77,7 @@ public class ApiGeneratorSetting implements Configurable {
                 .addComponent(cnFileNameCheckBox)
                 .addSeparator()
                 .addComponent(filterFieldInfoPanel.getPanel(), 0)
+                .addComponent(fieldValueFormatPanel.getPanel(), 0)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
         jbTabbedPane.addTab("Api Setting", normalJPanel);
@@ -133,7 +136,9 @@ public class ApiGeneratorSetting implements Configurable {
                 !oldState.excludeFields.equals(excludeFields.getText()) ||
                 !oldState.excludeAnnotations.equals(excludeAnnotations.getText()) ||
                 filterFieldInfoPanel.isModified(oldState.filterFieldInfo) ||
-                yApiProjectListsPanel.isModified();
+                yApiProjectListsPanel.isModified()
+                || fieldValueFormatPanel.isModified()
+                ;
     }
 
     @Override
@@ -164,6 +169,7 @@ public class ApiGeneratorSetting implements Configurable {
         filterFieldInfoPanel.apply(oldState.filterFieldInfo);
 
         yApiProjectListsPanel.apply();
+        fieldValueFormatPanel.apply();
 
     }
 
@@ -177,6 +183,7 @@ public class ApiGeneratorSetting implements Configurable {
         overwriteCheckBox.setSelected(oldState.overwrite);
         filterFieldInfoPanel.reset(oldState.filterFieldInfo);
         yApiProjectListsPanel.reset();
+        fieldValueFormatPanel.reset();
     }
 
     public static void main(String[] args) {

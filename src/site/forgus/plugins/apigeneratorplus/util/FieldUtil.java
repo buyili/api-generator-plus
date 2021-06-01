@@ -18,6 +18,9 @@ import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
 import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
 import java.util.*;
 
 public class FieldUtil {
@@ -57,9 +60,9 @@ public class FieldUtil {
         normalTypes.put("String", "@string");
         normalTypes.put("Date", new Date().getTime());
         normalTypes.put("BigDecimal", 0.111111);
-        normalTypes.put("LocalTime", "HH:mm:ss");
-        normalTypes.put("LocalDate", "yyyy-MM-dd");
-        normalTypes.put("LocalDateTime", "yyyy-MM-dd HH:mm:ss");
+        normalTypes.put("LocalTime", LocalTime.now().getLong(ChronoField.MILLI_OF_DAY));
+        normalTypes.put("LocalDate", System.currentTimeMillis());
+        normalTypes.put("LocalDateTime", System.currentTimeMillis());
         normalTypes.put("BigInteger", 0);
         normalTypes.put("MultipartFile", "@/path");
         normalTypes.put("CommonsMultipartFile", "@/path");
@@ -97,6 +100,27 @@ public class FieldUtil {
                     return null;
                 }
                 return obj.toString() + "," + obj.toString();
+            }
+        }
+        ApiGeneratorConfig config = GlobalVariable.getApiConfig();
+        if ("Date".equals(fieldInfo.getTypeText())) {
+            if (StringUtils.isNotBlank(config.dateFormat)) {
+                return "@datetime('" + config.dateFormat + "')";
+            }
+        }
+        if ("LocalDateTime".equals(fieldInfo.getTypeText())) {
+            if (StringUtils.isNotBlank(config.localDateTimeFormat)) {
+                return "@datetime('" + config.localDateTimeFormat + "')";
+            }
+        }
+        if ("LocalDate".equals(fieldInfo.getTypeText())) {
+            if (StringUtils.isNotBlank(config.localDateFormat)) {
+                return "@date('" + config.localDateFormat + "')";
+            }
+        }
+        if ("LocalTime".equals(fieldInfo.getTypeText())) {
+            if (StringUtils.isNotBlank(config.localTimeFormat)) {
+                return "@time('" + config.localTimeFormat + "')";
             }
         }
         Object value = normalTypes.get(fieldInfo.getTypeText());

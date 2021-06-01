@@ -44,6 +44,14 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
     public List<YApiProjectConfigInfo> yApiProjectConfigInfoList = new ArrayList<>();
     public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
 
+    /**
+     * 等于空字符串时代表毫秒数，不为空时根据该值内容格式化
+     */
+    public String dateFormat = "";
+    public String localDateFormat = "yyyy-MM-dd";
+    public String localDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+    public String localTimeFormat = "HH:mm:ss";
+
 
     @Nullable
     @Override

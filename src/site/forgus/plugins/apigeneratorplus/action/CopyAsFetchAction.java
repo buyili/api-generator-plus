@@ -24,7 +24,7 @@ public class CopyAsFetchAction extends AnAction {
 //            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
 //            PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
             Project project = actionEvent.getProject();
-            GlobalVariable.getInstance().setProject(project);
+            GlobalVariable.setProject(project);
             CurlUtils curlUtils = new CurlUtils();
             curlUtils.copyAsFetch(actionEvent);
         } catch (BizException exception) {

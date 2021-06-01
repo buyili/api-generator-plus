@@ -18,7 +18,7 @@ public class GenerateModuleNamesAction extends AnAction {
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
         try {
             Project project = actionEvent.getProject();
-            GlobalVariable.getInstance().setProject(project);
+            GlobalVariable.setProject(project);
             CurlUtils.findModuleInfoAndSave(actionEvent);
         } catch (Exception e) {
             e.printStackTrace();

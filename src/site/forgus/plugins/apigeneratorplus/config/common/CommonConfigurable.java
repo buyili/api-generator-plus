@@ -22,7 +22,7 @@ public class CommonConfigurable implements Configurable {
 
     public CommonConfigurable(Project project) {
         this.project = project;
-        GlobalVariable.getInstance().setProject(project);
+        GlobalVariable.setProject(project);
 //        oldState = ServiceManager.getService(project, CURLSettingState.class);
     }
 

@@ -51,7 +51,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ApiGenerateAction extends AnAction {
 
@@ -80,6 +79,8 @@ public class ApiGenerateAction extends AnAction {
             }
             GlobalVariable.setProject(project);
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
+            GlobalVariable.getInstance().setApiGeneratorConfig(config);
+
 
             if (StringUtils.isBlank(config.yApiServerUrl)) {
                 String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
