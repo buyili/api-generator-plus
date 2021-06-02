@@ -521,7 +521,12 @@ public class ApiGenerateAction extends AnAction {
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         PsiDocComment classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
-        yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
+
+        if (StringUtils.isNotBlank(methodInfo.getTitle())) {
+            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
+        } else {
+            yApiInterface.setTitle(requestMethodEnum.name() + " " + yApiInterface.getPath());
+        }
         if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
@@ -613,7 +618,12 @@ public class ApiGenerateAction extends AnAction {
         Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
         KDoc classDesc = containingClass.getDocComment();
         yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
-        yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
+
+        if (StringUtils.isNotBlank(methodInfo.getTitle())) {
+            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
+        } else {
+            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getMethodPath());
+        }
         if (methodInfo.containRequestBodyAnnotation()) {
             yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
