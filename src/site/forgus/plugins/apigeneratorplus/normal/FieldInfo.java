@@ -907,4 +907,8 @@ public class FieldInfo {
         return false;
     }
 
+    public boolean isQueryParam() {
+        return !containRequestBodyAnnotation() && !containPathVariableAnnotation();
+    }
+
 }

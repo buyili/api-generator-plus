@@ -330,6 +330,9 @@
             </action>
             <action id="CopyAsFetchAction" class="site.forgus.plugins.apigeneratorplus.action.CopyAsFetchAction"
                     text="Copy as Fetch"/>
+            <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsAxiosAction"
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsAxiosAction"
+                    text="Copy as Axios"/>
             <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction"
                     class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction" text="Copy as CURL (Cmd)">
             </action>

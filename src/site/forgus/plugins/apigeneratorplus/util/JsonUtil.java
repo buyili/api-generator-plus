@@ -2,8 +2,6 @@ package site.forgus.plugins.apigeneratorplus.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.util.PsiUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;
@@ -139,6 +137,7 @@ public class JsonUtil {
     private static void buildJsonValue(Map<String, Object> map, FieldInfo fieldInfo) {
         if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
             map.put(fieldInfo.getName(), FieldUtil.getValue(fieldInfo));
+            return;
         }
         if (TypeEnum.ARRAY.equals(fieldInfo.getParamType())) {
             if (AssertUtils.isNotEmpty(fieldInfo.getChildren())) {
@@ -151,14 +150,19 @@ public class JsonUtil {
             map.put(fieldInfo.getName(), Collections.singletonList(FieldUtil.normalTypes.get(innerType) == null ? new HashMap<>() : FieldUtil.normalTypes.get(innerType)));
             return;
         }
-        if (fieldInfo.getChildren() == null) {
+        if (CollectionUtils.isEmpty(fieldInfo.getChildren())) {
             map.put(fieldInfo.getName(), new HashMap<>());
             return;
         }
-        for (FieldInfo info : fieldInfo.getChildren()) {
-            if (!info.getName().equals(fieldInfo.getName())) {
-                map.put(fieldInfo.getName(), getStringObjectMap(fieldInfo.getChildren()));
-            }
+        if (fieldInfo.getParent() == null) {
+            map.putAll(getStringObjectMap(fieldInfo.getChildren()));
+        } else {
+            map.put(fieldInfo.getName(), getStringObjectMap(fieldInfo.getChildren()));
         }
+        //for (FieldInfo info : fieldInfo.getChildren()) {
+        //    if (!info.getName().equals(fieldInfo.getName())) {
+        //        map.put(fieldInfo.getName(), getStringObjectMap(fieldInfo.getChildren()));
+        //    }
+        //}
     }
 }
