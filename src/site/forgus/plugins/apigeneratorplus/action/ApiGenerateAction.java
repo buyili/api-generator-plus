@@ -131,7 +131,7 @@ public class ApiGenerateAction extends AnAction {
 
         } catch (BizException e) {
             e.printStackTrace();
-            NotificationUtil.errorNotify("", e.getMessage(), project);
+            NotificationUtil.errorNotify(e.getMessage(), project);
             System.out.println(e.getMessage());
         }
     }

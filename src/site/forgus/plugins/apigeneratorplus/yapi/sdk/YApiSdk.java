@@ -3,7 +3,6 @@ package site.forgus.plugins.apigeneratorplus.yapi.sdk;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import lombok.extern.log4j.Log4j;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.util.HttpUtil;
@@ -51,8 +50,8 @@ public class YApiSdk {
         }.getType();
         YApiResponse<YApiProject> yApiResponse = gson.fromJson(responseStr, type);
         System.out.println(responseStr);
-        if (yApiResponse != null && yApiResponse.getErrcode() != 0) {
-            String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
+        if (yApiResponse == null || yApiResponse.getErrcode() != 0) {
+            String message = MessageFormat.format("请求YApi项目信息失败！！！ Server Url: [{0}]    Token: [{1}]",
                     serverUrl, token);
             throw new BizException(message);
 //            Messages.showErrorDialog(message, "多模块项目配置保存失败");
@@ -75,8 +74,8 @@ public class YApiSdk {
         Type type = new TypeToken<YApiResponse<List<YApiCat>>>() {
         }.getType();
         YApiResponse<List<YApiCat>> yApiResponse = gson.fromJson(responseStr, type);
-        if (yApiResponse != null && yApiResponse.getErrcode() != 0) {
-            String message = MessageFormat.format("Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
+        if (yApiResponse == null || yApiResponse.getErrcode() != 0) {
+            String message = MessageFormat.format("获取YApi分类列表失败 😍😛😛！！！   Server Url 和 Token 不匹配; server url: [{0}] token: [{1}]",
                     serverUrl, token);
             throw new BizException(message);
         }
