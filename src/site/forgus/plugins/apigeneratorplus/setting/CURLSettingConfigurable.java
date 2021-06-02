@@ -8,11 +8,9 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.*;
 import com.intellij.ui.components.labels.LinkLabel;
 import com.intellij.util.ui.FormBuilder;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
-import site.forgus.plugins.apigeneratorplus.curl.model.Header;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,6 +25,7 @@ public class CURLSettingConfigurable implements Configurable {
     public static final String PANEL = "panel";
 
     Project project;
+    JBTabbedPane jbTabbedPane;
 
     CURLSettingState oldState;
     JBTextField baseApiTextField;
@@ -89,7 +88,7 @@ public class CURLSettingConfigurable implements Configurable {
         referrerPolicyTextField = new JBTextField(oldState.fetchConfig.referrerPolicy);
         integrityTextField = new JBTextField(oldState.fetchConfig.integrity);
 
-        JBTabbedPane jbTabbedPane = new JBTabbedPane();
+        jbTabbedPane = new JBTabbedPane();
 
         JPanel modulePortLabelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         modulePortLabelPanel.add(new JBLabel("Module Info"));
@@ -245,4 +244,8 @@ public class CURLSettingConfigurable implements Configurable {
         curlModuleInfoUI.reset(oldState.moduleInfoList);
     }
 
+    @Override
+    public void disposeUIResources() {
+        jbTabbedPane = null;
+    }
 }
