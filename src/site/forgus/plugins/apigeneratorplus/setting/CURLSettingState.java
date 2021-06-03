@@ -1,9 +1,11 @@
 package site.forgus.plugins.apigeneratorplus.setting;
 
 import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +45,10 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
     public FilterFieldInfo filterFieldInfo = new FilterFieldInfo();
 
     public FetchConfig fetchConfig = new FetchConfig();
+
+    public static CURLSettingState getInstance(Project project){
+        return ServiceManager.getService(project, CURLSettingState.class);
+    }
 
     @Nullable
     @Override

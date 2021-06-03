@@ -1,6 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.curl.model;
 
 import lombok.Data;
+import org.apache.commons.lang.StringUtils;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 
@@ -11,6 +12,8 @@ import java.util.Map;
  */
 @Data
 public class AxiosRequestInfo {
+
+    private String formDataVal;
 
     private String method;
 
@@ -30,13 +33,35 @@ public class AxiosRequestInfo {
 
     public String toPrettyString(){
         String rawHeaders = JsonUtil.prettyJson.toJson(headers);
-        return "axios({\n" +
-                "method: \"" + method + "\",\n" +
-                "url: \"" + url + "\",\n" +
-                "params: " + params + ",\n" +
-                "data: \"" + data + "\",\n" +
+        String raw = "axios({\n" +
+                "method: \"" + method + "\",\n";
+        raw += "url: \"" + url + "\",\n";
+        if(StringUtils.isNotBlank(params)){
+            if(params.startsWith("{") && params.endsWith("}")){
+                raw += "params: " + params + ",\n";
+            }else {
+                raw += "params: \"" + params + "\",\n";
+            }
+        }
+        if(StringUtils.isNotBlank(data)){
+            if(data.startsWith("{") && data.endsWith("}")){
+                raw += "data: " + data + ",\n";
+            }else {
+                raw += "data: \"" + data + "\",\n";
+            }
+        }
+        return raw +
                 "headers: " + rawHeaders + ",\n" +
                 "})"
+                ;
+    }
+
+    public String toPrettyStringForFormData() {
+        this.setData("$body");
+        String axiosString = this.toPrettyString();
+        axiosString = axiosString.replace("\"$body\"", "formData");
+        return formDataVal +
+                axiosString
                 ;
     }
 

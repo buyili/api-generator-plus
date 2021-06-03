@@ -77,7 +77,7 @@ public class CurlUtils {
             KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
             Assert.notNull(ktFunction, "KtFunction must not be null");
             methodInfo = new MethodInfo(ktFunction);
-//            System.out.println();
+            System.out.println();
         } else {
             PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
             Assert.notNull(selectedMethod, "PsiMethod must not be null");
@@ -96,23 +96,17 @@ public class CurlUtils {
 
         AxiosRequestInfo axiosRequestInfo = new AxiosRequestInfo();
 
-        FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
-        FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
-
-
         String url = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
         // 判斷是否是Get方法
         if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
-            //url = url + getRequestParams(methodInfo);
             axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
         }
         axiosRequestInfo.setUrl(url);
         // 访问接口
         if (RequestMethodEnum.GET != methodInfo.getRequestMethod()) {
             // 非Get请求参数
-            //fetchRequestInfo.setInput(getBaseApi(port) + buildPath(selectedMethod, curlModuleInfo));
             axiosRequestInfo.setData(getRequestBodyPlainObject(methodInfo));
             if(methodInfo.containRequestBodyAnnotation()){
                 axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
@@ -153,8 +147,8 @@ public class CurlUtils {
             List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
                     curlSettingState.filterFieldInfo);
             String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
-            fetchRequestInfo.setFormDataVal(formDataVal);
-            rawStr = fetchRequestInfo.toPrettyStringForFormData();
+            axiosRequestInfo.setFormDataVal(formDataVal);
+            rawStr = axiosRequestInfo.toPrettyStringForFormData();
         }
         System.out.println(rawStr);
         CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
