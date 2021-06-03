@@ -11,7 +11,7 @@ public class YApiHeader implements Serializable {
     private String name;
     private String value;
 
-    private YApiHeader(String name, String value) {
+    public YApiHeader(String name, String value) {
         this.name = name;
         this.value = value;
     }

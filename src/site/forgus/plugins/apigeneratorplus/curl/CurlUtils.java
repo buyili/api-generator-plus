@@ -116,7 +116,7 @@ public class CurlUtils {
         axiosRequestInfo.setMethod(methodInfo.getRequestMethod().lowerCaseName());
         // 添加header
         Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
             headers.putAll(mediaType.getHeader());
         }
@@ -212,7 +212,7 @@ public class CurlUtils {
         initOptions.setMethod(methodInfo.getRequestMethod().name());
         // 添加header
         Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
             headers.putAll(mediaType.getHeader());
         }
@@ -694,7 +694,7 @@ public class CurlUtils {
 
     public String getRequestBody(MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {
@@ -746,7 +746,7 @@ public class CurlUtils {
      */
     public String getRequestBody(MethodInfo methodInfo) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {
@@ -772,7 +772,7 @@ public class CurlUtils {
      */
     public String getRequestBodyPlainObject(MethodInfo methodInfo) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {

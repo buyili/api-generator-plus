@@ -471,25 +471,17 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private YApiInterface buildYApiInterface(Project project, PsiMethod psiMethod) throws IOException {
-        PsiClass containingClass = psiMethod.getContainingClass();
-        if (containingClass == null) {
-            return null;
-        }
-//        PsiAnnotation controller = null;
-//        PsiAnnotation classRequestMapping = null;
-//        for (PsiAnnotation annotation : containingClass.getAnnotations()) {
-//            String text = annotation.getText();
-//            if (text.endsWith(WebAnnotation.Controller)) {
-//                controller = annotation;
-//            } else if (text.contains(WebAnnotation.RequestMapping)) {
-//                classRequestMapping = annotation;
-//            }
-//        }
-//        if (controller == null) {
-//            NotificationUtil.warnNotify("Invalid Class File!", project);
-//            return null;
-//        }
         MethodInfo methodInfo = new MethodInfo(psiMethod);
+        return buildYApiInterface(project, methodInfo);
+    }
+
+    private YApiInterface buildYApiInterface(Project project, KtFunction ktFunction) throws IOException {
+        MethodInfo methodInfo = new MethodInfo(ktFunction);
+        return buildYApiInterface(project, methodInfo);
+    }
+
+    @Nullable
+    private YApiInterface buildYApiInterface(Project project, MethodInfo methodInfo) throws IOException {
         if (!methodInfo.containControllerAnnotation()) {
             NotificationUtil.warnNotify("Invalid Class File!", project);
             return null;
@@ -499,149 +491,41 @@ public class ApiGenerateAction extends AnAction {
         yApiInterface.setStatus(config.apiDone ? YApiInterfaceStatusEnum.DONE.getValue() : YApiInterfaceStatusEnum.UNDONE.getValue());
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
-        // 多模块项目，模块对应token等信息
-//        YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(psiMethod);
         yApiInterface.setToken(yApiProjectConfigInfo.getToken());
         yApiInterface.setPath(PathUtil.pathResolve(yApiProjectConfigInfo.getBasePath(), yApiInterface.getPath()));
 
         RequestMethodEnum requestMethodEnum = methodInfo.getRequestMethod();
         yApiInterface.setMethod(requestMethodEnum.name());
         List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType requestMediaType = methodInfo.getRequestMediaType();
         if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
             yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
             yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
-        } else {
-            if (MediaType.APPLICATION_FORM_URLENCODED == mediaType || MediaType.MULTIPART_FORM_DATA == mediaType) {
-                yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
-                yApiInterface.setReq_body_form(listYApiForms(requestFields));
-            }
+            yApiInterface.addReqYApiHeader(YApiHeader.json());
+        } else if (MediaType.APPLICATION_FORM_URLENCODED == requestMediaType) {
+            yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
+            yApiInterface.setReq_body_form(listYApiForms(requestFields));
+            yApiInterface.addReqYApiHeader(YApiHeader.form());
+        } else if (MediaType.MULTIPART_FORM_DATA == requestMediaType) {
+            yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
+            yApiInterface.setReq_body_form(listYApiForms(requestFields));
+            yApiInterface.addReqYApiHeader(YApiHeader.multipartFormData());
         }
-        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, mediaType));
-        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
-        PsiDocComment classDesc = containingClass.getDocComment();
-        yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
+
+        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, requestMediaType));
+        yApiInterface.setCatid(getCatId(methodInfo.getCatName(), yApiProjectConfigInfo));
 
         if (StringUtils.isNotBlank(methodInfo.getTitle())) {
             yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
         } else {
             yApiInterface.setTitle(requestMethodEnum.name() + " " + yApiInterface.getPath());
         }
-        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
-            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
-        } else if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.multipartFormData()));
-        } else {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.form()));
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-//            yApiInterface.setRes_body("");
-        }
-        if (containResponseBodyAnnotation(psiMethod.getAnnotations())
-                || containRestControllerAnnotation(containingClass.getAnnotations())) {
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
+        if (methodInfo.isReturnJSON()) {
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
         yApiInterface.setReq_params(listYApiPathVariables(requestFields));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
-                : "<pre><code data-language=\"java\" class=\"java\">" + DesUtil.getInterfaceDesc(psiMethod) + "</code> </pre>");
-
-        if (config.ignoreResponse) {
-            yApiInterface.setRes_body(null);
-            yApiInterface.setRes_body_type(null);
-            yApiInterface.setRes_body_is_json_schema(null);
-        } else {
-            YApiInterface docInterface = methodInfo.getYApiInterface();
-            if (docInterface != null) {
-                if (StringUtils.isNotBlank(docInterface.getRes_body())) {
-                    yApiInterface.setRes_body(docInterface.getRes_body());
-                }
-                if (StringUtils.isNotBlank(docInterface.getRes_body_type())) {
-                    yApiInterface.setRes_body_type(docInterface.getRes_body_type());
-                }
-                if (null != docInterface.getRes_body_is_json_schema()) {
-                    yApiInterface.setRes_body_is_json_schema(docInterface.getRes_body_is_json_schema());
-                }
-            }
-        }
-
-        return yApiInterface;
-    }
-
-    private YApiInterface buildYApiInterface(Project project, KtFunction ktFunction) throws IOException {
-        KtClass containingClass = (KtClass) ktFunction.getParent().getParent();
-//        if (containingClass == null) {
-//            return null;
-//        }
-//        PsiAnnotation controller = null;
-//        PsiAnnotation classRequestMapping = null;
-//        for (PsiAnnotation annotation : containingClass.getAnnotations()) {
-//            String text = annotation.getText();
-//            if (text.endsWith(WebAnnotation.Controller)) {
-//                controller = annotation;
-//            } else if (text.contains(WebAnnotation.RequestMapping)) {
-//                classRequestMapping = annotation;
-//            }
-//        }
-//        if (controller == null) {
-//            NotificationUtil.warnNotify("Invalid Class File!", project);
-//            return null;
-//        }
-        MethodInfo methodInfo = new MethodInfo(ktFunction);
-        if (!methodInfo.containControllerAnnotation()) {
-            NotificationUtil.warnNotify("Invalid Class File!", project);
-            return null;
-        }
-        YApiInterface yApiInterface = new YApiInterface();
-        yApiInterface.setTag(StringUtil.string2Set(config.tag));
-        yApiInterface.setToken(config.projectToken);
-        yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
-        // 多模块项目，模块对应token等信息
-//        YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(ktFunction);
-        yApiInterface.setToken(yApiProjectConfigInfo.getToken());
-        yApiInterface.setPath(PathUtil.pathResolve(yApiProjectConfigInfo.getBasePath(), yApiInterface.getPath()));
-
-        RequestMethodEnum requestMethodEnum = methodInfo.getRequestMethod();
-        yApiInterface.setMethod(requestMethodEnum.name());
-        List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
-        MediaType mediaType = methodInfo.getMediaType();
-        if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
-            yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
-            yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
-        } else {
-            if (MediaType.APPLICATION_FORM_URLENCODED == mediaType || MediaType.MULTIPART_FORM_DATA == mediaType) {
-                yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
-                yApiInterface.setReq_body_form(listYApiForms(requestFields));
-            }
-        }
-        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, mediaType));
-        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
-        KDoc classDesc = containingClass.getDocComment();
-        yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
-
-        if (StringUtils.isNotBlank(methodInfo.getTitle())) {
-            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
-        } else {
-            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getMethodPath());
-        }
-        if (methodInfo.containRequestBodyAnnotation()) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
-            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
-        } else if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.multipartFormData()));
-        } else {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.form()));
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-//            yApiInterface.setRes_body("");
-        }
-        if (methodInfo.containResponseBodyAnnotation()
-                || methodInfo.containRestControllerAnnotation()) {
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
-        }
-        yApiInterface.setReq_params(listYApiPathVariables(requestFields));
-        yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
-                : "<pre><code data-language=\"java\" class=\"java\">" + DesUtil.getInterfaceDesc(ktFunction) + "</code> </pre>");
+                : "<pre><code data-language=\"java\" class=\"java\">" + methodInfo.getDesc() + "</code> </pre>");
 
         if (config.ignoreResponse) {
             yApiInterface.setRes_body(null);
@@ -876,6 +760,41 @@ public class ApiGenerateAction extends AnAction {
             return apiCat.get_id().toString();
         }
         YApiResponse<YApiCat> yApiResponse = YApiSdk.addCategory(config.yApiServerUrl, config.projectToken, config.projectId, catName);
+        return yApiResponse.getData().get_id().toString();
+    }
+
+    private String getCatId(String catName, YApiProjectConfigInfo yApiProjectConfigInfo)
+            throws IOException {
+        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
+        String defaultCatName = getDefaultCatName();
+        if (config.autoCat) {
+            catName = StringUtils.isEmpty(catName) ? defaultCatName : catName;
+        } else {
+            catName = defaultCatName;
+        }
+        YApiCat apiCat = catNameMap.get(catName);
+        if (apiCat != null) {
+            return apiCat.get_id().toString();
+        }
+        YApiResponse<YApiCat> yApiResponse = YApiSdk.addCategory(config.yApiServerUrl,
+                yApiProjectConfigInfo.getToken(), yApiProjectConfigInfo.getProjectId(), catName);
+        return yApiResponse.getData().get_id().toString();
+    }
+
+    private String getCatId(Map<String, YApiCat> catNameMap, String catName, YApiProjectConfigInfo yApiProjectConfigInfo)
+            throws IOException {
+        String defaultCatName = getDefaultCatName();
+        if (config.autoCat) {
+            catName = StringUtils.isEmpty(catName) ? defaultCatName : catName;
+        } else {
+            catName = defaultCatName;
+        }
+        YApiCat apiCat = catNameMap.get(catName);
+        if (apiCat != null) {
+            return apiCat.get_id().toString();
+        }
+        YApiResponse<YApiCat> yApiResponse = YApiSdk.addCategory(config.yApiServerUrl,
+                yApiProjectConfigInfo.getToken(), yApiProjectConfigInfo.getProjectId(), catName);
         return yApiResponse.getData().get_id().toString();
     }
 
