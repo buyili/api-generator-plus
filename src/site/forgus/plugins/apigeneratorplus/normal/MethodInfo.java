@@ -228,7 +228,7 @@ public class MethodInfo implements Serializable {
         return false;
     }
 
-    public boolean isReturnJSON(){
+    public boolean isReturnJSON() {
         return containRequestBodyAnnotation() || containRestControllerAnnotation();
     }
 
@@ -472,6 +472,11 @@ public class MethodInfo implements Serializable {
 
     private String getReturnDesc(KDoc docComment) {
         return DesUtil.getTagContent(docComment, "return");
+    }
+
+    @Override
+    public String toString(){
+        return "";
     }
 
 }

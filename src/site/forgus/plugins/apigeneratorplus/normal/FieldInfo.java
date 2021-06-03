@@ -679,7 +679,8 @@ public class FieldInfo {
 
     private boolean isParamRequired(PsiAnnotation annotation) {
         String annotationText = annotation.getText();
-        if (annotationText.contains(WebAnnotation.RequestParam)) {
+        if (annotationText.contains(WebAnnotation.RequestParam)
+                || annotationText.contains(WebAnnotation.RequestHeader)) {
             PsiNameValuePair[] psiNameValuePairs = annotation.getParameterList().getAttributes();
             for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
                 if ("required".equals(psiNameValuePair.getName()) && "false".equals(psiNameValuePair.getLiteralValue())) {
@@ -693,7 +694,8 @@ public class FieldInfo {
 
     private boolean isParamRequired(KtAnnotationEntry annotation) {
         String annotationText = annotation.getText();
-        if (annotationText.contains(WebAnnotation.RequestParam)) {
+        if (annotationText.contains(WebAnnotation.RequestParam)
+                || annotationText.contains(WebAnnotation.RequestHeader)) {
             KtValueArgumentList valueArgumentList = annotation.getValueArgumentList();
             if (valueArgumentList != null) {
                 for (KtValueArgument argument : valueArgumentList.getArguments()) {
@@ -907,8 +909,51 @@ public class FieldInfo {
         return false;
     }
 
+    public boolean containRequestHeaderAnnotation() {
+        if (CollectionUtils.isNotEmpty(this.annotations)) {
+            for (PsiAnnotation annotation : annotations) {
+                if (annotation.getText().contains(WebAnnotation.RequestHeader)) {
+                    return true;
+                }
+            }
+        }
+        if (CollectionUtils.isNotEmpty(this.ktAnnotationEntries)) {
+            for (KtAnnotationEntry ktAnnotationEntry : ktAnnotationEntries) {
+                if (ktAnnotationEntry.getText().contains(WebAnnotation.RequestHeader)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean containRequestAttributeAnnotation() {
+        if (CollectionUtils.isNotEmpty(this.annotations)) {
+            for (PsiAnnotation annotation : annotations) {
+                if (annotation.getText().contains(WebAnnotation.RequestAttribute)) {
+                    return true;
+                }
+            }
+        }
+        if (CollectionUtils.isNotEmpty(this.ktAnnotationEntries)) {
+            for (KtAnnotationEntry ktAnnotationEntry : ktAnnotationEntries) {
+                if (ktAnnotationEntry.getText().contains(WebAnnotation.RequestAttribute)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public boolean isQueryParam() {
-        return !containRequestBodyAnnotation() && !containPathVariableAnnotation();
+        return !containRequestBodyAnnotation() && !containPathVariableAnnotation() && !containRequestHeaderAnnotation()
+                && !containRequestAttributeAnnotation();
+    }
+
+
+    @Override
+    public String toString() {
+        return this.name;
     }
 
 }

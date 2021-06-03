@@ -462,6 +462,13 @@ public class ApiGenerateAction extends AnAction {
             yApiInterface.addReqYApiHeader(YApiHeader.multipartFormData());
         }
 
+        for (FieldInfo requestField : requestFields) {
+            if (requestField.containRequestHeaderAnnotation()) {
+                yApiInterface.addReqYApiHeader(new YApiHeader(requestField.getName(), "",
+                        requestField.isRequire(), requestField.getDesc()));
+            }
+        }
+
         yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, requestMediaType));
         yApiInterface.setCatid(getCatId(methodInfo.getCatName(), yApiProjectConfigInfo));
 
@@ -831,7 +838,8 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private boolean notQuery(FieldInfo fieldInfo) {
-        return fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestBodyAnnotation();
+        return fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestBodyAnnotation()
+                || fieldInfo.containRequestAttributeAnnotation() || fieldInfo.containRequestHeaderAnnotation();
     }
 
     private YApiQuery buildYApiQuery(FieldInfo fieldInfo) {
@@ -863,7 +871,8 @@ public class ApiGenerateAction extends AnAction {
     private List<YApiForm> listYApiForms(List<FieldInfo> requestFields) {
         List<YApiForm> yApiForms = new ArrayList<>();
         for (FieldInfo fieldInfo : requestFields) {
-            if (fieldInfo.containPathVariableAnnotation()) {
+            if (fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestHeaderAnnotation()
+                    || fieldInfo.containRequestAttributeAnnotation()) {
                 continue;
             }
             if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {

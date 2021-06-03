@@ -99,6 +99,10 @@ public class CurlUtils {
         String url = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
+        List<FieldInfo> filteredRequestFields = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                curlSettingState.filterFieldInfo);
+        methodInfo.setRequestFields(filteredRequestFields);
+
         // 判斷是否是Get方法
         if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
             axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
@@ -108,7 +112,7 @@ public class CurlUtils {
         if (RequestMethodEnum.GET != methodInfo.getRequestMethod()) {
             // 非Get请求参数
             axiosRequestInfo.setData(getRequestBodyPlainObject(methodInfo));
-            if(methodInfo.containRequestBodyAnnotation()){
+            if (methodInfo.containRequestBodyAnnotation()) {
                 axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
             }
         }
@@ -116,6 +120,14 @@ public class CurlUtils {
         axiosRequestInfo.setMethod(methodInfo.getRequestMethod().lowerCaseName());
         // 添加header
         Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
+
+        //List<FieldInfo> requestFields = methodInfo.getRequestFields();
+        for (FieldInfo requestField : filteredRequestFields) {
+            if (requestField.containRequestHeaderAnnotation()) {
+                headers.put(requestField.getName(), "");
+            }
+        }
+
         MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
             headers.putAll(mediaType.getHeader());
@@ -144,9 +156,7 @@ public class CurlUtils {
 
         String rawStr = axiosRequestInfo.toPrettyString();
         if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
-                    curlSettingState.filterFieldInfo);
-            String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+            String formDataVal = MethodUtil.getFormDataVal(filteredRequestFields);
             axiosRequestInfo.setFormDataVal(formDataVal);
             rawStr = axiosRequestInfo.toPrettyStringForFormData();
         }
@@ -197,6 +207,10 @@ public class CurlUtils {
         String input = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
+        List<FieldInfo> filteredRequestFields = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                curlSettingState.filterFieldInfo);
+        methodInfo.setRequestFields(filteredRequestFields);
+
         // 判斷是否是Get方法
         if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
             input = input + getRequestParams(methodInfo);
@@ -212,6 +226,13 @@ public class CurlUtils {
         initOptions.setMethod(methodInfo.getRequestMethod().name());
         // 添加header
         Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
+
+        for (FieldInfo requestField : filteredRequestFields) {
+            if (requestField.containRequestHeaderAnnotation()) {
+                headers.put(requestField.getName(), "");
+            }
+        }
+
         MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
             headers.putAll(mediaType.getHeader());
@@ -242,9 +263,7 @@ public class CurlUtils {
 
         String rawStr = fetchRequestInfo.toPrettyString();
         if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
-                    curlSettingState.filterFieldInfo);
-            String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+            String formDataVal = MethodUtil.getFormDataVal(filteredRequestFields);
             fetchRequestInfo.setFormDataVal(formDataVal);
             rawStr = fetchRequestInfo.toPrettyStringForFormData();
         }
@@ -852,7 +871,7 @@ public class CurlUtils {
     public String getRequestParamsPlainObject(MethodInfo methodInfo) {
         List<FieldInfo> queryParamFields = new ArrayList<>();
         for (FieldInfo requestField : methodInfo.getRequestFields()) {
-            if (requestField.isQueryParam()){
+            if (requestField.isQueryParam()) {
                 queryParamFields.add(requestField);
             }
         }
