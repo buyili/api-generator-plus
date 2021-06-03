@@ -81,22 +81,30 @@ public class ApiGenerateAction extends AnAction {
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
             GlobalVariable.getInstance().setApiGeneratorConfig(config);
 
-
+            boolean needRequestProjectId = false;
             if (StringUtils.isBlank(config.yApiServerUrl)) {
+                needRequestProjectId = true;
                 String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
                 if (StringUtils.isEmpty(serverUrl)) {
-                    NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-                    return;
+                    throw new BizException("YApi server url can not be empty.");
                 }
                 config.yApiServerUrl = serverUrl;
             }
             if (StringUtils.isBlank(config.projectToken) && (!config.isMultiModule || config.isUseDefaultToken)) {
+                needRequestProjectId = true;
                 String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
                 if (StringUtils.isEmpty(projectToken)) {
-                    NotificationUtil.warnNotify("Project token can not be empty.", project);
-                    return;
+                    throw new BizException("Project token can not be empty.");
                 }
                 config.projectToken = projectToken;
+            }
+            if (StringUtils.isBlank(config.projectId) || needRequestProjectId) {
+                YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
+                String projectId = projectInfo.get_id().toString();
+                //if (StringUtils.isBlank(projectId)) {
+                //    throw new BizException("Project id can not be empty");
+                //}
+                config.projectId = projectId;
             }
 
             PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
@@ -373,26 +381,26 @@ public class ApiGenerateAction extends AnAction {
             NotificationUtil.warnNotify("Upload api failed, reason:\n not REST api.", project);
             return;
         }
-        if (StringUtils.isEmpty(config.yApiServerUrl)) {
-            String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(serverUrl)) {
-                NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-                return;
-            }
-            config.yApiServerUrl = serverUrl;
-        }
-        if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
-            String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(projectToken)) {
-                NotificationUtil.warnNotify("Project token can not be empty.", project);
-                return;
-            }
-            String projectId = "";
-            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
-            projectId = projectInfo.get_id().toString();
-            config.projectId = projectId;
-            config.projectToken = projectToken;
-        }
+        //if (StringUtils.isEmpty(config.yApiServerUrl)) {
+        //    String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
+        //    if (StringUtils.isEmpty(serverUrl)) {
+        //        NotificationUtil.warnNotify("YApi server url can not be empty.", project);
+        //        return;
+        //    }
+        //    config.yApiServerUrl = serverUrl;
+        //}
+        //if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
+        //    String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
+        //    if (StringUtils.isEmpty(projectToken)) {
+        //        NotificationUtil.warnNotify("Project token can not be empty.", project);
+        //        return;
+        //    }
+        //    String projectId = "";
+        //    YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
+        //    projectId = projectInfo.get_id().toString();
+        //    config.projectId = projectId;
+        //    config.projectToken = projectToken;
+        //}
         yApiProjectConfigInfo = getProjectConfigInfo(method);
 //        if (StringUtils.isEmpty(config.projectId)) {
 //            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
@@ -411,26 +419,26 @@ public class ApiGenerateAction extends AnAction {
             NotificationUtil.warnNotify("Upload api failed, reason:\n not REST api.", project);
             return;
         }
-        if (StringUtils.isEmpty(config.yApiServerUrl)) {
-            String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(serverUrl)) {
-                NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-                return;
-            }
-            config.yApiServerUrl = serverUrl;
-        }
-        if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
-            String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(projectToken)) {
-                NotificationUtil.warnNotify("Project token can not be empty.", project);
-                return;
-            }
-            String projectId = "";
-            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
-            projectId = projectInfo.get_id().toString();
-            config.projectId = projectId;
-            config.projectToken = projectToken;
-        }
+        //if (StringUtils.isEmpty(config.yApiServerUrl)) {
+        //    String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
+        //    if (StringUtils.isEmpty(serverUrl)) {
+        //        NotificationUtil.warnNotify("YApi server url can not be empty.", project);
+        //        return;
+        //    }
+        //    config.yApiServerUrl = serverUrl;
+        //}
+        //if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
+        //    String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
+        //    if (StringUtils.isEmpty(projectToken)) {
+        //        NotificationUtil.warnNotify("Project token can not be empty.", project);
+        //        return;
+        //    }
+        //    String projectId = "";
+        //    YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
+        //    projectId = projectInfo.get_id().toString();
+        //    config.projectId = projectId;
+        //    config.projectToken = projectToken;
+        //}
         yApiProjectConfigInfo = getProjectConfigInfo(method);
 //        if (StringUtils.isEmpty(config.projectId)) {
 //            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);

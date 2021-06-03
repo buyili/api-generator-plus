@@ -41,7 +41,6 @@ public class YApiSdk {
      * @return
      * @throws IOException
      */
-    @Nullable
     public static YApiProject getProjectInfo(String serverUrl, String token) {
         Map<String, String> params = new HashMap<>();
         params.put("token", token);
@@ -54,8 +53,6 @@ public class YApiSdk {
             String message = MessageFormat.format("请求YApi项目信息失败！！！ Server Url: [{0}]    Token: [{1}]",
                     serverUrl, token);
             throw new BizException(message);
-//            Messages.showErrorDialog(message, "多模块项目配置保存失败");
-//            return null;
         }
         return yApiResponse.getData();
     }
