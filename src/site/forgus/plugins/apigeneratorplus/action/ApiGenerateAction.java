@@ -381,36 +381,7 @@ public class ApiGenerateAction extends AnAction {
             NotificationUtil.warnNotify("Upload api failed, reason:\n not REST api.", project);
             return;
         }
-        //if (StringUtils.isEmpty(config.yApiServerUrl)) {
-        //    String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
-        //    if (StringUtils.isEmpty(serverUrl)) {
-        //        NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-        //        return;
-        //    }
-        //    config.yApiServerUrl = serverUrl;
-        //}
-        //if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
-        //    String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
-        //    if (StringUtils.isEmpty(projectToken)) {
-        //        NotificationUtil.warnNotify("Project token can not be empty.", project);
-        //        return;
-        //    }
-        //    String projectId = "";
-        //    YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
-        //    projectId = projectInfo.get_id().toString();
-        //    config.projectId = projectId;
-        //    config.projectToken = projectToken;
-        //}
         yApiProjectConfigInfo = getProjectConfigInfo(method);
-//        if (StringUtils.isEmpty(config.projectId)) {
-//            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
-//            String projectId = projectInfo != null && projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
-//            if (StringUtils.isEmpty(projectId)) {
-//                NotificationUtil.warnNotify("Project id can not be empty.", project);
-//                return;
-//            }
-//            config.projectId = projectId;
-//        }
         uploadToYApi(project, method);
     }
 
@@ -419,36 +390,7 @@ public class ApiGenerateAction extends AnAction {
             NotificationUtil.warnNotify("Upload api failed, reason:\n not REST api.", project);
             return;
         }
-        //if (StringUtils.isEmpty(config.yApiServerUrl)) {
-        //    String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
-        //    if (StringUtils.isEmpty(serverUrl)) {
-        //        NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-        //        return;
-        //    }
-        //    config.yApiServerUrl = serverUrl;
-        //}
-        //if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
-        //    String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
-        //    if (StringUtils.isEmpty(projectToken)) {
-        //        NotificationUtil.warnNotify("Project token can not be empty.", project);
-        //        return;
-        //    }
-        //    String projectId = "";
-        //    YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
-        //    projectId = projectInfo.get_id().toString();
-        //    config.projectId = projectId;
-        //    config.projectToken = projectToken;
-        //}
         yApiProjectConfigInfo = getProjectConfigInfo(method);
-//        if (StringUtils.isEmpty(config.projectId)) {
-//            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
-//            String projectId = projectInfo != null && projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
-//            if (StringUtils.isEmpty(projectId)) {
-//                NotificationUtil.warnNotify("Project id can not be empty.", project);
-//                return;
-//            }
-//            config.projectId = projectId;
-//        }
         uploadToYApi(project, method);
     }
 
@@ -1344,107 +1286,13 @@ public class ApiGenerateAction extends AnAction {
     public YApiProjectConfigInfo getProjectConfigInfo(PsiMethod psiMethod) {
         PsiClass containingClass = psiMethod.getContainingClass();
         String qualifiedName = containingClass.getQualifiedName();
-        YApiProjectConfigInfo selectedConfig = null;
-        if (config.isMultiModule) {
-            selectedConfig = getProjectInfoFromStorage(psiMethod);
-            // 选择包名对应的YApi项目
-//            if (selectedConfig == null) {
-//                int isUseModuleOrDefault = Messages.showYesNoCancelDialog("该模块未配置YApi项目token，是否选择配置过token的模块？" +
-//                                "\nYes：选择模块项目；" +
-//                                "\nNo：直接使用配置的默认YApi项目；" +
-//                                "\n如果不想每次都提醒，可以在设置里·取消勾选· Is multiple module；或者配置包名和对应的token",
-//                        "提示", Messages.getQuestionIcon());
-//                if (isUseModuleOrDefault == Messages.YES) {
-//                    List<String> packageNames = new ArrayList<>();
-//                    for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-//                        if (StringUtils.isNotEmpty(yApiProjectConfigInfo.getPackageName())) {
-//                            packageNames.add(yApiProjectConfigInfo.getPackageName());
-//                        }
-//                    }
-//                    if (CollectionUtils.isNotEmpty(packageNames)) {
-//                        int selectModuleIdx = Messages.showDialog("请选择YApi项目", "提示", packageNames.toArray(new String[0]),
-//                                0, Messages.getQuestionIcon());
-//                        if (selectModuleIdx == -1) {
-//                            throw new BizException("cancel generator api");
-//                        }
-//                        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-//                            if (yApiProjectConfigInfo.getPackageName().equals(packageNames.get(selectModuleIdx))) {
-//                                selectedConfig = yApiProjectConfigInfo.clone();
-//                            }
-//                        }
-//                    }
-//                } else if (isUseModuleOrDefault == Messages.CANCEL) {
-//                    throw new BizException("cancel generator api");
-//                }
-//            }
-            if (selectedConfig != null) {
-//                System.out.println(selectedConfig.getBasePath());
-                if (AssertUtils.isEmpty(selectedConfig.getToken())) {
-                    if (!config.isUseDefaultToken) {
-                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
-                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
-                                , config.matchWithModuleName ? "模块名" : "包名");
-                        int resultIdx = Messages.showOkCancelDialog(message,
-                                "提示", "Ok", "Cancel", Messages.getQuestionIcon());
-                        if (Messages.CANCEL == resultIdx) {
-                            throw new BizException("cancel generator api");
-                        }
-                    }
-                    selectedConfig.setToken(config.projectToken);
-                    selectedConfig.setProjectId(config.projectId);
-                }
-                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
-                if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
-                    selectedConfig.setBasePath("");
-                }
-                return selectedConfig;
-            }
-        }
-        selectedConfig = new YApiProjectConfigInfo();
-        selectedConfig.setToken(config.projectToken);
-        selectedConfig.setProjectId(config.projectId);
-        selectedConfig.setBasePath("");
-        return selectedConfig;
+        return getProjectConfigInfo(qualifiedName);
     }
 
     @SneakyThrows
     public YApiProjectConfigInfo getProjectConfigInfo(KtFunction ktFunction) {
-//        KtClass containingClass = (KtClass) ktFunction.getParent().getParent();
-//        String qualifiedName = containingClass.getQualifiedName();
-        YApiProjectConfigInfo selectedConfig = null;
-        if (config.isMultiModule) {
-            selectedConfig = getProjectInfoFromStorage(ktFunction);
-            // 选择包名对应的YApi项目
-            if (selectedConfig != null) {
-//                System.out.println(selectedConfig.getBasePath());
-                if (AssertUtils.isEmpty(selectedConfig.getToken())) {
-                    if (!config.isUseDefaultToken) {
-                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
-                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
-                                , config.matchWithModuleName ? "模块名" : "包名");
-                        int resultIdx = Messages.showOkCancelDialog(message,
-                                "提示", "Ok", "Cancel", Messages.getQuestionIcon());
-                        if (Messages.CANCEL == resultIdx) {
-                            throw new BizException("cancel generator api");
-                        }
-                    }
-                    selectedConfig.setToken(config.projectToken);
-                    selectedConfig.setProjectId(config.projectId);
-                }
-                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
-                if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
-                    selectedConfig.setBasePath("");
-                }
-                return selectedConfig;
-            }
-        }
-        selectedConfig = new YApiProjectConfigInfo();
-        selectedConfig.setToken(config.projectToken);
-        selectedConfig.setProjectId(config.projectId);
-        selectedConfig.setBasePath("");
-        return selectedConfig;
+        String qualifiedName = KtUtil.getFqName(ktFunction);
+        return getProjectConfigInfo(qualifiedName);
     }
 
     @SneakyThrows
@@ -1457,8 +1305,10 @@ public class ApiGenerateAction extends AnAction {
 //                System.out.println(selectedConfig.getBasePath());
                 if (AssertUtils.isEmpty(selectedConfig.getToken())) {
                     if (!config.isUseDefaultToken) {
-                        int resultIdx = Messages.showOkCancelDialog("匹配到的包名没有配置YApi token;是否使用默认YApi token?" +
-                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token",
+                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
+                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
+                                , config.matchWithModuleName ? "模块名" : "包名");
+                        int resultIdx = Messages.showOkCancelDialog(message,
                                 "提示", "Ok", "Cancel", Messages.getQuestionIcon());
                         if (Messages.CANCEL == resultIdx) {
                             throw new BizException("cancel generator api");
@@ -1468,7 +1318,7 @@ public class ApiGenerateAction extends AnAction {
                     selectedConfig.setProjectId(config.projectId);
                 }
                 Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "token 或 projectId 为空");
+                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
                 if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
                     selectedConfig.setBasePath("");
                 }
@@ -1480,95 +1330,6 @@ public class ApiGenerateAction extends AnAction {
         selectedConfig.setProjectId(config.projectId);
         selectedConfig.setBasePath("");
         return selectedConfig;
-    }
-
-    /**
-     * 根据包名或模块名获取YApi项目配置
-     *
-     * @param psiMethod
-     * @return
-     */
-    @Nullable
-    private YApiProjectConfigInfo getProjectInfoFromStorage(PsiMethod psiMethod) {
-        if (CollectionUtils.isNotEmpty(config.yApiProjectConfigInfoList)) {
-            Boolean matchWithModuleName = config.matchWithModuleName;
-            if (matchWithModuleName) {
-                Module module = CurlUtils.getModule(editor, project);
-                if (module == null) {
-                    throw new BizException("Failed to get module name");
-                }
-                String moduleName = module.getName();
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String dbModuleName = yApiProjectConfigInfo.getModuleName();
-                    if (moduleName.equals(dbModuleName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-
-                // 模块名没有匹配时，弹出选择框手动选择上传项目
-                int exitCode = ChooseYApiProjectDialog.showDialog(config.yApiProjectConfigInfoList);
-                if (exitCode == -1) {
-                    throw new BizException("cancel generator api");
-                }
-                return config.yApiProjectConfigInfoList.get(exitCode);
-            } else {
-                PsiClass containingClass = psiMethod.getContainingClass();
-                String qualifiedName = containingClass.getQualifiedName();
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String packageName = yApiProjectConfigInfo.getPackageName();
-                    if (StringUtils.isNotBlank(packageName) && StringUtils.isNotBlank(qualifiedName)
-                            && qualifiedName.startsWith(packageName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-                throw new BizException("Matching configuration failed based on package name");
-            }
-        }
-        throw new BizException("There is no multi-module project configuration");
-    }
-
-    /**
-     * 根据包名或模块名获取YApi项目配置
-     *
-     * @param ktFunction
-     * @return
-     */
-    @Nullable
-    private YApiProjectConfigInfo getProjectInfoFromStorage(KtFunction ktFunction) {
-        if (CollectionUtils.isNotEmpty(config.yApiProjectConfigInfoList)) {
-            Boolean matchWithModuleName = config.matchWithModuleName;
-            if (matchWithModuleName) {
-                Module module = CurlUtils.getModule(editor, project);
-                if (module == null) {
-                    throw new BizException("Failed to get module name");
-                }
-                String moduleName = module.getName();
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String dbModuleName = yApiProjectConfigInfo.getModuleName();
-                    if (moduleName.equals(dbModuleName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-
-                // 模块名没有匹配时，弹出选择框手动选择上传项目
-                int exitCode = ChooseYApiProjectDialog.showDialog(config.yApiProjectConfigInfoList);
-                if (exitCode == -1) {
-                    throw new BizException("cancel generator api");
-                }
-                return config.yApiProjectConfigInfoList.get(exitCode);
-            } else {
-                String qualifiedName = KtUtil.getFqName(ktFunction);
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String packageName = yApiProjectConfigInfo.getPackageName();
-                    if (StringUtils.isNotBlank(packageName) && StringUtils.isNotBlank(qualifiedName)
-                            && qualifiedName.startsWith(packageName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-                throw new BizException("Matching configuration failed based on package name");
-            }
-        }
-        throw new BizException("There is no multi-module project configuration");
     }
 
     /**
