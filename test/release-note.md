@@ -1,6 +1,17 @@
 
 
 
+##v1.0.11
+v1.0.11_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉未指定接口名称时使用接口路径代替
+    - 🎉🎉🎉修复Server Url或Token错误时空指针异常[(#7)](https://github.com/buyili/api-generator-plus/issues/7)
+### New features
+- copy as curl
+    - 🎉🎉 新增Copy as axios功能
+
 ##v1.0.10
 v1.0.10_IC171.469473
 

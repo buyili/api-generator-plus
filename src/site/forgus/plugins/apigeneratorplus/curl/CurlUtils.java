@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.psi.KtFunction;
 import org.yaml.snakeyaml.Yaml;
 import site.forgus.plugins.apigeneratorplus.constant.CUrlClientType;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
+import site.forgus.plugins.apigeneratorplus.curl.model.AxiosRequestInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.Header;
@@ -57,6 +58,102 @@ public class CurlUtils {
     private CURLSettingState curlSettingState;
 
     private static final String SLASH = "/";
+
+    public void copyAsAxios(@NotNull AnActionEvent actionEvent) {
+        Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
+        Assert.notNull(editor);
+
+        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
+        Assert.notNull(psiFile);
+
+        Project project = actionEvent.getProject();
+        Assert.notNull(project);
+
+        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
+        Assert.notNull(referenceAt);
+        Language language = referenceAt.getLanguage();
+        MethodInfo methodInfo = null;
+        if (language instanceof KotlinLanguage) {
+            KtFunction ktFunction = PsiTreeUtil.getContextOfType(referenceAt, KtFunction.class);
+            Assert.notNull(ktFunction, "KtFunction must not be null");
+            methodInfo = new MethodInfo(ktFunction);
+            System.out.println();
+        } else {
+            PsiMethod selectedMethod = PsiTreeUtil.getContextOfType(referenceAt, PsiMethod.class);
+            Assert.notNull(selectedMethod, "PsiMethod must not be null");
+            methodInfo = new MethodInfo(selectedMethod);
+        }
+
+        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
+
+        String moduleName = getModuleName(editor, project);
+        checkHasModuleConfig(project, moduleName);
+        CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
+        Assert.notNull(curlModuleInfo, "no matching module configuration");
+
+        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+
+        AxiosRequestInfo axiosRequestInfo = new AxiosRequestInfo();
+
+        String url = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+                MethodUtil.replacePathVariable(methodInfo));
+
+        // 判斷是否是Get方法
+        if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
+            axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
+        }
+        axiosRequestInfo.setUrl(url);
+        // 访问接口
+        if (RequestMethodEnum.GET != methodInfo.getRequestMethod()) {
+            // 非Get请求参数
+            axiosRequestInfo.setData(getRequestBodyPlainObject(methodInfo));
+            if(methodInfo.containRequestBodyAnnotation()){
+                axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
+            }
+        }
+
+        axiosRequestInfo.setMethod(methodInfo.getRequestMethod().lowerCaseName());
+        // 添加header
+        Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
+        MediaType mediaType = methodInfo.getMediaType();
+        if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
+            headers.putAll(mediaType.getHeader());
+        }
+        axiosRequestInfo.setHeaders(headers);
+
+
+        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
+        //    initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
+        //}
+        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.cache)) {
+        //    initOptions.setCache(curlSettingState.fetchConfig.cache);
+        //}
+        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.redirect)) {
+        //    initOptions.setRedirect(curlSettingState.fetchConfig.redirect);
+        //}
+        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrer)) {
+        //    initOptions.setReferrer(curlSettingState.fetchConfig.referrer);
+        //}
+        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrerPolicy)) {
+        //    initOptions.setReferrerPolicy(curlSettingState.fetchConfig.referrerPolicy);
+        //}
+        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.integrity)) {
+        //    initOptions.setIntegrity(curlSettingState.fetchConfig.integrity);
+        //}
+
+        String rawStr = axiosRequestInfo.toPrettyString();
+        if (MediaType.MULTIPART_FORM_DATA == mediaType) {
+            List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                    curlSettingState.filterFieldInfo);
+            String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+            axiosRequestInfo.setFormDataVal(formDataVal);
+            rawStr = axiosRequestInfo.toPrettyStringForFormData();
+        }
+        System.out.println(rawStr);
+        CopyPasteManager.getInstance().setContents(new TextTransferable(rawStr));
+        NotificationUtil.infoNotify("Copy as Axios", "已复制到剪切板", rawStr, project);
+    }
 
     public void copyAsFetch(@NotNull AnActionEvent actionEvent) {
         Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
@@ -667,6 +764,32 @@ public class CurlUtils {
         return "";
     }
 
+    /**
+     * for Copy as Axios
+     *
+     * @param methodInfo
+     * @return
+     */
+    public String getRequestBodyPlainObject(MethodInfo methodInfo) {
+        List<FieldInfo> requestFields = methodInfo.getRequestFields();
+        MediaType mediaType = methodInfo.getMediaType();
+        if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
+            for (FieldInfo requestField : requestFields) {
+                if (requestField.containRequestBodyAnnotation()) {
+                    return JsonUtil.buildPrettyJson(requestField);
+                }
+            }
+        } else {
+            List<String> strings = generateKeyValue(requestFields);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String string : strings) {
+                stringBuilder.append(string).append("&");
+            }
+            return stringBuilder.toString();
+        }
+        return "";
+    }
+
     public String getRequestParams(MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         if (methodInfo.getRequestMethod() != RequestMethodEnum.GET && !methodInfo.containRequestBodyAnnotation()) {
             return "";
@@ -718,6 +841,22 @@ public class CurlUtils {
         str = str.substring(0, str.length() - 1);
 //        str = str.replaceAll("%", "^%");
         return str;
+    }
+
+    /**
+     * for Axios
+     *
+     * @param methodInfo
+     * @return
+     */
+    public String getRequestParamsPlainObject(MethodInfo methodInfo) {
+        List<FieldInfo> queryParamFields = new ArrayList<>();
+        for (FieldInfo requestField : methodInfo.getRequestFields()) {
+            if (requestField.isQueryParam()){
+                queryParamFields.add(requestField);
+            }
+        }
+        return JsonUtil.buildPrettyJson(queryParamFields);
     }
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.10</version>
+    <version>1.0.11</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
@@ -132,6 +132,61 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h2>v1.0.11</h2>
+        <h3>Bug fixes</h3>
+        <ul>
+          <li>api generator plus
+            <ul>
+              <li>🎉🎉🎉未指定接口名称时使用接口路径代替</li>
+              <li>🎉🎉🎉修复Server Url或Token错误时空指针异常<a href="https://github.com/buyili/api-generator-plus/issues/7">(#7)</a></li>
+            </ul>
+          </li>
+        </ul>
+        <h3>New features</h3>
+        <ul>
+          <li>copy as curl
+            <ul>
+              <li>🎉🎉 新增Copy as axios功能</li>
+            </ul>
+          </li>
+        </ul>
+        <h3>1.0.10</h3>
+        <h4>Bug fixes</h4>
+        <ul>
+          <li>
+            api generator plus
+            <ul>
+              <li>🎉 修复类型转换异常 <a href="https://github.com/buyili/api-generator-plus/issues/6">(#6)</a></li>
+            </ul>
+          </li>
+          <li>
+            copy as curl
+            <ul>
+              <li>🎉🎉🎉修复打开设置报错，保存后配置数据丢失等问题</li>
+            </ul>
+          </li>
+        </ul>
+        <h4>New features</h4>
+        <ul>
+          <li>
+            api generator plus
+            <ul>
+              <li>✨✨✨新增自定义Date、LocalDateTime、LocalDate、LocalTime返回值</li>
+            </ul>
+          </li>
+        </ul>
+        <h3>1.0.9</h3>
+        <h4>Bug fixes</h4>
+        <ul>
+          <li>
+            api generator plus
+            <ul>
+              <li>🎉 修复字段类型为long而不是Long时报错问题</li>
+              <li>🎉 修复嵌套泛型导致idea卡死的问题 <a href="https://github.com/buyili/api-generator-plus/issues/4">(#4)</a></li>
+              <li>🎉 修复返回类型为ResponseEntity&lt;xx&gt;时，idea卡死的问题</li>
+            </ul>
+          </li>
+        </ul>
         <h3>1.0.8</h3>
         <h4>Bug fixes</h4>
         <ul>
@@ -330,6 +385,9 @@
             </action>
             <action id="CopyAsFetchAction" class="site.forgus.plugins.apigeneratorplus.action.CopyAsFetchAction"
                     text="Copy as Fetch"/>
+            <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsAxiosAction"
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsAxiosAction"
+                    text="Copy as Axios"/>
             <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction"
                     class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction" text="Copy as CURL (Cmd)">
             </action>

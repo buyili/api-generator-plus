@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class ApiGeneratorSetting implements Configurable {
+    JBTabbedPane jbTabbedPane;
 
     private ApiGeneratorConfig oldState;
 
@@ -54,7 +55,7 @@ public class ApiGeneratorSetting implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        JBTabbedPane jbTabbedPane = new JBTabbedPane();
+        jbTabbedPane = new JBTabbedPane();
         GridBagLayout layout = new GridBagLayout();
 
         //normal setting
@@ -184,6 +185,11 @@ public class ApiGeneratorSetting implements Configurable {
         filterFieldInfoPanel.reset(oldState.filterFieldInfo);
         yApiProjectListsPanel.reset();
         fieldValueFormatPanel.reset();
+    }
+
+    @Override
+    public void disposeUIResources() {
+        jbTabbedPane = null;
     }
 
     public static void main(String[] args) {
