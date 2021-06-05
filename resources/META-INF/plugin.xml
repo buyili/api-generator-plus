@@ -366,8 +366,8 @@
             <configurable instance="site.forgus.plugins.apigeneratorplus.setting.CURLSettingConfigurable"/>
         </projectConfigurable>
         <projectService serviceImplementation="site.forgus.plugins.apigeneratorplus.setting.CURLSettingState"/>
-        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"
-                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>
+<!--        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"-->
+<!--                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>-->
     </extensions>
 
     <actions>

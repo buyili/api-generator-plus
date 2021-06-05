@@ -419,7 +419,7 @@ public class CurlUtils {
             }
             return list;
         }
-        return ContainerUtil.newArrayList();
+        return Collections.emptyList();
     }
 
     private String buildPath(PsiMethod psiMethod, CURLModuleInfo info) {
@@ -880,7 +880,7 @@ public class CurlUtils {
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
-            return ContainerUtil.newArrayList();
+            return Collections.emptyList();
         }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
@@ -923,7 +923,7 @@ public class CurlUtils {
             }
             if (filterFieldInfo.excludeChildren) {
                 for (FieldInfo child : children) {
-                    child.setChildren(ContainerUtil.newArrayList());
+                    child.setChildren(Collections.emptyList());
                 }
             }
         }

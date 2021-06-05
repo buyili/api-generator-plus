@@ -5,6 +5,7 @@ import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class FilterFieldInfo {
             String[] split = string.split(";");
             return Arrays.asList(split);
         }
-        return ContainerUtil.newArrayList();
+        return Collections.emptyList();
     }
 
 

@@ -20,6 +20,7 @@ import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -185,7 +186,7 @@ public class MethodUtil {
                 }
                 if (filterFieldInfo.excludeChildren) {
                     for (FieldInfo child : children) {
-                        child.setChildren(ContainerUtil.newArrayList());
+                        child.setChildren(Collections.emptyList());
                     }
                 }
             }
@@ -210,7 +211,7 @@ public class MethodUtil {
 
     private static List<Object[]> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
-            return ContainerUtil.newArrayList();
+            return Collections.emptyList();
         }
         ArrayList<Object[]> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
