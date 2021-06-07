@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class YApiServerUrlEntity implements Cloneable{
 
-    private String id;
+    public String id;
 
-    private String serverUrl;
+    public String serverUrl;
 
     @Override
     public YApiServerUrlEntity clone() {
