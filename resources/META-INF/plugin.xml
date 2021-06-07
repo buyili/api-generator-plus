@@ -404,6 +404,10 @@
                 description="Generate Api for target code.">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
+        <group id="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup"
+               class="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup" text="Api Generator Plus">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </group>
     </actions>
 
     <depends>com.intellij.modules.java</depends>
