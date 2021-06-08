@@ -48,48 +48,58 @@ class YApiServerUrlsDialog(val project: Project, val yApiServerUrls: Collection<
         table.intercellSpacing = JBUI.emptySize()
         table.setDefaultRenderer(Any::class.java, MyCellRenderer())
 
-        return ToolbarDecorator.createDecorator(table).setAddAction { addRemote() }.setRemoveAction { removeRemote() }.setEditAction { editRemote() }.setEditActionUpdater { isUrlSelected() }.setRemoveActionUpdater { isUrlSelected() }.disableUpDownActions().createPanel()
+        return ToolbarDecorator.createDecorator(table)
+                .setAddAction { addRemote() }
+                .setRemoveAction { removeRemote() }
+                .setEditAction { editRemote() }
+                .setEditActionUpdater { isUrlSelected() }
+                .setRemoveActionUpdater { isUrlSelected() }.disableUpDownActions().createPanel()
 
     }
 
     private fun addRemote() {
+        val urlNode = getSelectedUrl()
+        val dialog = YApiDefineServerUrlDialog(project)
 //        val repository = getSelectedRepo()
 //        val proposedName = if (repository.remotes.any { it.name == ORIGIN }) "" else ORIGIN
 //        val dialog = GitDefineRemoteDialog(repository, git, proposedName, "")
-//        if (dialog.showAndGet()) {
-//            runInModalTask("Adding Remote...", repository,
-//                    "Add Remote", "Couldn't add remote ${dialog.remoteName} '${dialog.remoteUrl}'") {
+        if (dialog.showAndGet()) {
+            runInModalTask("Adding Remote...",
+                    "Add Remote", "Couldn't add remote ${dialog.url} ") {
 //                git.addRemote(repository, dialog.remoteName, dialog.remoteUrl)
-//            }
-//        }
+                appState.addUrl(dialog.url)
+            }
+        }
     }
 
     private fun removeRemote() {
         val urlNode = getSelectedUrl()!!
         if (Messages.YES == Messages.showYesNoDialog(rootPane, "Remove server url ${urlNode.getPresentableString()}?", "Remove Server Url", Messages.getQuestionIcon())) {
-            runInModalTask("Removing Remote...", urlNode, "Remove Remote", "Couldn't remove remote $urlNode") {
+            runInModalTask("Removing Remote...", "Remove Remote", "Couldn't remove remote $urlNode") {
                 appState.removeUrl(urlNode.yApiServerUrlEntity)
             }
         }
     }
 
     private fun editRemote() {
+        val urlNode = getSelectedUrl()
+        val oldUrl = urlNode?.yApiServerUrlEntity?.serverUrl
 //        val remoteNode = getSelectedUrl()!!
 //        val remote = remoteNode.remote
 //        val repository = remoteNode.repository
 //        val oldName = remote.name
 //        val oldUrl = getUrl(remote)
 //
-//        val dialog = GitDefineRemoteDialog(repository, git, oldName, oldUrl)
-//        if (dialog.showAndGet()) {
-//            val newRemoteName = dialog.remoteName
-//            val newRemoteUrl = dialog.remoteUrl
-//            if (newRemoteName == oldName && newRemoteUrl == oldUrl) return
-//            runInModalTask("Changing Remote...", repository,
-//                    "Change Remote", "Couldn't change remote $oldName to $newRemoteName '$newRemoteUrl'") {
-//                changeRemote(repository, oldName, oldUrl, newRemoteName, newRemoteUrl)
-//            }
-//        }
+        val dialog = YApiDefineServerUrlDialog(project, oldUrl!!)
+        if (dialog.showAndGet()) {
+            val id = urlNode.yApiServerUrlEntity.id
+            val newUrl = dialog.url
+            if (newUrl == oldUrl) return
+            runInModalTask("Changing Remote...",
+                    "Change Remote", "Couldn't change remote $oldUrl to $id '$newUrl'") {
+                appState.changeUrl(id, newUrl)
+            }
+        }
     }
 
 //    private fun changeRemote(repo: GitRepository, oldName: String, oldUrl: String, newName: String, newUrl: String): GitCommandResult {
@@ -134,7 +144,6 @@ class YApiServerUrlsDialog(val project: Project, val yApiServerUrls: Collection<
     }
 
     private fun runInModalTask(title: String,
-                               node: Node,
                                errorTitle: String,
                                errorMessage: String,
                                operation: () -> Unit) {
@@ -147,12 +156,12 @@ class YApiServerUrlsDialog(val project: Project, val yApiServerUrls: Collection<
 
             override fun onSuccess() {
                 rebuildTable()
-                if (result == null) {
-                    val errorDetails = result
-                    val message = "$errorMessage in $node:\n$errorDetails"
-                    LOG.warn(message)
-                    Messages.showErrorDialog(myProject, message, errorTitle)
-                }
+//                if (result == null) {
+//                    val errorDetails = result
+//                    val message = "$errorMessage :\n$errorDetails"
+//                    LOG.warn(message)
+//                    Messages.showErrorDialog(myProject, message, errorTitle)
+//                }
             }
         })
     }

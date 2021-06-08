@@ -6,13 +6,12 @@ import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 /**
  * @author lmx 2021/6/6 11:30
  **/
-@Data
 public class YApiProjectEntity {
 
-    private String serverUrlId;
+    public String serverUrlId;
 
-    private String token;
+    public String token;
 
-    private YApiProject project;
+    public YApiProject project;
 
 }

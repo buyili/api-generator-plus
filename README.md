@@ -43,9 +43,78 @@ YApi server url|YApi部署服务器地址|内网部署的yapi平台的域名，�
 Project token|项目token|接口对应的yapi项目的token
 Default save category|默认保存分类|插件生成的yapi文档保存位置，默认api_generator
 Classify API automatically|是否自动分类|勾选该选项后，生成文档时插件将从controller类注释里抽取模块名，并在yapi上自动创建对应分类保存接口
-多模块配置|-|-
+Ignore response|忽略返回数据|勾选该选项后，上传到YApi的接口没有返回数据
+多模块项目配置|-|-
 Is Multiple Module Project|是否是多模块项目|勾选该选项后，插件会根据包名查找对应的token
 Is Use Default Token|是否使用默认token|Is Multiple Module Project选项被勾选后生效；勾选该选项后，插件根据包名没有找到对应的token时，使用默认token。未勾选该选项时，插件会弹出提示框
+
+## 注释
+配置项|含义|详细解释
+---|---|---
+@res_body_is_json_schema|返回数据是否为 json-schema|可选值true,false；默认值：false
+@res_body_type|返回数据类型|枚举: json,raw 默认：json
+@res_body|返回数据|覆盖插件自动生成的返回数据
+
+### @res_body
+
+
+```java
+//基本数据类 BasicDataType
+@Data
+public class BasicDataType {
+
+    private String string;
+    private int intField;
+    private Integer integerField;
+    private long longField;
+    private Long longWrapperField;
+    private boolean booleanField;
+    private Boolean booleanWrapperField;
+    private Date date = new Date();
+    private LocalDateTime localDateTime = LocalDateTime.now();
+    private LocalDate localDate = LocalDate.now();
+    private LocalTime localTime = LocalTime.now();
+
+}
+```
+
+不使用@res_body时上传接口如下：
+```java
+@RestController
+public class TestController {
+    // 接口
+    @PostMapping("/test2")
+    public BasicDataType test2(){
+        return null;
+    }
+}
+```
+![使用@res_body前返回数据](docs/images/b5cca4c7.png)
+
+
+使用@res_body时上传接口如下：
+```java
+@RestController
+public class TestController {
+    /**
+     *
+     * @return
+     * @res_body {
+     *   "string": "使用@res_body",
+     *   "intField": 1,
+     *   "integerField": 0,
+     *   "longField": 1,
+     *   "longWrapperField": 0,
+     * }
+     */
+    @PostMapping("/test2")
+    public BasicDataType test2(){
+        return null;
+    }
+}
+```
+![使用@res_body后返回数据](docs/images/31632f61.png)
+
 
 
 # Copy as cUrl

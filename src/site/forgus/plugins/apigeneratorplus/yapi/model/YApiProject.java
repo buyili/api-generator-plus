@@ -11,26 +11,26 @@ public class YApiProject implements Serializable {
 
     private static final long serialVersionUID = -4425604264358577061L;
 
-    private Boolean switch_notice;
-    private Boolean is_mock_open;
-    private Boolean strice;
-    private Boolean is_json5;
-    private Integer _id;
-    private String name;
-    private String basepath;
-    private String desc;
-    private String project_type;
-    private Integer uid;
-    private Integer group_id;
-    private String icon;
-    private String color;
-    private Date add_time;
-    private Date up_time;
-    private Boolean role;
-    private String after_script;
-    private String pre_script;
-    private String project_mock_script;
-    private List<YApiEnv> env;
-    private List<YApiTag> tag;
+    public Boolean switch_notice;
+    public Boolean is_mock_open;
+    public Boolean strice;
+    public Boolean is_json5;
+    public Integer _id;
+    public String name;
+    public String basepath;
+    public String desc;
+    public String project_type;
+    public Integer uid;
+    public Integer group_id;
+    public String icon;
+    public String color;
+    public Date add_time;
+    public Date up_time;
+    public Boolean role;
+    public String after_script;
+    public String pre_script;
+    public String project_mock_script;
+    public List<YApiEnv> env;
+    public List<YApiTag> tag;
 
 }
