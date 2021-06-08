@@ -289,7 +289,7 @@ public class FieldUtil {
                 }
                 if (filterFieldInfo.excludeChildren) {
                     for (FieldInfo child : children) {
-                        child.setChildren(ContainerUtil.newArrayList());
+                        child.setChildren(Collections.emptyList());
                     }
                 }
             }

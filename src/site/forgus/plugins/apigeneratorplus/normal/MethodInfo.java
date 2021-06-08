@@ -42,7 +42,7 @@ public class MethodInfo implements Serializable {
     private List<FieldInfo> responseFields;
     private FieldInfo response;
     private PsiMethod psiMethod;
-    private MediaType mediaType;
+    private MediaType requestMediaType;
     private YApiInterface yApiInterface;
 
     private Language language;
@@ -52,13 +52,15 @@ public class MethodInfo implements Serializable {
     private String classPath;
     private String funStr;
     private List<String> classAnnotationTexts;
+    // YApi分类名称
+    private String catName;
 
     private List<String> excludeParamTypes = Arrays.asList("RedirectAttributes", "HttpServletRequest", "HttpServletResponse");
 
     public MethodInfo(PsiMethod psiMethod) {
         this.psiMethod = psiMethod;
         this.language = psiMethod.getLanguage();
-        this.mediaType = MethodUtil.getMediaType(psiMethod);
+        this.requestMediaType = MethodUtil.getRequestMediaType(psiMethod);
         this.setFunStr(psiMethod.getText());
         this.setRequestMethod(MethodUtil.getRequestMethod(psiMethod.getText()));
         this.setMethodPath(extraMethodPath(psiMethod));
@@ -71,6 +73,9 @@ public class MethodInfo implements Serializable {
         }
         this.setPackageName(PsiUtil.getPackageName(psiClass));
         this.setClassName(psiClass.getName());
+        PsiDocComment docComment = psiClass.getDocComment();
+        String classCatName = DesUtil.getInterfaceCatName(docComment);
+        this.catName = classCatName;
 
         List<String> classAnnotationTexts = new ArrayList<>();
         for (PsiAnnotation annotation : psiClass.getAnnotations()) {
@@ -105,7 +110,7 @@ public class MethodInfo implements Serializable {
     public MethodInfo(KtFunction ktFunction) {
         this.ktFunction = ktFunction;
         this.language = ktFunction.getLanguage();
-        this.mediaType = MethodUtil.getMediaType(ktFunction);
+        this.requestMediaType = MethodUtil.getRequestMediaType(ktFunction);
         this.setFunStr(ktFunction.getText());
         this.setParamStr(ktFunction.getValueParameterList().getText());
         this.setMethodName(ktFunction.getName());
@@ -119,6 +124,9 @@ public class MethodInfo implements Serializable {
         KtClass ktClass = (KtClass) ktFunction.getParent().getParent();
         this.setPackageName(ktClass.getFqName().toString());
         this.setClassName(ktClass.getName());
+        KDoc docComment = ktClass.getDocComment();
+        String classCatName = DesUtil.getInterfaceCatName(docComment);
+        this.catName = classCatName;
 
         List<String> classAnnotationTexts = new ArrayList<>();
         for (KtAnnotationEntry annotationEntry : ktClass.getAnnotationEntries()) {
@@ -218,6 +226,10 @@ public class MethodInfo implements Serializable {
             }
         }
         return false;
+    }
+
+    public boolean isReturnJSON() {
+        return containRequestBodyAnnotation() || containRestControllerAnnotation();
     }
 
     public boolean containControllerAnnotation() {
@@ -460,6 +472,11 @@ public class MethodInfo implements Serializable {
 
     private String getReturnDesc(KDoc docComment) {
         return DesUtil.getTagContent(docComment, "return");
+    }
+
+    @Override
+    public String toString(){
+        return "";
     }
 
 }

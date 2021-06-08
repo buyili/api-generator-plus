@@ -34,4 +34,14 @@ public class YApiInterface implements Serializable {
     private String markdown = "";
     private List<String> tag = new ArrayList<>();
 
+    public List<YApiHeader> addReqYApiHeader(String name, String value){
+        req_headers.add(new YApiHeader(name, value));
+        return req_headers;
+    }
+
+    public List<YApiHeader> addReqYApiHeader(YApiHeader yApiHeader){
+        req_headers.add(yApiHeader);
+        return req_headers;
+    }
+
 }

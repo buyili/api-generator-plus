@@ -81,22 +81,30 @@ public class ApiGenerateAction extends AnAction {
             config = ServiceManager.getService(project, ApiGeneratorConfig.class);
             GlobalVariable.getInstance().setApiGeneratorConfig(config);
 
-
+            boolean needRequestProjectId = false;
             if (StringUtils.isBlank(config.yApiServerUrl)) {
+                needRequestProjectId = true;
                 String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
                 if (StringUtils.isEmpty(serverUrl)) {
-                    NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-                    return;
+                    throw new BizException("YApi server url can not be empty.");
                 }
                 config.yApiServerUrl = serverUrl;
             }
             if (StringUtils.isBlank(config.projectToken) && (!config.isMultiModule || config.isUseDefaultToken)) {
+                needRequestProjectId = true;
                 String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
                 if (StringUtils.isEmpty(projectToken)) {
-                    NotificationUtil.warnNotify("Project token can not be empty.", project);
-                    return;
+                    throw new BizException("Project token can not be empty.");
                 }
                 config.projectToken = projectToken;
+            }
+            if (StringUtils.isBlank(config.projectId) || needRequestProjectId) {
+                YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
+                String projectId = projectInfo.get_id().toString();
+                //if (StringUtils.isBlank(projectId)) {
+                //    throw new BizException("Project id can not be empty");
+                //}
+                config.projectId = projectId;
             }
 
             PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
@@ -373,36 +381,7 @@ public class ApiGenerateAction extends AnAction {
             NotificationUtil.warnNotify("Upload api failed, reason:\n not REST api.", project);
             return;
         }
-        if (StringUtils.isEmpty(config.yApiServerUrl)) {
-            String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(serverUrl)) {
-                NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-                return;
-            }
-            config.yApiServerUrl = serverUrl;
-        }
-        if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
-            String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(projectToken)) {
-                NotificationUtil.warnNotify("Project token can not be empty.", project);
-                return;
-            }
-            String projectId = "";
-            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
-            projectId = projectInfo.get_id().toString();
-            config.projectId = projectId;
-            config.projectToken = projectToken;
-        }
         yApiProjectConfigInfo = getProjectConfigInfo(method);
-//        if (StringUtils.isEmpty(config.projectId)) {
-//            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
-//            String projectId = projectInfo != null && projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
-//            if (StringUtils.isEmpty(projectId)) {
-//                NotificationUtil.warnNotify("Project id can not be empty.", project);
-//                return;
-//            }
-//            config.projectId = projectId;
-//        }
         uploadToYApi(project, method);
     }
 
@@ -411,36 +390,7 @@ public class ApiGenerateAction extends AnAction {
             NotificationUtil.warnNotify("Upload api failed, reason:\n not REST api.", project);
             return;
         }
-        if (StringUtils.isEmpty(config.yApiServerUrl)) {
-            String serverUrl = Messages.showInputDialog("Input YApi Server Url", "YApi Server Url", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(serverUrl)) {
-                NotificationUtil.warnNotify("YApi server url can not be empty.", project);
-                return;
-            }
-            config.yApiServerUrl = serverUrl;
-        }
-        if (config.isUseDefaultToken && StringUtils.isBlank(config.projectToken)) {
-            String projectToken = Messages.showInputDialog("Input Project Token", "Project Token", Messages.getInformationIcon());
-            if (StringUtils.isEmpty(projectToken)) {
-                NotificationUtil.warnNotify("Project token can not be empty.", project);
-                return;
-            }
-            String projectId = "";
-            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, projectToken);
-            projectId = projectInfo.get_id().toString();
-            config.projectId = projectId;
-            config.projectToken = projectToken;
-        }
         yApiProjectConfigInfo = getProjectConfigInfo(method);
-//        if (StringUtils.isEmpty(config.projectId)) {
-//            YApiProject projectInfo = YApiSdk.getProjectInfo(config.yApiServerUrl, config.projectToken);
-//            String projectId = projectInfo != null && projectInfo.get_id() == null ? Messages.showInputDialog("Input Project Id", "Project Id", Messages.getInformationIcon()) : projectInfo.get_id().toString();
-//            if (StringUtils.isEmpty(projectId)) {
-//                NotificationUtil.warnNotify("Project id can not be empty.", project);
-//                return;
-//            }
-//            config.projectId = projectId;
-//        }
         uploadToYApi(project, method);
     }
 
@@ -471,25 +421,17 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private YApiInterface buildYApiInterface(Project project, PsiMethod psiMethod) throws IOException {
-        PsiClass containingClass = psiMethod.getContainingClass();
-        if (containingClass == null) {
-            return null;
-        }
-//        PsiAnnotation controller = null;
-//        PsiAnnotation classRequestMapping = null;
-//        for (PsiAnnotation annotation : containingClass.getAnnotations()) {
-//            String text = annotation.getText();
-//            if (text.endsWith(WebAnnotation.Controller)) {
-//                controller = annotation;
-//            } else if (text.contains(WebAnnotation.RequestMapping)) {
-//                classRequestMapping = annotation;
-//            }
-//        }
-//        if (controller == null) {
-//            NotificationUtil.warnNotify("Invalid Class File!", project);
-//            return null;
-//        }
         MethodInfo methodInfo = new MethodInfo(psiMethod);
+        return buildYApiInterface(project, methodInfo);
+    }
+
+    private YApiInterface buildYApiInterface(Project project, KtFunction ktFunction) throws IOException {
+        MethodInfo methodInfo = new MethodInfo(ktFunction);
+        return buildYApiInterface(project, methodInfo);
+    }
+
+    @Nullable
+    private YApiInterface buildYApiInterface(Project project, MethodInfo methodInfo) throws IOException {
         if (!methodInfo.containControllerAnnotation()) {
             NotificationUtil.warnNotify("Invalid Class File!", project);
             return null;
@@ -499,149 +441,48 @@ public class ApiGenerateAction extends AnAction {
         yApiInterface.setStatus(config.apiDone ? YApiInterfaceStatusEnum.DONE.getValue() : YApiInterfaceStatusEnum.UNDONE.getValue());
         yApiInterface.setToken(config.projectToken);
         yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
-        // 多模块项目，模块对应token等信息
-//        YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(psiMethod);
         yApiInterface.setToken(yApiProjectConfigInfo.getToken());
         yApiInterface.setPath(PathUtil.pathResolve(yApiProjectConfigInfo.getBasePath(), yApiInterface.getPath()));
 
         RequestMethodEnum requestMethodEnum = methodInfo.getRequestMethod();
         yApiInterface.setMethod(requestMethodEnum.name());
         List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType requestMediaType = methodInfo.getRequestMediaType();
         if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
             yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
             yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
-        } else {
-            if (MediaType.APPLICATION_FORM_URLENCODED == mediaType || MediaType.MULTIPART_FORM_DATA == mediaType) {
-                yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
-                yApiInterface.setReq_body_form(listYApiForms(requestFields));
+            yApiInterface.addReqYApiHeader(YApiHeader.json());
+        } else if (MediaType.APPLICATION_FORM_URLENCODED == requestMediaType) {
+            yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
+            yApiInterface.setReq_body_form(listYApiForms(requestFields));
+            yApiInterface.addReqYApiHeader(YApiHeader.form());
+        } else if (MediaType.MULTIPART_FORM_DATA == requestMediaType) {
+            yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
+            yApiInterface.setReq_body_form(listYApiForms(requestFields));
+            yApiInterface.addReqYApiHeader(YApiHeader.multipartFormData());
+        }
+
+        for (FieldInfo requestField : requestFields) {
+            if (requestField.containRequestHeaderAnnotation()) {
+                yApiInterface.addReqYApiHeader(new YApiHeader(requestField.getName(), "",
+                        requestField.isRequire(), requestField.getDesc()));
             }
         }
-        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, mediaType));
-        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
-        PsiDocComment classDesc = containingClass.getDocComment();
-        yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
+
+        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, requestMediaType));
+        yApiInterface.setCatid(getCatId(methodInfo.getCatName(), yApiProjectConfigInfo));
 
         if (StringUtils.isNotBlank(methodInfo.getTitle())) {
             yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
         } else {
             yApiInterface.setTitle(requestMethodEnum.name() + " " + yApiInterface.getPath());
         }
-        if (containRequestBodyAnnotation(psiMethod.getAnnotations())) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
-            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
-        } else if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.multipartFormData()));
-        } else {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.form()));
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-//            yApiInterface.setRes_body("");
-        }
-        if (containResponseBodyAnnotation(psiMethod.getAnnotations())
-                || containRestControllerAnnotation(containingClass.getAnnotations())) {
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
+        if (methodInfo.isReturnJSON()) {
             yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
         }
         yApiInterface.setReq_params(listYApiPathVariables(requestFields));
         yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
-                : "<pre><code data-language=\"java\" class=\"java\">" + DesUtil.getInterfaceDesc(psiMethod) + "</code> </pre>");
-
-        if (config.ignoreResponse) {
-            yApiInterface.setRes_body(null);
-            yApiInterface.setRes_body_type(null);
-            yApiInterface.setRes_body_is_json_schema(null);
-        } else {
-            YApiInterface docInterface = methodInfo.getYApiInterface();
-            if (docInterface != null) {
-                if (StringUtils.isNotBlank(docInterface.getRes_body())) {
-                    yApiInterface.setRes_body(docInterface.getRes_body());
-                }
-                if (StringUtils.isNotBlank(docInterface.getRes_body_type())) {
-                    yApiInterface.setRes_body_type(docInterface.getRes_body_type());
-                }
-                if (null != docInterface.getRes_body_is_json_schema()) {
-                    yApiInterface.setRes_body_is_json_schema(docInterface.getRes_body_is_json_schema());
-                }
-            }
-        }
-
-        return yApiInterface;
-    }
-
-    private YApiInterface buildYApiInterface(Project project, KtFunction ktFunction) throws IOException {
-        KtClass containingClass = (KtClass) ktFunction.getParent().getParent();
-//        if (containingClass == null) {
-//            return null;
-//        }
-//        PsiAnnotation controller = null;
-//        PsiAnnotation classRequestMapping = null;
-//        for (PsiAnnotation annotation : containingClass.getAnnotations()) {
-//            String text = annotation.getText();
-//            if (text.endsWith(WebAnnotation.Controller)) {
-//                controller = annotation;
-//            } else if (text.contains(WebAnnotation.RequestMapping)) {
-//                classRequestMapping = annotation;
-//            }
-//        }
-//        if (controller == null) {
-//            NotificationUtil.warnNotify("Invalid Class File!", project);
-//            return null;
-//        }
-        MethodInfo methodInfo = new MethodInfo(ktFunction);
-        if (!methodInfo.containControllerAnnotation()) {
-            NotificationUtil.warnNotify("Invalid Class File!", project);
-            return null;
-        }
-        YApiInterface yApiInterface = new YApiInterface();
-        yApiInterface.setTag(StringUtil.string2Set(config.tag));
-        yApiInterface.setToken(config.projectToken);
-        yApiInterface.setPath(PathUtil.pathResolve(methodInfo.getClassPath(), methodInfo.getMethodPath()));
-        // 多模块项目，模块对应token等信息
-//        YApiProjectConfigInfo yApiProjectConfigInfo = getProjectConfigInfo(ktFunction);
-        yApiInterface.setToken(yApiProjectConfigInfo.getToken());
-        yApiInterface.setPath(PathUtil.pathResolve(yApiProjectConfigInfo.getBasePath(), yApiInterface.getPath()));
-
-        RequestMethodEnum requestMethodEnum = methodInfo.getRequestMethod();
-        yApiInterface.setMethod(requestMethodEnum.name());
-        List<FieldInfo> requestFields = FieldUtil.filterChildrenFiled(methodInfo.getRequestFields(), config.filterFieldInfo);
-        MediaType mediaType = methodInfo.getMediaType();
-        if (methodInfo.getParamStr().contains(WebAnnotation.RequestBody)) {
-            yApiInterface.setReq_body_type(RequestBodyTypeEnum.JSON.getValue());
-            yApiInterface.setReq_body_other(JsonUtil.buildJson5(getRequestBodyParam(requestFields)));
-        } else {
-            if (MediaType.APPLICATION_FORM_URLENCODED == mediaType || MediaType.MULTIPART_FORM_DATA == mediaType) {
-                yApiInterface.setReq_body_type(RequestBodyTypeEnum.FORM.getValue());
-                yApiInterface.setReq_body_form(listYApiForms(requestFields));
-            }
-        }
-        yApiInterface.setReq_query(listYApiQueries(requestFields, requestMethodEnum, mediaType));
-        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
-        KDoc classDesc = containingClass.getDocComment();
-        yApiInterface.setCatid(getCatId(catNameMap, classDesc, yApiProjectConfigInfo));
-
-        if (StringUtils.isNotBlank(methodInfo.getTitle())) {
-            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getTitle());
-        } else {
-            yApiInterface.setTitle(requestMethodEnum.name() + " " + methodInfo.getMethodPath());
-        }
-        if (methodInfo.containRequestBodyAnnotation()) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.json()));
-            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
-        } else if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.multipartFormData()));
-        } else {
-            yApiInterface.setReq_headers(Collections.singletonList(YApiHeader.form()));
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-//            yApiInterface.setRes_body("");
-        }
-        if (methodInfo.containResponseBodyAnnotation()
-                || methodInfo.containRestControllerAnnotation()) {
-//            yApiInterface.setRes_body_type(ResponseBodyTypeEnum.RAW.getValue());
-            yApiInterface.setRes_body(JsonUtil.buildJson5(methodInfo.getResponse()));
-        }
-        yApiInterface.setReq_params(listYApiPathVariables(requestFields));
-        yApiInterface.setDesc(Objects.nonNull(yApiInterface.getDesc()) ? yApiInterface.getDesc()
-                : "<pre><code data-language=\"java\" class=\"java\">" + DesUtil.getInterfaceDesc(ktFunction) + "</code> </pre>");
+                : "<pre><code data-language=\"java\" class=\"java\">" + methodInfo.getDesc() + "</code> </pre>");
 
         if (config.ignoreResponse) {
             yApiInterface.setRes_body(null);
@@ -879,6 +720,41 @@ public class ApiGenerateAction extends AnAction {
         return yApiResponse.getData().get_id().toString();
     }
 
+    private String getCatId(String catName, YApiProjectConfigInfo yApiProjectConfigInfo)
+            throws IOException {
+        Map<String, YApiCat> catNameMap = getCatNameMap(yApiProjectConfigInfo);
+        String defaultCatName = getDefaultCatName();
+        if (config.autoCat) {
+            catName = StringUtils.isEmpty(catName) ? defaultCatName : catName;
+        } else {
+            catName = defaultCatName;
+        }
+        YApiCat apiCat = catNameMap.get(catName);
+        if (apiCat != null) {
+            return apiCat.get_id().toString();
+        }
+        YApiResponse<YApiCat> yApiResponse = YApiSdk.addCategory(config.yApiServerUrl,
+                yApiProjectConfigInfo.getToken(), yApiProjectConfigInfo.getProjectId(), catName);
+        return yApiResponse.getData().get_id().toString();
+    }
+
+    private String getCatId(Map<String, YApiCat> catNameMap, String catName, YApiProjectConfigInfo yApiProjectConfigInfo)
+            throws IOException {
+        String defaultCatName = getDefaultCatName();
+        if (config.autoCat) {
+            catName = StringUtils.isEmpty(catName) ? defaultCatName : catName;
+        } else {
+            catName = defaultCatName;
+        }
+        YApiCat apiCat = catNameMap.get(catName);
+        if (apiCat != null) {
+            return apiCat.get_id().toString();
+        }
+        YApiResponse<YApiCat> yApiResponse = YApiSdk.addCategory(config.yApiServerUrl,
+                yApiProjectConfigInfo.getToken(), yApiProjectConfigInfo.getProjectId(), catName);
+        return yApiResponse.getData().get_id().toString();
+    }
+
     private String getCatId(Map<String, YApiCat> catNameMap, PsiDocComment classDesc, YApiProjectConfigInfo yApiProjectConfigInfo)
             throws IOException {
         String defaultCatName = getDefaultCatName();
@@ -962,7 +838,8 @@ public class ApiGenerateAction extends AnAction {
     }
 
     private boolean notQuery(FieldInfo fieldInfo) {
-        return fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestBodyAnnotation();
+        return fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestBodyAnnotation()
+                || fieldInfo.containRequestAttributeAnnotation() || fieldInfo.containRequestHeaderAnnotation();
     }
 
     private YApiQuery buildYApiQuery(FieldInfo fieldInfo) {
@@ -994,7 +871,8 @@ public class ApiGenerateAction extends AnAction {
     private List<YApiForm> listYApiForms(List<FieldInfo> requestFields) {
         List<YApiForm> yApiForms = new ArrayList<>();
         for (FieldInfo fieldInfo : requestFields) {
-            if (fieldInfo.containPathVariableAnnotation()) {
+            if (fieldInfo.containPathVariableAnnotation() || fieldInfo.containRequestHeaderAnnotation()
+                    || fieldInfo.containRequestAttributeAnnotation()) {
                 continue;
             }
             if (TypeEnum.LITERAL.equals(fieldInfo.getParamType())) {
@@ -1417,107 +1295,13 @@ public class ApiGenerateAction extends AnAction {
     public YApiProjectConfigInfo getProjectConfigInfo(PsiMethod psiMethod) {
         PsiClass containingClass = psiMethod.getContainingClass();
         String qualifiedName = containingClass.getQualifiedName();
-        YApiProjectConfigInfo selectedConfig = null;
-        if (config.isMultiModule) {
-            selectedConfig = getProjectInfoFromStorage(psiMethod);
-            // 选择包名对应的YApi项目
-//            if (selectedConfig == null) {
-//                int isUseModuleOrDefault = Messages.showYesNoCancelDialog("该模块未配置YApi项目token，是否选择配置过token的模块？" +
-//                                "\nYes：选择模块项目；" +
-//                                "\nNo：直接使用配置的默认YApi项目；" +
-//                                "\n如果不想每次都提醒，可以在设置里·取消勾选· Is multiple module；或者配置包名和对应的token",
-//                        "提示", Messages.getQuestionIcon());
-//                if (isUseModuleOrDefault == Messages.YES) {
-//                    List<String> packageNames = new ArrayList<>();
-//                    for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-//                        if (StringUtils.isNotEmpty(yApiProjectConfigInfo.getPackageName())) {
-//                            packageNames.add(yApiProjectConfigInfo.getPackageName());
-//                        }
-//                    }
-//                    if (CollectionUtils.isNotEmpty(packageNames)) {
-//                        int selectModuleIdx = Messages.showDialog("请选择YApi项目", "提示", packageNames.toArray(new String[0]),
-//                                0, Messages.getQuestionIcon());
-//                        if (selectModuleIdx == -1) {
-//                            throw new BizException("cancel generator api");
-//                        }
-//                        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-//                            if (yApiProjectConfigInfo.getPackageName().equals(packageNames.get(selectModuleIdx))) {
-//                                selectedConfig = yApiProjectConfigInfo.clone();
-//                            }
-//                        }
-//                    }
-//                } else if (isUseModuleOrDefault == Messages.CANCEL) {
-//                    throw new BizException("cancel generator api");
-//                }
-//            }
-            if (selectedConfig != null) {
-//                System.out.println(selectedConfig.getBasePath());
-                if (AssertUtils.isEmpty(selectedConfig.getToken())) {
-                    if (!config.isUseDefaultToken) {
-                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
-                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
-                                , config.matchWithModuleName ? "模块名" : "包名");
-                        int resultIdx = Messages.showOkCancelDialog(message,
-                                "提示", "Ok", "Cancel", Messages.getQuestionIcon());
-                        if (Messages.CANCEL == resultIdx) {
-                            throw new BizException("cancel generator api");
-                        }
-                    }
-                    selectedConfig.setToken(config.projectToken);
-                    selectedConfig.setProjectId(config.projectId);
-                }
-                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
-                if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
-                    selectedConfig.setBasePath("");
-                }
-                return selectedConfig;
-            }
-        }
-        selectedConfig = new YApiProjectConfigInfo();
-        selectedConfig.setToken(config.projectToken);
-        selectedConfig.setProjectId(config.projectId);
-        selectedConfig.setBasePath("");
-        return selectedConfig;
+        return getProjectConfigInfo(qualifiedName);
     }
 
     @SneakyThrows
     public YApiProjectConfigInfo getProjectConfigInfo(KtFunction ktFunction) {
-//        KtClass containingClass = (KtClass) ktFunction.getParent().getParent();
-//        String qualifiedName = containingClass.getQualifiedName();
-        YApiProjectConfigInfo selectedConfig = null;
-        if (config.isMultiModule) {
-            selectedConfig = getProjectInfoFromStorage(ktFunction);
-            // 选择包名对应的YApi项目
-            if (selectedConfig != null) {
-//                System.out.println(selectedConfig.getBasePath());
-                if (AssertUtils.isEmpty(selectedConfig.getToken())) {
-                    if (!config.isUseDefaultToken) {
-                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
-                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
-                                , config.matchWithModuleName ? "模块名" : "包名");
-                        int resultIdx = Messages.showOkCancelDialog(message,
-                                "提示", "Ok", "Cancel", Messages.getQuestionIcon());
-                        if (Messages.CANCEL == resultIdx) {
-                            throw new BizException("cancel generator api");
-                        }
-                    }
-                    selectedConfig.setToken(config.projectToken);
-                    selectedConfig.setProjectId(config.projectId);
-                }
-                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
-                if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
-                    selectedConfig.setBasePath("");
-                }
-                return selectedConfig;
-            }
-        }
-        selectedConfig = new YApiProjectConfigInfo();
-        selectedConfig.setToken(config.projectToken);
-        selectedConfig.setProjectId(config.projectId);
-        selectedConfig.setBasePath("");
-        return selectedConfig;
+        String qualifiedName = KtUtil.getFqName(ktFunction);
+        return getProjectConfigInfo(qualifiedName);
     }
 
     @SneakyThrows
@@ -1530,8 +1314,10 @@ public class ApiGenerateAction extends AnAction {
 //                System.out.println(selectedConfig.getBasePath());
                 if (AssertUtils.isEmpty(selectedConfig.getToken())) {
                     if (!config.isUseDefaultToken) {
-                        int resultIdx = Messages.showOkCancelDialog("匹配到的包名没有配置YApi token;是否使用默认YApi token?" +
-                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token",
+                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
+                                        "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
+                                , config.matchWithModuleName ? "模块名" : "包名");
+                        int resultIdx = Messages.showOkCancelDialog(message,
                                 "提示", "Ok", "Cancel", Messages.getQuestionIcon());
                         if (Messages.CANCEL == resultIdx) {
                             throw new BizException("cancel generator api");
@@ -1541,7 +1327,7 @@ public class ApiGenerateAction extends AnAction {
                     selectedConfig.setProjectId(config.projectId);
                 }
                 Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "token 或 projectId 为空");
+                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
                 if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
                     selectedConfig.setBasePath("");
                 }
@@ -1553,95 +1339,6 @@ public class ApiGenerateAction extends AnAction {
         selectedConfig.setProjectId(config.projectId);
         selectedConfig.setBasePath("");
         return selectedConfig;
-    }
-
-    /**
-     * 根据包名或模块名获取YApi项目配置
-     *
-     * @param psiMethod
-     * @return
-     */
-    @Nullable
-    private YApiProjectConfigInfo getProjectInfoFromStorage(PsiMethod psiMethod) {
-        if (CollectionUtils.isNotEmpty(config.yApiProjectConfigInfoList)) {
-            Boolean matchWithModuleName = config.matchWithModuleName;
-            if (matchWithModuleName) {
-                Module module = CurlUtils.getModule(editor, project);
-                if (module == null) {
-                    throw new BizException("Failed to get module name");
-                }
-                String moduleName = module.getName();
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String dbModuleName = yApiProjectConfigInfo.getModuleName();
-                    if (moduleName.equals(dbModuleName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-
-                // 模块名没有匹配时，弹出选择框手动选择上传项目
-                int exitCode = ChooseYApiProjectDialog.showDialog(config.yApiProjectConfigInfoList);
-                if (exitCode == -1) {
-                    throw new BizException("cancel generator api");
-                }
-                return config.yApiProjectConfigInfoList.get(exitCode);
-            } else {
-                PsiClass containingClass = psiMethod.getContainingClass();
-                String qualifiedName = containingClass.getQualifiedName();
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String packageName = yApiProjectConfigInfo.getPackageName();
-                    if (StringUtils.isNotBlank(packageName) && StringUtils.isNotBlank(qualifiedName)
-                            && qualifiedName.startsWith(packageName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-                throw new BizException("Matching configuration failed based on package name");
-            }
-        }
-        throw new BizException("There is no multi-module project configuration");
-    }
-
-    /**
-     * 根据包名或模块名获取YApi项目配置
-     *
-     * @param ktFunction
-     * @return
-     */
-    @Nullable
-    private YApiProjectConfigInfo getProjectInfoFromStorage(KtFunction ktFunction) {
-        if (CollectionUtils.isNotEmpty(config.yApiProjectConfigInfoList)) {
-            Boolean matchWithModuleName = config.matchWithModuleName;
-            if (matchWithModuleName) {
-                Module module = CurlUtils.getModule(editor, project);
-                if (module == null) {
-                    throw new BizException("Failed to get module name");
-                }
-                String moduleName = module.getName();
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String dbModuleName = yApiProjectConfigInfo.getModuleName();
-                    if (moduleName.equals(dbModuleName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-
-                // 模块名没有匹配时，弹出选择框手动选择上传项目
-                int exitCode = ChooseYApiProjectDialog.showDialog(config.yApiProjectConfigInfoList);
-                if (exitCode == -1) {
-                    throw new BizException("cancel generator api");
-                }
-                return config.yApiProjectConfigInfoList.get(exitCode);
-            } else {
-                String qualifiedName = KtUtil.getFqName(ktFunction);
-                for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                    String packageName = yApiProjectConfigInfo.getPackageName();
-                    if (StringUtils.isNotBlank(packageName) && StringUtils.isNotBlank(qualifiedName)
-                            && qualifiedName.startsWith(packageName)) {
-                        return yApiProjectConfigInfo.clone();
-                    }
-                }
-                throw new BizException("Matching configuration failed based on package name");
-            }
-        }
-        throw new BizException("There is no multi-module project configuration");
     }
 
     /**

@@ -20,6 +20,7 @@ import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -117,11 +118,11 @@ public class MethodUtil {
         return false;
     }
 
-    public static MediaType getMediaType(MethodInfo methodInfo) {
-        return getMediaType(methodInfo.getPsiMethod());
+    public static MediaType getRequestMediaType(MethodInfo methodInfo) {
+        return getRequestMediaType(methodInfo.getPsiMethod());
     }
 
-    public static MediaType getMediaType(PsiMethod psiMethod) {
+    public static MediaType getRequestMediaType(PsiMethod psiMethod) {
         if (isGetMethod(psiMethod.getAnnotations())) {
             return null;
         }
@@ -139,7 +140,7 @@ public class MethodUtil {
         return MediaType.APPLICATION_FORM_URLENCODED;
     }
 
-    public static MediaType getMediaType(KtFunction ktFunction) {
+    public static MediaType getRequestMediaType(KtFunction ktFunction) {
         if (isGetMethod(ktFunction.getAnnotationEntries())) {
             return null;
         }
@@ -185,7 +186,7 @@ public class MethodUtil {
                 }
                 if (filterFieldInfo.excludeChildren) {
                     for (FieldInfo child : children) {
-                        child.setChildren(ContainerUtil.newArrayList());
+                        child.setChildren(Collections.emptyList());
                     }
                 }
             }
@@ -210,7 +211,7 @@ public class MethodUtil {
 
     private static List<Object[]> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
-            return ContainerUtil.newArrayList();
+            return Collections.emptyList();
         }
         ArrayList<Object[]> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {

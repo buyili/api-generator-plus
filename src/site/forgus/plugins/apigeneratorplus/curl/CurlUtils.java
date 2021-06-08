@@ -99,6 +99,10 @@ public class CurlUtils {
         String url = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
+        List<FieldInfo> filteredRequestFields = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                curlSettingState.filterFieldInfo);
+        methodInfo.setRequestFields(filteredRequestFields);
+
         // 判斷是否是Get方法
         if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
             axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
@@ -108,7 +112,7 @@ public class CurlUtils {
         if (RequestMethodEnum.GET != methodInfo.getRequestMethod()) {
             // 非Get请求参数
             axiosRequestInfo.setData(getRequestBodyPlainObject(methodInfo));
-            if(methodInfo.containRequestBodyAnnotation()){
+            if (methodInfo.containRequestBodyAnnotation()) {
                 axiosRequestInfo.setParams(getRequestParamsPlainObject(methodInfo));
             }
         }
@@ -116,7 +120,15 @@ public class CurlUtils {
         axiosRequestInfo.setMethod(methodInfo.getRequestMethod().lowerCaseName());
         // 添加header
         Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
-        MediaType mediaType = methodInfo.getMediaType();
+
+        //List<FieldInfo> requestFields = methodInfo.getRequestFields();
+        for (FieldInfo requestField : filteredRequestFields) {
+            if (requestField.containRequestHeaderAnnotation()) {
+                headers.put(requestField.getName(), "");
+            }
+        }
+
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
             headers.putAll(mediaType.getHeader());
         }
@@ -144,9 +156,7 @@ public class CurlUtils {
 
         String rawStr = axiosRequestInfo.toPrettyString();
         if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
-                    curlSettingState.filterFieldInfo);
-            String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+            String formDataVal = MethodUtil.getFormDataVal(filteredRequestFields);
             axiosRequestInfo.setFormDataVal(formDataVal);
             rawStr = axiosRequestInfo.toPrettyStringForFormData();
         }
@@ -197,6 +207,10 @@ public class CurlUtils {
         String input = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
+        List<FieldInfo> filteredRequestFields = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
+                curlSettingState.filterFieldInfo);
+        methodInfo.setRequestFields(filteredRequestFields);
+
         // 判斷是否是Get方法
         if (RequestMethodEnum.GET == methodInfo.getRequestMethod()) {
             input = input + getRequestParams(methodInfo);
@@ -212,7 +226,14 @@ public class CurlUtils {
         initOptions.setMethod(methodInfo.getRequestMethod().name());
         // 添加header
         Map<String, String> headers = curlModuleInfo.getHeadersAsMap();
-        MediaType mediaType = methodInfo.getMediaType();
+
+        for (FieldInfo requestField : filteredRequestFields) {
+            if (requestField.containRequestHeaderAnnotation()) {
+                headers.put(requestField.getName(), "");
+            }
+        }
+
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType != null && MediaType.MULTIPART_FORM_DATA != mediaType) {
             headers.putAll(mediaType.getHeader());
         }
@@ -242,9 +263,7 @@ public class CurlUtils {
 
         String rawStr = fetchRequestInfo.toPrettyString();
         if (MediaType.MULTIPART_FORM_DATA == mediaType) {
-            List<FieldInfo> fieldInfoList = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
-                    curlSettingState.filterFieldInfo);
-            String formDataVal = MethodUtil.getFormDataVal(fieldInfoList);
+            String formDataVal = MethodUtil.getFormDataVal(filteredRequestFields);
             fetchRequestInfo.setFormDataVal(formDataVal);
             rawStr = fetchRequestInfo.toPrettyStringForFormData();
         }
@@ -400,7 +419,7 @@ public class CurlUtils {
             }
             return list;
         }
-        return ContainerUtil.newArrayList();
+        return Collections.emptyList();
     }
 
     private String buildPath(PsiMethod psiMethod, CURLModuleInfo info) {
@@ -694,7 +713,7 @@ public class CurlUtils {
 
     public String getRequestBody(MethodInfo methodInfo, CUrlClientType cUrlClientType) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {
@@ -746,7 +765,7 @@ public class CurlUtils {
      */
     public String getRequestBody(MethodInfo methodInfo) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {
@@ -772,7 +791,7 @@ public class CurlUtils {
      */
     public String getRequestBodyPlainObject(MethodInfo methodInfo) {
         List<FieldInfo> requestFields = methodInfo.getRequestFields();
-        MediaType mediaType = methodInfo.getMediaType();
+        MediaType mediaType = methodInfo.getRequestMediaType();
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {
@@ -852,7 +871,7 @@ public class CurlUtils {
     public String getRequestParamsPlainObject(MethodInfo methodInfo) {
         List<FieldInfo> queryParamFields = new ArrayList<>();
         for (FieldInfo requestField : methodInfo.getRequestFields()) {
-            if (requestField.isQueryParam()){
+            if (requestField.isQueryParam()) {
                 queryParamFields.add(requestField);
             }
         }
@@ -861,7 +880,7 @@ public class CurlUtils {
 
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
-            return ContainerUtil.newArrayList();
+            return Collections.emptyList();
         }
         ArrayList<String> strings = new ArrayList<>();
         for (FieldInfo requestField : fieldInfoList) {
@@ -904,7 +923,7 @@ public class CurlUtils {
             }
             if (filterFieldInfo.excludeChildren) {
                 for (FieldInfo child : children) {
-                    child.setChildren(ContainerUtil.newArrayList());
+                    child.setChildren(Collections.emptyList());
                 }
             }
         }

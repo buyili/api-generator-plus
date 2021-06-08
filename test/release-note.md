@@ -1,6 +1,15 @@
 
 
 
+##v1.0.12
+v1.0.12_IC171.469473
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修复copy as fetch、copy as axios字段过滤功能失效问题
+    - 🎉🎉🎉修复copy as fetch、copy as axios未处理包含@RequestAttribute、@RequestHeader注释的字段的问题
+
+
 ##v1.0.11
 v1.0.11_IC171.469473
 

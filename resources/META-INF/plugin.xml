@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.11</version>
+    <version>1.0.12</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[
@@ -132,6 +132,16 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h2>v1.0.12</h2>
+        <h3>Bug fixes</h3>
+        <ul>
+          <li>copy as curl
+            <ul>
+              <li>🎉🎉🎉修复copy as fetch、copy as axios字段过滤功能失效问题</li>
+              <li>🎉🎉🎉修复copy as fetch、copy as axios未处理包含@RequestAttribute、@RequestHeader注释的字段的问题</li>
+            </ul>
+          </li>
+        </ul>
         <h2>v1.0.11</h2>
         <h3>Bug fixes</h3>
         <ul>
@@ -366,8 +376,11 @@
             <configurable instance="site.forgus.plugins.apigeneratorplus.setting.CURLSettingConfigurable"/>
         </projectConfigurable>
         <projectService serviceImplementation="site.forgus.plugins.apigeneratorplus.setting.CURLSettingState"/>
-        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"
-                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>
+        <applicationService id="site.forgus.plugins.apigeneratorplus.state.ApiGeneratorPlusAppState"
+                            serviceImplementation="site.forgus.plugins.apigeneratorplus.state.ApiGeneratorPlusAppState"
+                            />
+<!--        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"-->
+<!--                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>-->
     </extensions>
 
     <actions>
@@ -404,6 +417,10 @@
                 description="Generate Api for target code.">
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
+<!--        <group id="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup"-->
+<!--               class="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup" text="Api Generator Plus" popup="true">-->
+<!--            <add-to-group group-id="ToolsMenu" anchor="last"/>-->
+<!--        </group>-->
     </actions>
 
     <depends>com.intellij.modules.java</depends>
