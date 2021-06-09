@@ -17,6 +17,27 @@ public class JsonUtil {
             .disableHtmlEscaping()
             .setPrettyPrinting().create();
 
+
+    /**
+     * 去掉字段名的双引号
+     * @param children
+     * @return
+     */
+    public static String buildPrettyJsonWithoutQuotes(List<FieldInfo> children) {
+        String jsonVal = prettyJson.toJson(getStringObjectMap(children));
+        return jsonVal.replaceAll("\"(\\w+)\"(\\s*:\\s*)", "$1$2");
+    }
+
+    /**
+     * 去掉字段名的双引号
+     * @param fieldInfo
+     * @return
+     */
+    public static String buildPrettyJsonWithoutQuotes(FieldInfo fieldInfo) {
+        String jsonVal = buildPrettyJson(fieldInfo);
+        return jsonVal.replaceAll("\"(\\w+)\"(\\s*:\\s*)", "$1$2");
+    }
+
     public static String buildPrettyJson(List<FieldInfo> children) {
         return prettyJson.toJson(getStringObjectMap(children));
     }
@@ -165,4 +186,5 @@ public class JsonUtil {
         //    }
         //}
     }
+
 }

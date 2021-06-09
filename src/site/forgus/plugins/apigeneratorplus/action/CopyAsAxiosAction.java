@@ -9,9 +9,8 @@ import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
 
 /**
- * reference:
- * 使用 Fetch: https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch
- * WorkerOrGlobalScope.fetch(): https://developer.mozilla.org/zh-CN/docs/Web/API/WindowOrWorkerGlobalScope/fetch
+ * axios中文文档|axios中文网
+ * http://www.axios-js.com/zh-cn/docs/
  */
 public class CopyAsAxiosAction extends AnAction {
 
