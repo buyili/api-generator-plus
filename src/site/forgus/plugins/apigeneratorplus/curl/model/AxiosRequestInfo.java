@@ -1,5 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.curl.model;
 
+import com.intellij.openapi.util.text.StringUtil;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
@@ -24,6 +25,8 @@ public class AxiosRequestInfo {
     private String data;
 
     private Map<String, String> headers;
+
+    private String append;
 
     //public AxiosRequestInfo(MethodInfo methodInfo) {
     //    this.method = methodInfo.getMethodName();
@@ -50,10 +53,12 @@ public class AxiosRequestInfo {
                 raw += "data: \"" + data + "\",\n";
             }
         }
-        return raw +
-                "headers: " + rawHeaders + ",\n" +
-                "})"
-                ;
+        raw += "headers: " + rawHeaders + ",\n";
+        if(StringUtils.isNotBlank(append)){
+            raw += append + "\n";
+        }
+        raw += "})";
+        return raw;
     }
 
     public String toPrettyStringForFormData() {

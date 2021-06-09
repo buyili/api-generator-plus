@@ -133,26 +133,8 @@ public class CurlUtils {
             headers.putAll(mediaType.getHeader());
         }
         axiosRequestInfo.setHeaders(headers);
+        axiosRequestInfo.setAppend(curlSettingState.axiosAppend);
 
-
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
-        //    initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.cache)) {
-        //    initOptions.setCache(curlSettingState.fetchConfig.cache);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.redirect)) {
-        //    initOptions.setRedirect(curlSettingState.fetchConfig.redirect);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrer)) {
-        //    initOptions.setReferrer(curlSettingState.fetchConfig.referrer);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrerPolicy)) {
-        //    initOptions.setReferrerPolicy(curlSettingState.fetchConfig.referrerPolicy);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.integrity)) {
-        //    initOptions.setIntegrity(curlSettingState.fetchConfig.integrity);
-        //}
 
         String rawStr = axiosRequestInfo.toPrettyString();
         if (MediaType.MULTIPART_FORM_DATA == mediaType) {
