@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
-    <version>1.0.12</version>
+    <version>1.0.13</version>
     <vendor email="l1132989278@gmail.com">布衣</vendor>
 
     <description><![CDATA[

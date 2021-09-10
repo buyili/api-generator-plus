@@ -1061,7 +1061,7 @@ public class ApiGenerateAction extends AnAction {
 
     public List<FieldInfo> listFieldInfos(PsiClass psiClass) {
         List<FieldInfo> fieldInfos = new ArrayList<>();
-        for (PsiField psiField : psiClass.getAllFields()) {
+        for (PsiField psiField : psiClass.getFields()) {
             if (StringUtil.string2Set(config.excludeFields).contains(psiField.getName())) {
                 continue;
             }

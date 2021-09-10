@@ -333,7 +333,7 @@ public class FieldInfo {
                 if (outerClass == null) {
                     return Collections.emptyList();
                 }
-                PsiField[] allFields = outerClass.getAllFields();
+                PsiField[] allFields = outerClass.getFields();
                 for (PsiField outField : allFields) {
                     PsiType type = outField.getType();
                     if (config.getState().excludeFields.contains(outField.getName())) {
@@ -348,7 +348,7 @@ public class FieldInfo {
             if (psiClass == null) {
                 return new ArrayList<>();
             }
-            for (PsiField psiField : psiClass.getAllFields()) {
+            for (PsiField psiField : psiClass.getFields()) {
                 if (config.getState().excludeFields.contains(psiField.getName())) {
                     continue;
                 }
@@ -420,7 +420,7 @@ public class FieldInfo {
             PsiElement fieldClass = getPsiReference(ktTypeReference).resolve();
             if (fieldClass instanceof PsiClass) {
                 PsiClass psiClass = (PsiClass) fieldClass;
-                for (PsiField outField : psiClass.getAllFields()) {
+                for (PsiField outField : psiClass.getFields()) {
                     PsiType type = outField.getType();
                     if (config.getState().excludeFields.contains(outField.getName())) {
                         continue;
