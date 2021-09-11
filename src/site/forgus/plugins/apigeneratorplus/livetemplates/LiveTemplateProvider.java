@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 public class LiveTemplateProvider implements DefaultLiveTemplatesProvider {
     @Override
     public String[] getDefaultLiveTemplateFiles() {
-        return new String[]{"liveTemplates/Markdown", "liveTemplates/Java"};
+        // "liveTemplates/Markdown",
+        return new String[]{"liveTemplates/Java"};
     }
 
     @Nullable
