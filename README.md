@@ -49,6 +49,9 @@ Is Multiple Module Project|是否是多模块项目|勾选该选项后，插件�
 Is Use Default Token|是否使用默认token|Is Multiple Module Project选项被勾选后生效；勾选该选项后，插件根据包名没有找到对应的token时，使用默认token。未勾选该选项时，插件会弹出提示框
 
 ## 注释
+
+将光标定位到Java注释区域内，输入@，点击Ctrl+J就会出现提示
+
 配置项|含义|详细解释
 ---|---|---
 @res_body_is_json_schema|返回数据是否为 json-schema|可选值true,false；默认值：false
