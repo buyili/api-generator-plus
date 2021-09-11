@@ -1,0 +1,29 @@
+<templateSet group="Api Generator Plus">
+  <template name="res_body_is_json_schema"
+            value="res_body_is_json_schema false$END$"
+            description="返回数据是否为 json-schema，可选值true,false；默认值：false"
+            toReformat="true"
+            toShortenFQNames="false">
+    <context>
+      <option name="JAVA_COMMENT" value="true" />
+    </context>
+  </template>
+  <template name="res_body_type"
+            value="res_body_type json$END$"
+            description="返回数据类型，json或raw，默认json"
+            toReformat="true"
+            toShortenFQNames="false">
+    <context>
+      <option name="JAVA_COMMENT" value="true" />
+    </context>
+  </template>
+  <template name="res_body"
+            value="res_body $END$"
+            description="自定义返回数据，覆盖插件自动生成的返回数据"
+            toReformat="false"
+            toShortenFQNames="false">
+    <context>
+      <option name="JAVA_COMMENT" value="true"/>
+    </context>
+  </template>
+</templateSet>

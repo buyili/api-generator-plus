@@ -381,6 +381,10 @@
                             />
 <!--        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"-->
 <!--                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>-->
+
+        <defaultLiveTemplatesProvider implementation="site.forgus.plugins.apigeneratorplus.livetemplates.LiveTemplateProvider"/>
+        <liveTemplateContext implementation="site.forgus.plugins.apigeneratorplus.livetemplates.MarkdownContext"/>
+        <liveTemplateMacro implementation="site.forgus.plugins.apigeneratorplus.livetemplates.TitleCaseMacro"/>
     </extensions>
 
     <actions>

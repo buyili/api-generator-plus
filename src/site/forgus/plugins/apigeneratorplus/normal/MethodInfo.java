@@ -157,7 +157,14 @@ public class MethodInfo implements Serializable {
         for (PsiDocTag tag : tags) {
             if ("res_body".equals(tag.getName())) {
 //                StringUtil.testTag(tag);
-                yApiInterface.setRes_body(tag.getText().replace("@res_body", "").replaceAll("\n *\\*", "\n"));
+                String text = tag.getText();
+                String res_body = text.replace("@res_body", "")
+                        .replaceAll("\n *\\*", "\n");
+                //res_body = res_body.trim();
+                if(res_body.endsWith("\n")){
+                    res_body = res_body.substring(0, res_body.length() -1);
+                }
+                yApiInterface.setRes_body(res_body);
             }
             if ("res_body_type".equals(tag.getName())) {
 //                StringUtil.testTag(tag);
@@ -174,7 +181,9 @@ public class MethodInfo implements Serializable {
                 Boolean aBoolean = null;
                 if (valueElement != null) {
                     try {
-                        aBoolean = Boolean.parseBoolean(valueElement.getText());
+                        if (!"ignore".equals(valueElement.getText().trim())) {
+                            aBoolean = Boolean.parseBoolean(valueElement.getText());
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -475,7 +484,7 @@ public class MethodInfo implements Serializable {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "";
     }
 

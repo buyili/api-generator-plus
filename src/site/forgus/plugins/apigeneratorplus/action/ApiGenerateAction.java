@@ -491,11 +491,19 @@ public class ApiGenerateAction extends AnAction {
         } else {
             YApiInterface docInterface = methodInfo.getYApiInterface();
             if (docInterface != null) {
-                if (StringUtils.isNotBlank(docInterface.getRes_body())) {
-                    yApiInterface.setRes_body(docInterface.getRes_body());
+                if (null != docInterface.getRes_body()) {
+                    if ("ignore".equals(docInterface.getRes_body().trim())) {
+                        yApiInterface.setRes_body(null);
+                    } else {
+                        yApiInterface.setRes_body(docInterface.getRes_body());
+                    }
                 }
                 if (StringUtils.isNotBlank(docInterface.getRes_body_type())) {
-                    yApiInterface.setRes_body_type(docInterface.getRes_body_type());
+                    if ("ignore".equals(docInterface.getRes_body_type().trim())) {
+                        yApiInterface.setRes_body_type(null);
+                    } else {
+                        yApiInterface.setRes_body_type(docInterface.getRes_body_type());
+                    }
                 }
                 if (null != docInterface.getRes_body_is_json_schema()) {
                     yApiInterface.setRes_body_is_json_schema(docInterface.getRes_body_is_json_schema());
