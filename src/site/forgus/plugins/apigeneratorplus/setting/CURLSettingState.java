@@ -46,6 +46,8 @@ public class CURLSettingState implements PersistentStateComponent<CURLSettingSta
 
     public FetchConfig fetchConfig = new FetchConfig();
 
+    public String axiosAppend = "";
+
     public static CURLSettingState getInstance(Project project){
         return ServiceManager.getService(project, CURLSettingState.class);
     }

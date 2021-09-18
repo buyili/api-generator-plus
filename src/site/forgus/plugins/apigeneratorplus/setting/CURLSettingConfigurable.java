@@ -44,6 +44,8 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextField referrerPolicyTextField;
     JBTextField integrityTextField;
 
+    CopyAsAxiosUI copyAsAxiosUI;
+
     public CURLSettingConfigurable(Project project) {
         this.project = project;
         oldState = ServiceManager.getService(project, CURLSettingState.class);
@@ -178,6 +180,10 @@ public class CURLSettingConfigurable implements Configurable {
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
         jbTabbedPane.add("Copy as fetch", fetchPanel);
+
+        copyAsAxiosUI = new CopyAsAxiosUI(project, oldState);
+        jbTabbedPane.add("Copy as Axios", copyAsAxiosUI.createComponent());
+
         return jbTabbedPane;
     }
 
@@ -202,6 +208,10 @@ public class CURLSettingConfigurable implements Configurable {
             return true;
         }
 
+        if(copyAsAxiosUI.isModified()){
+            return true;
+        }
+
         return curlModuleInfoUI.isModified(oldState.moduleInfoList);
     }
 
@@ -223,6 +233,7 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.fetchConfig.integrity = integrityTextField.getText();
 
         curlModuleInfoUI.apply(oldState.moduleInfoList);
+        copyAsAxiosUI.apply();
     }
 
     @Override
@@ -242,10 +253,12 @@ public class CURLSettingConfigurable implements Configurable {
         integrityTextField.setText(oldState.fetchConfig.integrity);
 
         curlModuleInfoUI.reset(oldState.moduleInfoList);
+        copyAsAxiosUI.reset();
     }
 
     @Override
     public void disposeUIResources() {
         jbTabbedPane = null;
+        copyAsAxiosUI = null;
     }
 }

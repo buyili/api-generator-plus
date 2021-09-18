@@ -133,26 +133,8 @@ public class CurlUtils {
             headers.putAll(mediaType.getHeader());
         }
         axiosRequestInfo.setHeaders(headers);
+        axiosRequestInfo.setAppend(curlSettingState.axiosAppend);
 
-
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.credentials)) {
-        //    initOptions.setCredentials(curlSettingState.fetchConfig.credentials);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.cache)) {
-        //    initOptions.setCache(curlSettingState.fetchConfig.cache);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.redirect)) {
-        //    initOptions.setRedirect(curlSettingState.fetchConfig.redirect);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrer)) {
-        //    initOptions.setReferrer(curlSettingState.fetchConfig.referrer);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.referrerPolicy)) {
-        //    initOptions.setReferrerPolicy(curlSettingState.fetchConfig.referrerPolicy);
-        //}
-        //if (StringUtils.isNotEmpty(curlSettingState.fetchConfig.integrity)) {
-        //    initOptions.setIntegrity(curlSettingState.fetchConfig.integrity);
-        //}
 
         String rawStr = axiosRequestInfo.toPrettyString();
         if (MediaType.MULTIPART_FORM_DATA == mediaType) {
@@ -795,7 +777,7 @@ public class CurlUtils {
         if (mediaType == MediaType.APPLICATION_JSON || mediaType == MediaType.APPLICATION_JSON_UTF8) {
             for (FieldInfo requestField : requestFields) {
                 if (requestField.containRequestBodyAnnotation()) {
-                    return JsonUtil.buildPrettyJson(requestField);
+                    return JsonUtil.buildPrettyJsonWithoutQuotes(requestField);
                 }
             }
         } else {
@@ -864,7 +846,7 @@ public class CurlUtils {
 
     /**
      * for Axios
-     *
+     * 简单对象的查询参数
      * @param methodInfo
      * @return
      */
@@ -875,9 +857,14 @@ public class CurlUtils {
                 queryParamFields.add(requestField);
             }
         }
-        return JsonUtil.buildPrettyJson(queryParamFields);
+        return JsonUtil.buildPrettyJsonWithoutQuotes(queryParamFields);
     }
 
+    /**
+     * 根据字段信息获取默认值，并生成URl Params格式
+     * @param fieldInfoList
+     * @return
+     */
     private List<String> generateKeyValue(List<FieldInfo> fieldInfoList) {
         if (CollectionUtils.isEmpty(fieldInfoList)) {
             return Collections.emptyList();

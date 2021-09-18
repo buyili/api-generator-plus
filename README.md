@@ -7,7 +7,7 @@
 
 ## 简介
 《Generate Api Plus》是一款可以自动生成接口文档的IDEA插件。包括基于Spring注解的RESTful接口和用于定义dubbo api的普通接口。其中，RESTful接口将自动上传并托管在内网部署的YApi服务器上，而普通接口则以markdown文件的形式保存在指定目录。
-所以，如果你想利用该插件的能力帮你生成REST接口文档，请先确保你已部署好自己的YApi服务端。   
+所以，如果你想利用该插件的能力帮你生成REST接口文档，请先确保你已部署好自己的YApi服务端。
 传送门：[如何部署YApi平台](https://hellosean1025.github.io/yapi/devops/index.html)
 
 ## 特性
@@ -23,14 +23,14 @@ Preferences → Plugins → Marketplace → 搜索“Generate Api Plus” → �
 
 ### 开始使用
 #### 上传REST接口
-选择一个Controller类，将光标定位到方法区（方法名或者方法注释）或Controller类上，点击鼠标右键，在弹出的菜单项里选择“Generate Api Plus”单击，文档瞬间已经自动生成并托管到YApi平台！   
+选择一个Controller类，将光标定位到方法区（方法名或者方法注释）或Controller类上，点击鼠标右键，在弹出的菜单项里选择“Generate Api Plus”单击，文档瞬间已经自动生成并托管到YApi平台！
 （PS：首次使用会弹框提示输入YApi部署的url和项目token，填写一次自动保存）
 
 #### 生成dubbo接口文档
 操作方式同上，插件会自动识别出这是一个普通接口，插件会将文档以markdown的形式输出，默认保存在当前项目的target目录下。（保存路径可更改，见下文介绍）
 
 ## 插件设置
-自定义配置项： Preferences —> Other Settings —> Generate Api Plus Setting  
+自定义配置项： Preferences —> Other Settings —> Generate Api Plus Setting
 
 配置项|含义|详细解释
 ---|---|---
@@ -49,11 +49,16 @@ Is Multiple Module Project|是否是多模块项目|勾选该选项后，插件�
 Is Use Default Token|是否使用默认token|Is Multiple Module Project选项被勾选后生效；勾选该选项后，插件根据包名没有找到对应的token时，使用默认token。未勾选该选项时，插件会弹出提示框
 
 ## 注释
+
+将光标定位到Java注释区域内，输入@，点击Ctrl+J就会出现提示
+
 配置项|含义|详细解释
 ---|---|---
 @res_body_is_json_schema|返回数据是否为 json-schema|可选值true,false；默认值：false
 @res_body_type|返回数据类型|枚举: json,raw 默认：json
 @res_body|返回数据|覆盖插件自动生成的返回数据
+
+值为ignore时，代表上传接口信息至YApi时忽略该字段。
 
 ### @res_body
 
@@ -133,7 +138,7 @@ public class TestController {
 
 ### Canonical Class Name
 类的引用,用于指定某个类中的字段在生成curl时是包含还是不包含
-包名+类名 (选中类名，右键点击Copy Reference) 示例：java.lang.String； 
+包名+类名 (选中类名，右键点击Copy Reference) 示例：java.lang.String；
 有泛型的类不写泛型类型，如List<T> java.util.List<
 有多个类时用;分隔
 

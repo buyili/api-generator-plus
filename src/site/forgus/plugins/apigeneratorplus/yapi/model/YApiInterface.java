@@ -25,7 +25,7 @@ public class YApiInterface implements Serializable {
     private String status = YApiInterfaceStatusEnum.UNDONE.getValue();
     private String res_body_type = ResponseBodyTypeEnum.JSON.getValue();
     private Boolean res_body_is_json_schema = false;
-    private String res_body = "";
+    private String res_body;
     private Boolean switch_notice = false;
     private String message;
     private String desc;
