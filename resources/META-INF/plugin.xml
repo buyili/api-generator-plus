@@ -142,6 +142,15 @@
             </ul>
           </li>
         </ul>
+        <h3>New features</h3>
+        <ul>
+          <li>
+            api generator plus
+            <ul>
+              <li>🎉 将注解标签 @res_body,@res_body_type,@res_body_is_json_schema 增加至 Live Templates </li>
+            </ul>
+          </li>
+        </ul>
         <h2>v1.0.12</h2>
         <h3>Bug fixes</h3>
         <ul>

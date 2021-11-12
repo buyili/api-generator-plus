@@ -1,5 +1,12 @@
+##v1.0.13
+v1.0.13_IC171.469473
 
-
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修修复读取字段时死循环
+### New features
+- api generator plus
+    - 🎉 将注解标签 @res_body,@res_body_type,@res_body_is_json_schema 增加至 Live Templates
 
 ##v1.0.12
 v1.0.12_IC171.469473
