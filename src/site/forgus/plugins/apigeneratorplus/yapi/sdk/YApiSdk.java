@@ -50,7 +50,7 @@ public class YApiSdk {
         YApiResponse<YApiProject> yApiResponse = gson.fromJson(responseStr, type);
         System.out.println(responseStr);
         if (yApiResponse == null || yApiResponse.getErrcode() != 0) {
-            String message = MessageFormat.format("请求YApi项目信息失败！！！ Server Url: [{0}]    Token: [{1}]",
+            String message = MessageFormat.format("获取YApi项目信息失败！！！请检查 Url 或 Token 是否配置正确。 Server Url: [{0}]    Token: [{1}]",
                     serverUrl, token);
             throw new BizException(message);
         }

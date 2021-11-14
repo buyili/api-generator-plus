@@ -7,6 +7,7 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
+import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ public class ApiGeneratorConfig implements PersistentStateComponent<ApiGenerator
 
     public String yApiServerUrl = "";
     public String projectToken = "";
+    public YApiProject yApiProject;
     public String projectId = "";
     public Boolean autoCat = false;
     public Boolean apiDone = true;
