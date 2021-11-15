@@ -17,10 +17,14 @@
 
 3. 上传接口  
 打开 Spring MVC 或 Spring Boot 项目，打开 任意一个 controller 类，鼠标移动到方法上单击右键，选择 Generate Api Plus，插件就会自动生成接口信息并上传至YApi，
+
 ![](./images/2021-11-15-12-54-52.png)
 成功后，右下角会提示 Upload api success.   
+
 ![](./images/2021-11-15-12-50-18.png)  
+
 打开 YApi 中的项目，可以看到接口已上传成功
+
 ![](./images/2021-11-15-12-55-41.png)  
 
 

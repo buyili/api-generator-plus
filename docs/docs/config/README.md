@@ -1,5 +1,5 @@
 ---
-sidebarDepth: 2
+sidebarDepth: 3
 ---
 # 配置
 ## YApi 项目设置
@@ -112,7 +112,7 @@ YApi 接口返回数据：
 
 2. 更新接口，返回数据不会被修改
 
-```
+```java {6-7}
 @RestController
 @RequestMapping("/guide")
 public class GuideController {
