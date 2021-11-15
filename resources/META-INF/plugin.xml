@@ -444,6 +444,11 @@
 <!--               class="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup" text="Api Generator Plus" popup="true">-->
 <!--            <add-to-group group-id="ToolsMenu" anchor="last"/>-->
 <!--        </group>-->
+        <action id="com.example.action.TestNotificationAction"
+                class="site.forgus.plugins.apigeneratorplus.action.TestNotificationAction"
+                text="Test Notification Action" description="Test notification action description">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
     </actions>
 
     <depends>com.intellij.modules.java</depends>
