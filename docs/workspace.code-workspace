@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"pasteImage.showFilePathConfirmInputBox": true,
+		"pasteImage.insertPattern": "${imageSyntaxPrefix}./${imageFilePath}${imageSyntaxSuffix}"
+	}
+}
