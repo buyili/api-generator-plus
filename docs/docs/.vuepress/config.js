@@ -1,6 +1,7 @@
 module.exports = {
     title: 'Api Generator Plus',
     description: '',
+    base: '/api-generator-plus/',
     themeConfig: {
         logo: '/assets/img/logo.png',
         nav: [
@@ -25,25 +26,25 @@ module.exports = {
                     sidebarDepth: 1,    // 可选的, 默认值是 1
                     children: [
                         '', /* /guide/ */
-                        'api-generator-plus',
+                        // 'api-generator-plus',
                     ]
                 },
                 // '', /* /guide/ */
                 // 'api-generator-plus',
             ],
-            '/config/':[
-                // {
-                //     title: '配置',
-                //     // path: '/foo/',      // 可选的, 标题的跳转链接，应为绝对路径且必须存在
-                //     collapsable: false, // 可选的, 默认值是 true,
-                //     // sidebarDepth: 1,    // 可选的, 默认值是 1
-                //     children: [
-                //         '',
-                //     ]
-                // },
-                '', /* /config/ */
-                // 'api-generator-plus',
-            ],
+            // '/config/':[
+            //     // {
+            //     //     title: '配置',
+            //     //     // path: '/foo/',      // 可选的, 标题的跳转链接，应为绝对路径且必须存在
+            //     //     collapsable: false, // 可选的, 默认值是 true,
+            //     //     // sidebarDepth: 1,    // 可选的, 默认值是 1
+            //     //     children: [
+            //     //         '',
+            //     //     ]
+            //     // },
+            //     '', /* /config/ */
+            //     // 'api-generator-plus',
+            // ],
         },
         // 假定是 GitHub. 同时也可以是一个完整的 GitLab URL
         repo: 'buyili/api-generator-plus',

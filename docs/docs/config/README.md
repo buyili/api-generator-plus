@@ -1,4 +1,5 @@
 ---
+sidebar: auto
 sidebarDepth: 3
 ---
 # 配置
@@ -271,6 +272,8 @@ markdown文档保存目录（绝对路径）；用于配置生成的markdown形�
 
 
 ## Copy as cURL
+File -> Settings... -> Tools -> Copy as cURl -> Copy as cURl  
+
 Chrome 浏览器 DevTool 中有一个很好用的功能叫 `copy as cURL`，这里实现的功能和 Chrome 是一样的。生成的 curl 命令可导入到 Postman 中
 
 ![](./images/2021-11-15-18-07-45.png)
@@ -296,7 +299,7 @@ curl 'http://localhost:8080/config/' \
   --compressed
 ```
 
-### Base Api
+### Base Api 
 配置 curl 请求基本路径，默认为 http://本地ip:端口
 
 不填为默认配置，插件生成的 curl 命令
@@ -310,6 +313,38 @@ curl 'http://172.16.3.8:8882/admin/guide/guide1?name=@string&id=0' -X GET
 ```
 curl 'http://h5.buyi.cn/admin/guide/guide1?name=@string&id=0' -X GET 
 ```
+
+
+
+### Canonical Class Name
+类的引用信息,用于指定需要过滤的类。多个类引用使用 `;` 分隔。有泛型的类不写泛型类型，如：`List<T>` 只输入 `java.util.List<`  就可以了
+
+::: tip
+如何获取类的引用？ IDEA 选中类名，右键点击 Copy Reference，复制出的信息就是。 示例：`java.lang.String`
+:::
+
+
+### Include Fields
+不需要过滤的的字段，  
+同一个类中的多个字段使用 `,` 分隔，示例：`size,current` ；  
+不同类字段使用 `;` 分隔，示例：`size,current;name,age` 。  
+
+与 `Canonical Class Name` 的对应关系是行对行，如 `Canonical Class Name` 第一行为 `java.util.List`，`Include Fields` 第一行为 `name,id`；表示只解析 `java.util.List` 类中的 `name` 和 `id` 字段，其他字段忽略掉。
+
+::: tip
+`Include Fields` 优先级高于 `Exclude Fields`
+:::
+
+
+### Exclude Fields
+
+不需要过滤的的字段，  
+同一个类中的多个字段使用 `,` 分隔，示例：`size,current` ；  
+不同类字段使用 `;` 分隔，示例：`size,current;name,age` 。 
+
+与 `Canonical Class Name` 的对应关系是行对行，如 `Canonical Class Name` 第一行为 `java.util.List`，`Include Fields` 第一行为 `name,id`；表示只解析 `java.util.List` 类中的 `name` 和 `id` 字段，其他字段忽略掉。
+
+
 
 ### Array Format
 
@@ -327,5 +362,60 @@ qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'comma' })
 // 'a=b,c
 ```
 
+### Exclude Children Field
+* 默认值 `true`
 
+是否排除 `Canonical Class Name` 中声明的类过滤后字段的子字段。
+
+示例：
+```java
+public class A {
+    private String aName;
+    private B b;
+}
+
+public class B {
+    private String bName;
+}
+```
+```
+# Canonical Class Name 
+com.example.A;
+
+# Include Fields
+aName,b;
+
+# 默认选中 Exclude Children Field ，此时插件解析时会忽略类 B 中的字段 bName
+# 取消选中 Exclude Children Field ，此时插件解析时“不会”忽略类 B 中的字段 bName
+```
+
+## Module info
+在多模块项目中为模块单独配置，点击 [Find Module Info]() 可以自动扫描项目包含模块信息
+
+### Module name
+模块名称，不建议修改。
+
+### Port
+模块端口，自定义 [Base Api](#base-api) 未配置时的端口
+
+### Context Path
+模块基本路径，默认为 `application.properties` 文件中配置：
+
+```properties
+server.servlet.context-path=/admin
+```
+
+### Headers
+自定义请求 header
+
+示例：
+![](./images/2021-11-16-11-10-49.png)
+
+@RequestMapping 方法上 单击右键 -> Copy as -> Copy as cURL(Bash)，结果如下：
+
+![](./images/2021-11-16-11-12-26.png)
+
+```curl
+curl 'http://172.16.3.8:8882/admin/guide/guide1?name=@string&id=0' -X GET  -H 'Authorization: 222222222222222222'
+```
 

@@ -2,6 +2,8 @@
 
 以下教程使用 IDEA 2019.3.4 版本演示
 
+## 将接口上传至 YApi
+
 1. 安装插件并重启 IDEA  
 打开 IDEA 中的插件管理，左上角 File -> Settings... -> Plugins -> Marketplace。输入 Api Generator Plus，找到插件点击  install，安装成功后点击 Restart IDE
 
@@ -28,4 +30,12 @@
 ![](./images/2021-11-15-12-55-41.png)  
 
 
+## 使用 Copy as cURL 将接口复制成 curl 格式
 
+鼠标置于方法上，鼠标右键 -> Copy as -> Copy as cURL(Bash)
+
+![](./images/2021-11-16-11-47-26.png)
+
+成功后，右下角会提示。并自动复制到剪切板，可在 Postman 中粘贴导入
+
+![](./images/2021-11-16-11-48-57.png)
