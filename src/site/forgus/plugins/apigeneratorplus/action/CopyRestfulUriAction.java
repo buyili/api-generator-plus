@@ -21,10 +21,10 @@ public class CopyRestfulUriAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
+        Project project = actionEvent.getProject();
         try {
 //        Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
 //        PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-            Project project = actionEvent.getProject();
             GlobalVariable.setProject(project);
 //        PsiElement referenceAt = psiFile.findElementAt(editor.getCaretModel().getOffset());
 //        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
@@ -37,7 +37,7 @@ public class CopyRestfulUriAction extends AnAction {
         } catch (BizException e) {
             e.printStackTrace();
             if (StringUtils.isNotBlank(e.getMessage())) {
-                NotificationUtil.errorNotify(e.getMessage());
+                NotificationUtil.errorNotify(e.getMessage(), project);
             }
         }
 //        Project project = actionEvent.getProject();
