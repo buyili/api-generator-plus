@@ -13,6 +13,9 @@ public class YApiProjectConfigInfo implements Cloneable, Serializable {
 
     private String id = String.valueOf(System.currentTimeMillis());
 
+    /**
+     * 模块配置名称
+     */
     private String name = "";
 
     private String moduleName = "";

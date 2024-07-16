@@ -1319,23 +1319,40 @@ public class ApiGenerateAction extends AnAction {
             selectedConfig = getProjectInfoFromStorage(packageName);
             // 选择包名对应的YApi项目
             if (selectedConfig != null) {
-//                System.out.println(selectedConfig.getBasePath());
                 if (AssertUtils.isEmpty(selectedConfig.getToken())) {
                     if (!config.isUseDefaultToken) {
-                        String message = MessageFormat.format("匹配到的{0}没有配置YApi token;是否使用默认YApi token?" +
+                        String message = MessageFormat.format(
+                                "根据{0}【{1}】匹配到的模块配置项【{2}】没有配置YApi token;是否使用默认YApi token?" +
                                         "\n如果不想每次都提醒，可以在设置里·勾选· Is Use Default Token"
-                                , config.matchWithModuleName ? "模块名" : "包名");
+                                , config.matchWithModuleName ? "模块名" : "包名"
+                                , config.matchWithModuleName ? selectedConfig.getModuleName() : selectedConfig.getPackageName()
+                                , selectedConfig.getName()
+                        );
                         int resultIdx = Messages.showOkCancelDialog(message,
                                 "提示", "Ok", "Cancel", Messages.getQuestionIcon());
                         if (Messages.CANCEL == resultIdx) {
-                            throw new BizException("cancel generator api");
+                            throw new BizException("Cancel upload YApi api!");
                         }
                     }
                     selectedConfig.setToken(config.projectToken);
                     selectedConfig.setProjectId(config.projectId);
+                } else {
+                    /**
+                     * 修复v1.0.13及之前版本Bug: 配置模块token获取到YApi项目信息后未将projectId存入字段:{@link site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo#projectId}
+                     */
+                    if (AssertUtils.isEmpty(selectedConfig.getProjectId())) {
+                        YApiProject project = selectedConfig.getProject();
+                        if (!(null != project && null != project.get_id())) {
+                            throw new BizException(
+                                    MessageFormat.format("未查询到模块token对应项目ID，请重新配置token。\n当前模块配置名称：【{0}】token:【{1}】", selectedConfig.getName(), selectedConfig.getToken())
+                            );
+                        }
+                        selectedConfig.setProjectId(String.valueOf(project.get_id()));
+                    }
                 }
-                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken())
-                        && AssertUtils.isNotEmpty(selectedConfig.getProjectId()), "默认 token 为空");
+                Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken()) && AssertUtils.isNotEmpty(selectedConfig.getProjectId()),
+                        "token或token对应项目id为空，请尝试重新配置token。若重新配置后还是无法解决，请向作者反馈问题！ https://github.com/buyili/api-generator-plus/issues"
+                );
                 if (AssertUtils.isEmpty(selectedConfig.getBasePath())) {
                     selectedConfig.setBasePath("");
                 }

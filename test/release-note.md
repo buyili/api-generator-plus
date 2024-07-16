@@ -1,3 +1,12 @@
+##v1.0.14
+
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修复配置模块token成功后上传接口接口失败并提示: "默认 token 为空"
+### New features
+- api generator plus
+    - 🎉 将注解标签 @res_body,@res_body_type,@res_body_is_json_schema 增加至 Live Templates
+
 ##v1.0.13
 v1.0.13_IC171.469473
 

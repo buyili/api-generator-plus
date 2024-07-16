@@ -110,34 +110,34 @@ public class ChooseYApiProjectDialog extends JDialog {
         return dialog.exitCode;
     }
 
-    public static void main(String[] args) {
-        YApiProjectConfigInfo info = new YApiProjectConfigInfo();
-        info.setPackageName("packageName");
-        info.setToken("token");
-        info.setProjectId("projectId");
-        info.setBasePath("basePath");
-        YApiProject project = new YApiProject();
-        project.setName("project name");
-        info.setProject(project);
-        YApiProjectConfigInfo info1 = new YApiProjectConfigInfo();
-        info1.setPackageName("packageName");
-        info1.setToken("token");
-        info1.setProjectId("projectId");
-        info1.setBasePath("basePath");
-        YApiProject project1 = new YApiProject();
-        project.setName("project name");
-        info1.setProject(project1);
-
-        ChooseYApiProjectDialog dialog = new ChooseYApiProjectDialog(Arrays.asList(info, info1));
-        dialog.setLocationByPlatform(true);
-        dialog.pack();
-        dialog.setVisible(true);
-        System.exit(0);
-    }
-
     private void createUIComponents() {
         // TODO: place custom component creation code here
         comboBoxProject = new ComboBox<>(list.toArray(new YApiProjectConfigInfo[0]));
         yApiProjectListPanel = new YApiProjectListPanel();
     }
+
+    //public static void main(String[] args) {
+    //    YApiProjectConfigInfo info = new YApiProjectConfigInfo();
+    //    info.setPackageName("packageName");
+    //    info.setToken("token");
+    //    info.setProjectId("projectId");
+    //    info.setBasePath("basePath");
+    //    YApiProject project = new YApiProject();
+    //    project.setName("project name");
+    //    info.setProject(project);
+    //    YApiProjectConfigInfo info1 = new YApiProjectConfigInfo();
+    //    info1.setPackageName("packageName");
+    //    info1.setToken("token");
+    //    info1.setProjectId("projectId");
+    //    info1.setBasePath("basePath");
+    //    YApiProject project1 = new YApiProject();
+    //    project.setName("project name");
+    //    info1.setProject(project1);
+    //
+    //    ChooseYApiProjectDialog dialog = new ChooseYApiProjectDialog(Arrays.asList(info, info1));
+    //    dialog.setLocationByPlatform(true);
+    //    dialog.pack();
+    //    dialog.setVisible(true);
+    //    System.exit(0);
+    //}
 }

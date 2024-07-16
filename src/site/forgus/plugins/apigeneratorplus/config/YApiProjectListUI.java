@@ -193,6 +193,8 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
                     try {
                         YApiProject projectInfo = YApiSdk.getProjectInfo(oldState.yApiServerUrl, yApiProjectConfigInfo.getToken());
                         yApiProjectConfigInfo.setProject(projectInfo);
+                        yApiProjectConfigInfo.setProjectId(String.valueOf(projectInfo.get_id()));
+                        yApiProjectConfigInfo.setBasePath(projectInfo.getBasepath());
                     } catch (Exception e) {
                         e.printStackTrace();
 //                    itemPanel.setItem(yApiProjectConfigInfo);
