@@ -1348,6 +1348,14 @@ public class ApiGenerateAction extends AnAction {
                             );
                         }
                         selectedConfig.setProjectId(String.valueOf(project.get_id()));
+                        selectedConfig.setBasePath(project.getBasepath());
+                        // 将修复后的配置持久化保存到xml文件中
+                        for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
+                            if(yApiProjectConfigInfo.getId().equals(selectedConfig.getId())){
+                                yApiProjectConfigInfo.setProjectId(selectedConfig.getProjectId());
+                                yApiProjectConfigInfo.setBasePath(selectedConfig.getBasePath());
+                            }
+                        }
                     }
                 }
                 Assert.isTrue(AssertUtils.isNotEmpty(selectedConfig.getToken()) && AssertUtils.isNotEmpty(selectedConfig.getProjectId()),
@@ -1385,6 +1393,7 @@ public class ApiGenerateAction extends AnAction {
                 for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
                     String dbModuleName = yApiProjectConfigInfo.getModuleName();
                     if (moduleName.equals(dbModuleName)) {
+                        // 返回配置的克隆对象，免得修改返回对象属性后更改了源配置
                         return yApiProjectConfigInfo.clone();
                     }
                 }
@@ -1392,9 +1401,10 @@ public class ApiGenerateAction extends AnAction {
                 // 模块名没有匹配时，弹出选择框手动选择上传项目
                 int exitCode = ChooseYApiProjectDialog.showDialog(config.yApiProjectConfigInfoList);
                 if (exitCode == -1) {
-                    throw new BizException("cancel generator api");
+                    throw new BizException("Cancel upload YApi api!");
                 }
-                return config.yApiProjectConfigInfoList.get(exitCode);
+                // 返回配置的克隆对象，免得修改返回对象属性后更改了源配置
+                return config.yApiProjectConfigInfoList.get(exitCode).clone();
             } else {
                 for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
                     String tempPackageName = yApiProjectConfigInfo.getPackageName();
