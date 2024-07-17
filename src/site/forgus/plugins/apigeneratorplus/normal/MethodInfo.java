@@ -2,6 +2,11 @@ package site.forgus.plugins.apigeneratorplus.normal;
 
 import com.intellij.lang.Language;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiFieldImpl;
+import com.intellij.psi.impl.source.tree.java.PsiBinaryExpressionImpl;
+import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
+import com.intellij.psi.impl.source.tree.java.PsiPolyadicExpressionImpl;
+import com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocTagValue;
@@ -13,6 +18,8 @@ import org.jetbrains.kotlin.kdoc.psi.api.KDoc;
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag;
 import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.constant.WebAnnotation;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
+import site.forgus.plugins.apigeneratorplus.exception.ReportException;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.util.DesUtil;
 import site.forgus.plugins.apigeneratorplus.util.FieldUtil;
@@ -22,6 +29,7 @@ import site.forgus.plugins.apigeneratorplus.yapi.model.YApiInterface;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 public class MethodInfo implements Serializable {
@@ -402,14 +410,48 @@ public class MethodInfo implements Serializable {
         }
         PsiNameValuePair[] psiNameValuePairs = annotation.getParameterList().getAttributes();
         if (psiNameValuePairs.length == 1 && psiNameValuePairs[0].getName() == null) {
-            return appendSlash(psiNameValuePairs[0].getLiteralValue());
+            PsiNameValuePair psiNameValuePair = psiNameValuePairs[0];
+            return getPsiNameValuePairValue(psiNameValuePair);
         }
         if (psiNameValuePairs.length >= 1) {
             for (PsiNameValuePair psiNameValuePair : psiNameValuePairs) {
-                if (psiNameValuePair.getName().equals("value") || psiNameValuePair.getName().equals("path")) {
-                    return appendSlash(psiNameValuePair.getLiteralValue());
+                if ("value".equals(psiNameValuePair.getName()) || "path".equals(psiNameValuePair.getName())) {
+                    return getPsiNameValuePairValue(psiNameValuePair);
                 }
             }
+        }
+        return "";
+    }
+
+    private String getPsiNameValuePairValue(PsiNameValuePair psiNameValuePair){
+        PsiAnnotationMemberValue value = psiNameValuePair.getValue();
+        if(value instanceof PsiExpression){
+            String stringValue = getPsiExpressionValue((PsiExpression) value);
+            return appendSlash(stringValue);
+        }
+        return appendSlash(psiNameValuePair.getLiteralValue());
+    }
+
+    private String getPsiExpressionValue(PsiExpression psiExpression){
+        if(psiExpression instanceof PsiPolyadicExpressionImpl) {
+            PsiExpression[] operands = ((PsiPolyadicExpressionImpl) psiExpression).getOperands();
+            return Arrays.stream(operands).map(this::getPsiExpressionValue).collect(Collectors.joining());
+        }
+        if(psiExpression instanceof PsiReferenceExpressionImpl){
+            PsiElement psiElement = ((PsiReferenceExpressionImpl) psiExpression).resolve();
+            if(psiElement instanceof PsiFieldImpl){
+                PsiExpression tmpPsiExpression = ((PsiFieldImpl) psiElement).getInitializer();
+                return getPsiExpressionValue(tmpPsiExpression);
+            }
+            assert psiElement != null;
+            throw new ReportException("未知类型: " + psiElement.getClass().getName() + "请向作者反馈问题！");
+        }
+        if(psiExpression instanceof PsiBinaryExpressionImpl){
+            PsiExpression[] operands = ((PsiBinaryExpressionImpl) psiExpression).getOperands();
+            return Arrays.stream(operands).map(this::getPsiExpressionValue).collect(Collectors.joining());
+        }
+        if(psiExpression instanceof PsiLiteralExpressionImpl){
+            return String.valueOf(((PsiLiteralExpressionImpl) psiExpression).getValue());
         }
         return "";
     }

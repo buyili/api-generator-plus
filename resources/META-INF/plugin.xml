@@ -2,7 +2,7 @@
     <id>site.forgus.plugins.api-generator-plus</id>
     <name>Api Generator Plus</name>
     <version>1.0.14</version>
-    <vendor email="l1132989278@gmail.com">布衣</vendor>
+    <vendor email="1132989278@qq.com">布衣</vendor>
 
     <description><![CDATA[
         <h3>Api development tool, YApi api automatic generation; support Copy as cURL,</h3><br><br>
@@ -139,6 +139,7 @@
             api generator plus
             <ul>
               <li>🎉 修复配置模块token成功后上传接口接口失败并提示“默认 token 为空”</a></li>
+              <li>🎉 修复@RequestMapping等注释中path属性包含静态常量时路径解析为空 </a></li>
             </ul>
           </li>
         </ul>
