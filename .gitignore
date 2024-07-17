@@ -1,7 +1,6 @@
-.idea/
+#.idea/
 out/
 *.iml
 *.zip
-/.idea/
 /Test.html
 docs/docs/.vuepress/dist
