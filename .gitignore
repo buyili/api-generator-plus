@@ -4,3 +4,4 @@ out/
 *.zip
 /.idea/
 /Test.html
+docs/docs/.vuepress/dist

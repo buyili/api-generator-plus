@@ -6,10 +6,12 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
+import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 
 /**
  * reference:
@@ -20,15 +22,18 @@ public class CopyAsFetchAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent actionEvent) {
+            Project project = actionEvent.getProject();
         try {
 //            Editor editor = actionEvent.getDataContext().getData(CommonDataKeys.EDITOR);
 //            PsiFile psiFile = actionEvent.getData(CommonDataKeys.PSI_FILE);
-            Project project = actionEvent.getProject();
             GlobalVariable.setProject(project);
             CurlUtils curlUtils = new CurlUtils();
             curlUtils.copyAsFetch(actionEvent);
-        } catch (BizException exception) {
-            exception.printStackTrace();
+        } catch (BizException e) {
+            e.printStackTrace();
+            if (StringUtils.isNotBlank(e.getMessage())) {
+                NotificationUtil.errorNotify(e.getMessage(), project);
+            }
         }
     }
 

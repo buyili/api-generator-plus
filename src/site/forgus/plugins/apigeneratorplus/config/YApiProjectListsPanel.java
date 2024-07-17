@@ -3,6 +3,7 @@ package site.forgus.plugins.apigeneratorplus.config;
 import com.intellij.openapi.options.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import site.forgus.plugins.apigeneratorplus.util.AssertUtils;
+import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
 import javax.swing.*;
@@ -24,6 +25,7 @@ public class YApiProjectListsPanel {
     private JTextField tokenTextField;
     private JTextField defaultCatTextField;
     private JLabel projectIdLabel;
+    private JLabel projectNameLabel;
     private JCheckBox autoCatCheckBox;
     private JCheckBox ignoreResponseCheckBox;
     private JCheckBox apiDoneCheckBox;
@@ -63,10 +65,14 @@ public class YApiProjectListsPanel {
         if (AssertUtils.isNotEmpty(yApiUrlTextField.getText())) {
             if (StringUtils.isBlank(tokenTextField.getText())) {
                 projectIdLabel.setText("");
+                projectNameLabel.setText("");
             } else {
                 try {
-                    String projectId = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), tokenTextField.getText()).get_id().toString();
+                    YApiProject yApiProject = YApiSdk.getProjectInfo(yApiUrlTextField.getText(), tokenTextField.getText());
+                    oldState.yApiProject = yApiProject;
+                    String projectId = yApiProject.get_id().toString();
                     projectIdLabel.setText(projectId);
+                    projectNameLabel.setText(yApiProject.getName());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new ConfigurationException(e.getMessage());
@@ -100,6 +106,9 @@ public class YApiProjectListsPanel {
         yApiUrlTextField.setText(oldState.yApiServerUrl);
         tokenTextField.setText(oldState.projectToken);
         projectIdLabel.setText(oldState.projectId);
+        if(null != oldState.yApiProject){
+            projectNameLabel.setText(oldState.yApiProject.getName());
+        }
         defaultCatTextField.setText(oldState.defaultCat);
         tagTextField.setText(oldState.tag);
         autoCatCheckBox.setSelected(oldState.autoCat);

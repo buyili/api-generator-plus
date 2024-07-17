@@ -5,11 +5,12 @@ import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.project.Project;
+import site.forgus.plugins.apigeneratorplus.bundles.ApiGeneratorPlusBundle;
 import site.forgus.plugins.apigeneratorplus.icons.SdkIcons;
 
 public class NotificationUtil {
 
-    public static NotificationGroup notificationGroup = new NotificationGroup("Java2Json.NotificationGroup",
+    public static NotificationGroup notificationGroup = new NotificationGroup(ApiGeneratorPlusBundle.message("notification.group.display.id"),
             NotificationDisplayType.BALLOON, true, null, SdkIcons.Logo);
 
     public static void warnNotify(String message, Project project) {

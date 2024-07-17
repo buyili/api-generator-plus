@@ -18,7 +18,6 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.TextTransferable;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -34,12 +33,15 @@ import site.forgus.plugins.apigeneratorplus.curl.model.AxiosRequestInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.FetchRequestInfo;
 import site.forgus.plugins.apigeneratorplus.curl.model.Header;
+import site.forgus.plugins.apigeneratorplus.exception.BizException;
 import site.forgus.plugins.apigeneratorplus.http.MediaType;
 import site.forgus.plugins.apigeneratorplus.model.FilterFieldInfo;
+import site.forgus.plugins.apigeneratorplus.model.NetInterfaceWrap;
 import site.forgus.plugins.apigeneratorplus.normal.FieldInfo;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.setting.CURLSettingState;
 import site.forgus.plugins.apigeneratorplus.util.*;
+import site.forgus.plugins.apigeneratorplus.views.NetInterfaceChooseDialogWrapper;
 import site.forgus.plugins.apigeneratorplus.yapi.enums.RequestMethodEnum;
 
 import java.net.Inet4Address;
@@ -84,7 +86,7 @@ public class CurlUtils {
             methodInfo = new MethodInfo(selectedMethod);
         }
 
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        //PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
         String moduleName = getModuleName(editor, project);
@@ -92,11 +94,12 @@ public class CurlUtils {
         CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
         Assert.notNull(curlModuleInfo, "no matching module configuration");
 
-        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        //String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        String baseApi = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getBaseApi() : getBaseApi(curlModuleInfo.getPort());
 
         AxiosRequestInfo axiosRequestInfo = new AxiosRequestInfo();
 
-        String url = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+        String url = baseApi + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
         List<FieldInfo> filteredRequestFields = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
@@ -172,7 +175,7 @@ public class CurlUtils {
             methodInfo = new MethodInfo(selectedMethod);
         }
 
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        //PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
         String moduleName = getModuleName(editor, project);
@@ -180,13 +183,14 @@ public class CurlUtils {
         CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
         Assert.notNull(curlModuleInfo, "no matching module configuration");
 
-        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        //String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        String baseApi = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getBaseApi() : getBaseApi(curlModuleInfo.getPort());
 
         FetchRequestInfo fetchRequestInfo = new FetchRequestInfo();
         FetchRequestInfo.InitOptions initOptions = new FetchRequestInfo.InitOptions();
 
 
-        String input = getBaseApi(port) + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
+        String input = baseApi + pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                 MethodUtil.replacePathVariable(methodInfo));
 
         List<FieldInfo> filteredRequestFields = MethodUtil.filterChildrenFiled(methodInfo.getRequestFields(),
@@ -279,7 +283,6 @@ public class CurlUtils {
             methodInfo = new MethodInfo(selectedMethod);
         }
 
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
         String moduleName = getModuleName(editor, project);
@@ -287,14 +290,15 @@ public class CurlUtils {
         CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
         Assert.notNull(curlModuleInfo);
 
-        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        //String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        String baseApi = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getBaseApi() : getBaseApi(curlModuleInfo.getPort());
         StringBuilder stringBuilder = new StringBuilder("curl");
 
         String method = methodInfo.getRequestMethod().name();
 
         // 访问接口
         stringBuilder.append(" '")
-                .append(getBaseApi(port))
+                .append(baseApi)
                 .append(pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                         MethodUtil.replacePathVariable(methodInfo)));
         stringBuilder.append(getRequestParams(methodInfo, cUrlClientType));
@@ -350,7 +354,7 @@ public class CurlUtils {
             methodInfo = new MethodInfo(selectedMethod);
         }
 
-        PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
+        //PsiClass selectedClass = PsiTreeUtil.getContextOfType(referenceAt, PsiClass.class);
         curlSettingState = ServiceManager.getService(project, CURLSettingState.class);
 
         String moduleName = getModuleName(editor, project);
@@ -358,10 +362,11 @@ public class CurlUtils {
         CURLModuleInfo curlModuleInfo = getCurlModelInfo(moduleName);
         Assert.notNull(curlModuleInfo);
 
-        String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        //String port = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getChooseOrInputPort() : curlModuleInfo.getPort();
+        String baseApi = StringUtils.isEmpty(curlModuleInfo.getPort()) ? getBaseApi() : getBaseApi(curlModuleInfo.getPort());
 
         // 访问接口
-        String curlStr = getBaseApi(port) +
+        String curlStr = baseApi +
                 pathResolve(curlModuleInfo.getContextPath(), methodInfo.getClassPath(),
                         MethodUtil.replacePathVariable(methodInfo));
         System.out.println(curlStr);
@@ -642,9 +647,8 @@ public class CurlUtils {
                     continue;
                 }
 
-                if (!netInterface.getDisplayName().contains("Intel")
-                        && !netInterface.getDisplayName().contains("Realtek")
-                        && !netInterface.getDisplayName().contains("Ethernet")) {
+                if (netInterface.getDisplayName().contains("Virtual")
+                        || netInterface.getDisplayName().contains("Adapter")) {
                     continue;
                 }
 
@@ -690,6 +694,43 @@ public class CurlUtils {
         }
         String localIP = getRealIP();
         return "http://" + localIP + ":" + port;
+    }
+
+    public String getBaseApi() {
+        if (StringUtils.isNotEmpty(curlSettingState.baseApi)) {
+            return curlSettingState.baseApi;
+        }
+
+        // 弹窗选择ip地址、输入或选择端口
+        List<NetInterfaceWrap> netInterfaceWraps = NetworkUtil.getAll();
+        if(CollectionUtils.isEmpty(netInterfaceWraps)){
+            throw new BizException("Can not found any network interface");
+        }
+
+        List<String> modulePortList = new ArrayList<>();
+        for (CURLModuleInfo info : curlSettingState.moduleInfoList) {
+            if (StringUtils.isNotEmpty(info.getPort())) {
+                modulePortList.add(info.getPort() + ":" + info.getModuleName());
+            }
+        }
+        String[] modulePorts = modulePortList.toArray(new String[0]);
+
+        NetInterfaceChooseDialogWrapper chooseDialogWrapper = new NetInterfaceChooseDialogWrapper(netInterfaceWraps, modulePorts, "8080");
+        if (chooseDialogWrapper.showAndGet()) {
+            // user pressed OK
+            NetInterfaceWrap netInterfaceWrap = chooseDialogWrapper.getSelectedItem();
+            Assert.notNull(netInterfaceWrap, "Cancel copy as curl. Not choose network interface!");
+            String port = chooseDialogWrapper.getInputString();
+            Assert.notNull(port, "Cancel copy as curl. Not choose or select port!");
+            String[] split = port.split(":");
+            if (split.length > 0) {
+                port = split[0];
+            } else {
+                port = "";
+            }
+            return "http://" + netInterfaceWrap.getIpV4() + ":" + port;
+        }
+        throw new BizException("cancel copy as curl");
     }
 
 
@@ -847,6 +888,7 @@ public class CurlUtils {
     /**
      * for Axios
      * 简单对象的查询参数
+     *
      * @param methodInfo
      * @return
      */
@@ -862,6 +904,7 @@ public class CurlUtils {
 
     /**
      * 根据字段信息获取默认值，并生成URl Params格式
+     *
      * @param fieldInfoList
      * @return
      */

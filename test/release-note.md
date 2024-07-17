@@ -1,7 +1,24 @@
+## v1.0.14
 
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修复配置模块token成功后上传接口接口失败并提示: "默认 token 为空"
+    - 🎉🎉🎉修复@RequestMapping等注释中path属性包含静态常量时路径解析为空
+### New features
+- api generator plus
+    - 🎉 Copy as 选择端口时增加选择IP地址
 
+## v1.0.13
+v1.0.13_IC171.469473
 
-##v1.0.12
+### Bug fixes
+- api generator plus
+    - 🎉🎉🎉修修复读取字段时死循环
+### New features
+- api generator plus
+    - 🎉 将注解标签 @res_body,@res_body_type,@res_body_is_json_schema 增加至 Live Templates
+
+## v1.0.12
 v1.0.12_IC171.469473
 
 ### Bug fixes
@@ -10,7 +27,7 @@ v1.0.12_IC171.469473
     - 🎉🎉🎉修复copy as fetch、copy as axios未处理包含@RequestAttribute、@RequestHeader注释的字段的问题
 
 
-##v1.0.11
+## v1.0.11
 v1.0.11_IC171.469473
 
 ### Bug fixes
@@ -21,7 +38,7 @@ v1.0.11_IC171.469473
 - copy as curl
     - 🎉🎉 新增Copy as axios功能
 
-##v1.0.10
+## v1.0.10
 v1.0.10_IC171.469473
 
 ### Bug fixes
@@ -34,7 +51,7 @@ v1.0.10_IC171.469473
     - ✨✨ 新增自定义Date、LocalDateTime、LocalDate、LocalTime返回值
 
 
-##v1.0.9
+## v1.0.9
 v1.0.9_IC171.469473
 
 ### Bug fixes
@@ -44,7 +61,7 @@ v1.0.9_IC171.469473
     - 🎉🎉🎉修复返回类型为ResponseEntity&lt;xx&gt;时，idea卡死的问题
 
 
-##v1.0.8
+## v1.0.8
 v1.0.8_IC171.469473
 
 ### Bug fixes
@@ -56,7 +73,7 @@ v1.0.8_IC171.469473
     - 🎉 Custom interface state
 
 
-##v1.0.7
+## v1.0.7
 v1.0.7_IC171.469473
 
 ### Bug fixes
@@ -71,13 +88,13 @@ v1.0.7_IC171.469473
 
 
 
-##v1.0.6
+## v1.0.6
 ### New features
 - 🎉add copy RESTful uri
 
 
 
-##v1.0.5
+## v1.0.5
 ### Bug fixes
 - copy as curl
     - Fixed curl and fetch syntax errors when content-type was multipart/form-data
