@@ -4,9 +4,9 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.CheckBoxList;
 import com.intellij.ui.CheckBoxListListener;
+import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.model.NetInterfaceWrap;
 
-import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
@@ -19,8 +19,7 @@ import java.util.List;
 public class NetInterfaceChooseDialogWrapper extends DialogWrapper {
 
     private int selectedInt = -1;
-    private List<NetInterfaceWrap> netInterfaceWraps;
-    private String port = "";
+    private final List<NetInterfaceWrap> netInterfaceWraps;
     private ComboBox<String> myComboBox;
     private CheckBoxList<NetInterfaceWrap> checkBoxList;
 
@@ -29,7 +28,7 @@ public class NetInterfaceChooseDialogWrapper extends DialogWrapper {
         setTitle("Select IP and Port");
         init();
 
-        this.myComboBox.setModel(new DefaultComboBoxModel(ports));
+        this.myComboBox.setModel(new DefaultComboBoxModel<>(ports));
         this.myComboBox.setSelectedItem(portInitialValue);
         this.myComboBox.setEditable(true);
         this.myComboBox.getEditor().setItem(portInitialValue);
@@ -49,10 +48,6 @@ public class NetInterfaceChooseDialogWrapper extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel dialogPanel = new JPanel(new BorderLayout());
-
-        JLabel label = new JLabel("Testing");
-        label.setPreferredSize(new Dimension(100, 100));
-        dialogPanel.add(label, BorderLayout.CENTER);
 
         checkBoxList = new CheckBoxList<>();
 
@@ -74,7 +69,7 @@ public class NetInterfaceChooseDialogWrapper extends DialogWrapper {
         });
         dialogPanel.add(checkBoxList);
 
-        this.myComboBox = new ComboBox(220);
+        this.myComboBox = new ComboBox<>(220);
         dialogPanel.add(this.myComboBox, "South");
 
         return dialogPanel;
@@ -87,7 +82,7 @@ public class NetInterfaceChooseDialogWrapper extends DialogWrapper {
 
     @Nullable
     public String getInputString() {
-        return this.getExitCode() == 0 ? this.myComboBox.getSelectedItem().toString() : null;
+        return this.getExitCode() == 0 ? (String) this.myComboBox.getSelectedItem() : null;
     }
 
     //public static parseNetworkInterfaces(NetworkInterface[])

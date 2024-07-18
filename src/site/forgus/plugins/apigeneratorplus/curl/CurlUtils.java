@@ -703,7 +703,7 @@ public class CurlUtils {
 
         // 弹窗选择ip地址、输入或选择端口
         List<NetInterfaceWrap> netInterfaceWraps = NetworkUtil.getAll();
-        if(CollectionUtils.isEmpty(netInterfaceWraps)){
+        if (CollectionUtils.isEmpty(netInterfaceWraps)) {
             throw new BizException("Can not found any network interface");
         }
 
@@ -721,7 +721,9 @@ public class CurlUtils {
             NetInterfaceWrap netInterfaceWrap = chooseDialogWrapper.getSelectedItem();
             Assert.notNull(netInterfaceWrap, "Cancel copy as curl. Not choose network interface!");
             String port = chooseDialogWrapper.getInputString();
-            Assert.notNull(port, "Cancel copy as curl. Not choose or select port!");
+            if (AssertUtils.isEmpty(port)) {
+                throw new BizException("Cancel copy as curl. Not choose or input port!");
+            }
             String[] split = port.split(":");
             if (split.length > 0) {
                 port = split[0];

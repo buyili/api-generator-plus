@@ -1,8 +1,8 @@
 package site.forgus.plugins.apigeneratorplus.util;
 
+import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.model.NetInterfaceWrap;
 
-import javax.annotation.Nullable;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
