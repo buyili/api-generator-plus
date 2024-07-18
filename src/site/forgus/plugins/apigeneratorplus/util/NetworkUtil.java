@@ -19,14 +19,14 @@ import java.util.List;
 public class NetworkUtil {
 
     @Nullable
-    public static List<NetInterfaceWrap> getAll(){
+    public static List<NetInterfaceWrap> getAll() {
         try {
             boolean checkedInterface = false;
             List<NetInterfaceWrap> netInterfaceWraps = new ArrayList<>();
             Enumeration<NetworkInterface> allNetInterfaces = NetworkInterface.getNetworkInterfaces();
             while (allNetInterfaces.hasMoreElements()) {
                 NetworkInterface netInterface = allNetInterfaces.nextElement();
-                // 去除回环接口，子接口，未运行和接口
+                // 去除回环接口，子接口，未运行的接口
                 if (netInterface.isLoopback() || netInterface.isVirtual() || !netInterface.isUp()) {
                     continue;
                 }
@@ -34,11 +34,6 @@ public class NetworkUtil {
                 NetInterfaceWrap wrap = new NetInterfaceWrap();
                 String displayName = netInterface.getDisplayName();
                 wrap.setDisplayName(displayName);
-
-                if(!checkedInterface && (!displayName.contains("Virtual") && !displayName.contains("Adapter"))){
-                    checkedInterface = true;
-                    wrap.setChecked(true);
-                }
 
                 Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
                 while (addresses.hasMoreElements()) {
@@ -49,6 +44,15 @@ public class NetworkUtil {
                             wrap.setIpV4(ip.getHostAddress());
                         }
                     }
+                }
+                // 过滤掉没有ip地址的网络接口
+                if (AssertUtils.isEmpty(wrap.getIpV4())) {
+                    continue;
+                }
+
+                if (!checkedInterface && (!displayName.contains("Virtual") && !displayName.contains("Adapter"))) {
+                    checkedInterface = true;
+                    wrap.setChecked(true);
                 }
 
 
