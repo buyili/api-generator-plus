@@ -213,6 +213,9 @@ Kotlin包位于~/ideaIC-2019.1.4/plugins/Kotlin/lib 文件夹
 
 ![](.README_images/579e47ba.png)
 
+4. 配置项目使用刚刚添加的SDK
+
+![](.README_images/08d0e95e.png)
 
 
 
