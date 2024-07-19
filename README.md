@@ -190,6 +190,8 @@ Canonical Class Name值包含com.xxx.B，Exclude Children Field值为true时，c
 
 ## 编译环境
 
+插件开发官方文档：https://plugins.jetbrains.com/docs/intellij/welcome.html
+
 1. 下载 IntelliJ IDEA Platform SDK 并导入
 
 社区版下载地址：https://www.jetbrains.com/idea/download/other.html  
