@@ -188,6 +188,30 @@ Canonical Class Name值包含com.xxx.B，Exclude Children Field值为true时，c
 ## Copy as fetch
 将Spring MVC接口复制成[fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)方法。配置参数各个含义可查看文档：  [fetch()](https://developer.mozilla.org/zh-CN/docs/Web/API/WindowOrWorkerGlobalScope/fetch)
 
+## 编译环境
+
+1. 下载 IntelliJ IDEA Platform SDK 并导入
+
+社区版下载地址：https://www.jetbrains.com/idea/download/other.html  
+- 本项目使用 2019.1.4 版本，下面下载源码时需保持一致
+- 内置JDK版本与IDEA版本对应的JDK保持一致，2019.1.4使用JDK 11
+
+![](.README_images/83848d82.png)
+![](.README_images/9e35951f.png)
+
+2. 导入Kotlin依赖
+
+Kotlin包位于~/ideaIC-2019.1.4/plugins/Kotlin/lib 文件夹
+
+![](.README_images/3b5e20d4.png)
+
+3. 下载源码并导入
+
+下载源码并导入上面步骤添加的SDK中。
+- 2019.1.4 源码地址: https://github.com/JetBrains/intellij-community/tree/idea/191.8026.42
+- 导入 ~/idea 2019.1.4/platform 文件夹下源码
+
+![](.README_images/579e47ba.png)
 
 
 
