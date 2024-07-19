@@ -418,9 +418,8 @@
         <applicationService id="site.forgus.plugins.apigeneratorplus.state.ApiGeneratorPlusAppState"
                             serviceImplementation="site.forgus.plugins.apigeneratorplus.state.ApiGeneratorPlusAppState"
                             />
-<!--        <projectService serviceInterface="site.forgus.plugins.apigeneratorplus.config.common.aaa"-->
-<!--                        serviceImplementation="site.forgus.plugins.apigeneratorplus.config.common.impl.aaaImpl"/>-->
 
+<!--        声明模板后不能使用 Dynamic Plugin 功能. 验证结果: Plugin probably cannot be enabled or disabled without IDE restart because it declares non-dynamic extensions: `com.intellij.defaultLiveTemplatesProvider`-->
         <defaultLiveTemplatesProvider implementation="site.forgus.plugins.apigeneratorplus.livetemplates.LiveTemplateProvider"/>
         <liveTemplateContext implementation="site.forgus.plugins.apigeneratorplus.livetemplates.MarkdownContext"/>
         <liveTemplateMacro implementation="site.forgus.plugins.apigeneratorplus.livetemplates.TitleCaseMacro"/>
@@ -445,10 +444,12 @@
                     class="site.forgus.plugins.apigeneratorplus.action.CopyAsAxiosAction"
                     text="Copy as Axios"/>
             <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction"
-                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction" text="Copy as CURL (Cmd)">
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlCMDAction"
+                    text="Copy as CURL (Cmd)">
             </action>
             <action id="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlBashAction"
-                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlBashAction" text="Copy as CURL (Bash)">
+                    class="site.forgus.plugins.apigeneratorplus.action.CopyAsCurlBashAction"
+                    text="Copy as CURL (Bash)">
             </action>
             <action class="site.forgus.plugins.apigeneratorplus.action.GenerateModuleNamesAction"
                     text="Scan Project Modules And Save">
@@ -461,14 +462,11 @@
             <add-to-group group-id="EditorLangPopupMenu" anchor="first"/>
         </action>
 <!--        <group id="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup"-->
-<!--               class="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup" text="Api Generator Plus" popup="true">-->
+<!--               class="site.forgus.plugins.apigeneratorplus.action.ToolsActionGroup"-->
+<!--               text="Api Generator Plus"-->
+<!--               popup="true">-->
 <!--            <add-to-group group-id="ToolsMenu" anchor="last"/>-->
 <!--        </group>-->
-        <action id="com.example.action.TestNotificationAction"
-                class="site.forgus.plugins.apigeneratorplus.action.TestNotificationAction"
-                text="Test Notification Action" description="Test notification action description">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-        </action>
     </actions>
 
     <depends>com.intellij.modules.java</depends>

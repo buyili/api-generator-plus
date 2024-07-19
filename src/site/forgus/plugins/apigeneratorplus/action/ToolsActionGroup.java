@@ -15,7 +15,7 @@ public class ToolsActionGroup extends ActionGroup {
 
     @Override
     public void update(@NotNull AnActionEvent event) {
-        // 设置该Action图标
+        // 设置该Action Group图标
         event.getPresentation().setIcon(SdkIcons.Logo);
     }
 
@@ -23,6 +23,7 @@ public class ToolsActionGroup extends ActionGroup {
     @Override
     public AnAction[] getChildren(@Nullable AnActionEvent anActionEvent) {
         return new AnAction[]{
+                new TestNotificationAction("Test Notification Action", "Test notification action description", null),
                 new YApiServerUrlDialogAction("Server Urls", "", null),
                 new YApiProjectDialogAction("YApi Token", "", null)
         };

@@ -166,7 +166,7 @@ public class YApiProjectDialog(val project: Project,
 
         fun projectName() = yApiProjectEntity.project.name
 
-        fun projectId() = yApiProjectEntity.project._id
+        fun projectId(): String = yApiProjectEntity.project._id.toString()
     }
 
     private inner class ProjectsTableModel() : AbstractTableModel() {

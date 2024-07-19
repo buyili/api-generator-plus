@@ -6,13 +6,22 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import com.intellij.openapi.diagnostic.Logger;
+import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.util.NotificationUtil;
 
 public class TestNotificationAction extends AnAction {
 
-    private Logger LOG = Logger.getInstance(TestNotificationAction.class);
+    private final Logger LOG = Logger.getInstance(TestNotificationAction.class);
+
+    public TestNotificationAction() {
+    }
+
+    public TestNotificationAction(@Nullable String text, @Nullable String description, @Nullable Icon icon) {
+        super(text, description, icon);
+    }
 
     @Override
     public void actionPerformed(AnActionEvent actionEvent) {
