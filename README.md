@@ -6,9 +6,12 @@
 新增功能 Copy as cURL；灵感来自于Chrome浏览器的Copy as cURL功能
 
 ## 简介
+<!-- Plugin description -->
 《Generate Api Plus》是一款可以自动生成接口文档的IDEA插件。包括基于Spring注解的RESTful接口和用于定义dubbo api的普通接口。其中，RESTful接口将自动上传并托管在内网部署的YApi服务器上，而普通接口则以markdown文件的形式保存在指定目录。
 所以，如果你想利用该插件的能力帮你生成REST接口文档，请先确保你已部署好自己的YApi服务端。
 传送门：[如何部署YApi平台](https://hellosean1025.github.io/yapi/devops/index.html)
+<!-- Plugin description end -->
+
 
 ## 特性
 - 基于javadoc解析，无代码入侵
