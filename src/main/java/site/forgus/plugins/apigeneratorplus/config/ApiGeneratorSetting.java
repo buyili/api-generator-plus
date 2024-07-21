@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.AddEditDeleteListPanel;
 import com.intellij.ui.components.*;
 import com.intellij.util.ui.FormBuilder;
-import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;

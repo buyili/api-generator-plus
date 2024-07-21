@@ -1,6 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.util;
 
-import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 
 /**
  * @author lmx 2020/12/22 16:52

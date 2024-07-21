@@ -1,7 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.config;
 
 import com.intellij.openapi.options.ConfigurationException;
-import org.apache.commons.lang3.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import site.forgus.plugins.apigeneratorplus.util.AssertUtils;
 import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;

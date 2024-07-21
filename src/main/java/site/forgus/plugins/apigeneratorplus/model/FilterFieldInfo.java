@@ -2,7 +2,7 @@ package site.forgus.plugins.apigeneratorplus.model;
 
 import com.intellij.util.containers.ContainerUtil;
 import lombok.Data;
-import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;

@@ -13,7 +13,7 @@ import com.intellij.util.ui.ListItemEditor;
 import com.intellij.util.ui.ListModelEditor;
 import com.intellij.util.ui.ListModelEditorBase;
 import com.intellij.util.ui.UIUtil;
-import org.apache.commons.lang3.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;

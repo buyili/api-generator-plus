@@ -2,7 +2,7 @@ package site.forgus.plugins.apigeneratorplus.curl.model;
 
 import com.intellij.openapi.util.text.StringUtil;
 import lombok.Data;
-import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import site.forgus.plugins.apigeneratorplus.normal.MethodInfo;
 import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 

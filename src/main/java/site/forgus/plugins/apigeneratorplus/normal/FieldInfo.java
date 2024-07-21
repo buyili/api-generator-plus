@@ -8,7 +8,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import org.jetbrains.kotlin.psi.*;
 import site.forgus.plugins.apigeneratorplus.config.ApiGeneratorConfig;
 import site.forgus.plugins.apigeneratorplus.constant.TypeEnum;

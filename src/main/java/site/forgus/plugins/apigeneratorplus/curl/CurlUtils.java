@@ -21,7 +21,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ui.TextTransferable;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.SystemIndependent;
 import org.jetbrains.kotlin.idea.KotlinLanguage;
