@@ -3,6 +3,7 @@ package site.forgus.plugins.apigeneratorplus.yapi.model;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +31,8 @@ public class YApiProject implements Serializable {
     public String after_script;
     public String pre_script;
     public String project_mock_script;
-    public List<YApiEnv> env;
-    public List<YApiTag> tag;
+    // 使用ArrayList代替List,或者设定默认值new ArrayList<>(); 避免IDE读取配置时实例化为com.intellij.util.SmartList, 避免深拷贝时报错
+    public List<YApiEnv> env = new ArrayList<>();
+    public List<YApiTag> tag = new ArrayList<>();
 
 }

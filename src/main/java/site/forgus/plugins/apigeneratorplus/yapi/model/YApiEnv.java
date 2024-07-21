@@ -3,6 +3,7 @@ package site.forgus.plugins.apigeneratorplus.yapi.model;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ public class YApiEnv implements Serializable {
     private String _id;
     private String name;
     private String domain;
-    private List<YApiHeader> header;
-    private List<YApiGlobal> global;
+    private List<YApiHeader> header = new ArrayList<>();
+    private List<YApiGlobal> global = new ArrayList<>();
 
 }
