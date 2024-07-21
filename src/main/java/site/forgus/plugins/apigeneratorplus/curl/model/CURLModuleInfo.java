@@ -1,13 +1,16 @@
 package site.forgus.plugins.apigeneratorplus.curl.model;
 
 
-import com.intellij.util.containers.ContainerUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.forgus.plugins.apigeneratorplus.util.JsonUtil;
 
-import java.util.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author lmx 2020/11/11 22:53
@@ -15,7 +18,9 @@ import java.util.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CURLModuleInfo implements Cloneable {
+public class CURLModuleInfo implements Cloneable, Serializable {
+
+    private static final long serialVersionUID = -8561360758136970403L;
 
     private String id = String.valueOf(System.nanoTime());
 

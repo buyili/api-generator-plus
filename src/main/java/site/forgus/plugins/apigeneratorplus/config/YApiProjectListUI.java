@@ -10,6 +10,7 @@ import com.intellij.ui.*;
 import com.intellij.ui.components.JBList;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.ListItemEditor;
+import com.intellij.util.ui.ListModelEditor;
 import com.intellij.util.ui.ListModelEditorBase;
 import com.intellij.util.ui.UIUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 import site.forgus.plugins.apigeneratorplus.store.GlobalVariable;
+import site.forgus.plugins.apigeneratorplus.util.DeepCloneUtil;
 import site.forgus.plugins.apigeneratorplus.yapi.model.YApiProject;
 import site.forgus.plugins.apigeneratorplus.yapi.sdk.YApiSdk;
 
@@ -145,11 +147,7 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 
     @Override
     public void reset(@NotNull List<YApiProjectConfigInfo> settings) {
-        List<YApiProjectConfigInfo> cloneList = new ArrayList<>();
-        for (YApiProjectConfigInfo setting : settings) {
-            cloneList.add(setting.clone());
-        }
-//        List<YApiProjectConfigInfo> cloneList = ContainerUtil.copyList(settings);
+        List<YApiProjectConfigInfo> cloneList = DeepCloneUtil.deepCloneList(settings);
         editor.reset(cloneList);
     }
 
@@ -171,42 +169,34 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
 //            return true;
 //        });
 
-        if (isModified(settings)) {
-            List<YApiProjectConfigInfo> result = editor.apply();
-            if (result.size() == 0) {
-                editor.reset(result);
-            }
-            if (editor.isModified()) {
-                // 解决   editor.reset(result);   后result被清空问题
-                List<YApiProjectConfigInfo> newList = new ArrayList<>(result);
-                editor.reset(newList);
-            }
+        List<YApiProjectConfigInfo> newItems = editor.getModel().getItems();
 
-            // apply后，不切换左侧列表项，再次修改后检测不到是否修改
-            YApiProjectConfigInfo item = editor.getSelected();
-            if (item != null) {
-                itemPanel.setItem(editor.getMutable(item));
-            }
-
-            for (YApiProjectConfigInfo yApiProjectConfigInfo : result) {
-                if (StringUtils.isNotBlank(yApiProjectConfigInfo.getToken())) {
-                    try {
-                        YApiProject projectInfo = YApiSdk.getProjectInfo(oldState.yApiServerUrl, yApiProjectConfigInfo.getToken());
-                        yApiProjectConfigInfo.setProject(projectInfo);
-                        yApiProjectConfigInfo.setProjectId(String.valueOf(projectInfo.get_id()));
-                        yApiProjectConfigInfo.setBasePath(projectInfo.getBasepath());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-//                    itemPanel.setItem(yApiProjectConfigInfo);
-                        editor.getList().setSelectedIndex(result.indexOf(yApiProjectConfigInfo));
-                        throw new ConfigurationException(e.getMessage());
-                    }
+        for (YApiProjectConfigInfo yApiProjectConfigInfo : newItems) {
+            if (StringUtils.isNotBlank(yApiProjectConfigInfo.getToken())) {
+                try {
+                    YApiProject projectInfo = YApiSdk.getProjectInfo(oldState.yApiServerUrl, yApiProjectConfigInfo.getToken());
+                    yApiProjectConfigInfo.setProject(projectInfo);
+                    yApiProjectConfigInfo.setProjectId(String.valueOf(projectInfo.get_id()));
+                    yApiProjectConfigInfo.setBasePath(projectInfo.getBasepath());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    editor.getList().setSelectedIndex(newItems.indexOf(yApiProjectConfigInfo));
+                    throw new ConfigurationException(e.getMessage());
                 }
+            } else {
+                yApiProjectConfigInfo.setProject(null);
             }
-
-            oldState.yApiProjectConfigInfoList = new ArrayList<>(result);
-
         }
+
+        List<YApiProjectConfigInfo> result = editor.apply();
+
+        // apply后，不切换左侧列表项，并且解决再次修改后检测不到是否修改的问题
+        YApiProjectConfigInfo item = editor.getSelected();
+        if (item != null) {
+            itemPanel.setItem(editor.getMutable(item));
+        }
+
+        oldState.yApiProjectConfigInfoList = DeepCloneUtil.deepCloneList(result);
     }
 
     @NotNull
@@ -215,7 +205,10 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
         return component;
     }
 
-
+    /**
+     * 参考 {@link ListModelEditor} 实现
+     * @param <T>
+     */
     public static class MyListModelEditor<T> extends ListModelEditorBase<T> {
         private final ToolbarDecorator toolbarDecorator;
         protected boolean myRefreshActionEnabled;
@@ -293,6 +286,18 @@ public class YApiProjectListUI implements ConfigurableUi<List<YApiProjectConfigI
                     list.setSelectedIndex(0);
                 }
             });
+        }
+
+        @NotNull
+        @Override
+        public List<T> apply() {
+            List<T> items = super.apply();
+            // 解决点击apply按钮执行成功后，reset按钮不消失的两种情况。1. 给空列表新添一个或多个配置 2. 删除列表中的所有配置
+            // 不使用super.apply()方法中的 if (!helper.hasModifiedItems()) { , 避免污染其他情况
+            if (items.isEmpty() || this.isModified()) {
+                this.helper.reset(items);
+            }
+            return items;
         }
 
         private class MyListCellRenderer extends ColoredListCellRenderer {

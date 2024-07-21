@@ -8,6 +8,7 @@ import com.intellij.util.ui.ListItemEditor;
 import com.intellij.util.ui.ListModelEditor;
 import org.jetbrains.annotations.NotNull;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
+import site.forgus.plugins.apigeneratorplus.util.DeepCloneUtil;
 import site.forgus.plugins.apigeneratorplus.util.StringUtil;
 
 import javax.swing.*;
@@ -146,25 +147,23 @@ public class CURLModuleInfoUI implements ConfigurableUi<List<CURLModuleInfo>> {
 //            return true;
 //        });
 
-        if (isModified(settings)) {
-            List<CURLModuleInfo> result = editor.apply();
-            if (result.size() == 0) {
-                editor.reset(result);
-            }
-            if (editor.isModified()) {
-                // 解决   editor.reset(result);   后result被清空问题
-                List<CURLModuleInfo> newList = new ArrayList<>(result);
-                editor.reset(newList);
-            }
-
-            // apply后，不切换左侧列表项，再次修改后检测不到是否修改
-            CURLModuleInfo item = editor.getSelected();
-            if (item != null) {
-                itemPanel.setItem(editor.getMutable(item));
-            }
-
-            oldState.moduleInfoList = new ArrayList<>(result);
+        List<CURLModuleInfo> result = editor.apply();
+        if (result.isEmpty()) {
+            editor.reset(result);
         }
+        if (editor.isModified()) {
+            // 解决   editor.reset(result);   后result被清空问题
+            List<CURLModuleInfo> newList = new ArrayList<>(result);
+            editor.reset(newList);
+        }
+
+        // apply后，不切换左侧列表项，再次修改后检测不到是否修改
+        CURLModuleInfo item = editor.getSelected();
+        if (item != null) {
+            itemPanel.setItem(editor.getMutable(item));
+        }
+
+        oldState.moduleInfoList = DeepCloneUtil.deepCloneList(result);
     }
 
     @NotNull

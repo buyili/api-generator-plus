@@ -1,6 +1,6 @@
 package site.forgus.plugins.apigeneratorplus.util;
 
-import site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo;
+import org.jetbrains.annotations.Contract;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -12,7 +12,14 @@ import java.util.List;
 
 public class DeepCloneUtil {
 
-    public static <T> List<T> deepCloneList(List<T> list){
+    @Contract("null -> null")
+    public static <T extends Serializable> List<T> deepCloneList(List<T> list) {
+        if (null == list) {
+            return null;
+        }
+        if (list.isEmpty()) {
+            return new ArrayList<>();
+        }
         List<T> cloneList = new ArrayList<>();
         for (T item : list) {
             cloneList.add(deepClone(item));
