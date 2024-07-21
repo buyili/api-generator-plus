@@ -1,12 +1,24 @@
 package site.forgus.plugins.apigeneratorplus.util;
 
+import site.forgus.plugins.apigeneratorplus.config.YApiProjectConfigInfo;
+
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author lmx 2021/1/13 18:14
  */
 
 public class DeepCloneUtil {
+
+    public static <T> List<T> deepCloneList(List<T> list){
+        List<T> cloneList = new ArrayList<>();
+        for (T item : list) {
+            cloneList.add(deepClone(item));
+        }
+        return cloneList;
+    }
 
     /**
      * 深层复制序列化 vo
