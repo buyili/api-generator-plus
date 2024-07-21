@@ -191,7 +191,7 @@ Canonical Class Name值包含com.xxx.B，Exclude Children Field值为true时，c
 ## Copy as fetch
 将Spring MVC接口复制成[fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)方法。配置参数各个含义可查看文档：  [fetch()](https://developer.mozilla.org/zh-CN/docs/Web/API/WindowOrWorkerGlobalScope/fetch)
 
-## 编译环境
+## DevKit开发环境配置
 
 插件开发官方文档：https://plugins.jetbrains.com/docs/intellij/welcome.html
 
@@ -221,6 +221,10 @@ Kotlin包位于~/ideaIC-2019.1.4/plugins/Kotlin/lib 文件夹
 4. 配置项目使用刚刚添加的SDK
 
 ![](.README_images/08d0e95e.png)
+
+## Gradle开发环境
+
+使用模板：[IntelliJ Platform Plugin Template v0.7.0](https://github.com/JetBrains/intellij-platform-plugin-template/tree/v0.7.0)
 
 
 
