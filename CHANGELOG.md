@@ -3,6 +3,12 @@
 # Api Generator Plus Changelog
 
 ## [Unreleased]
+- api generator plus
+  - 🎉修复某个第三方插件引起的网络接口筛选失效, 新增根据是否能获取到ip地址来筛选网络接口
+  - 🎉修复执行Copy as CUrl(Bash)动作, 弹出选择窗口时, 如果输入端口为空字符串时报错
+  - 🎉YApi模块配置错误token时只有第一次点击apply报错,第二次不再报错,但没有保存成功
+  - 🎉修复浅拷贝引起的设置界面异常
+  - 🎉修复打开项目后首先在类上执行 Generate Api Plus 动作, 报空指针异常
 
 ## [1.0.14]
 
