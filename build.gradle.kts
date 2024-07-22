@@ -117,6 +117,11 @@ tasks {
         )
     }
 
+    runIde {
+        // https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html#tasks-runide-autoreloadplugins
+        autoReloadPlugins = true
+    }
+
     runPluginVerifier {
         ideVersions(pluginVerifierIdeVersions)
     }
