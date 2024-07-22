@@ -3,6 +3,7 @@
 # Api Generator Plus Changelog
 
 ## [Unreleased]
+### Bug fixes
 - api generator plus
   - 🎉修复某个第三方插件引起的网络接口筛选失效, 新增根据是否能获取到ip地址来筛选网络接口
   - 🎉修复执行Copy as CUrl(Bash)动作, 弹出选择窗口时, 如果输入端口为空字符串时报错
