@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -19,6 +20,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
+import site.forgus.plugins.apigeneratorplus.serverurl.YApiDefineServerUrlDialog;
 import site.forgus.plugins.apigeneratorplus.util.StringUtils;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -53,6 +55,8 @@ import java.text.MessageFormat;
 import java.util.*;
 
 public class ApiGenerateAction extends AnAction {
+
+    private static final Logger LOG = Logger.getInstance(ApiGenerateAction.class);
 
     protected ApiGeneratorConfig config;
 
@@ -137,10 +141,13 @@ public class ApiGenerateAction extends AnAction {
                 }
             }
 
-        } catch (BizException e) {
-            e.printStackTrace();
-            NotificationUtil.errorNotify(e.getMessage(), project);
-            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            LOG.error(e);
+            if (e instanceof BizException) {
+                NotificationUtil.errorNotify(e.getMessage(), project);
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -212,7 +219,7 @@ public class ApiGenerateAction extends AnAction {
         boolean uploadSuccess = false;
         for (PsiMethod method : methods) {
             if (hasMappingAnnotation(method)) {
-                uploadToYApi(project, method);
+                uploadSelectedMethodToYApi(project, method);
                 uploadSuccess = true;
             }
         }
@@ -259,7 +266,7 @@ public class ApiGenerateAction extends AnAction {
             if (psiElement instanceof KtFunction) {
                 KtFunction method = (KtFunction) psiElement;
                 if (hasMappingAnnotation(method)) {
-                    uploadToYApi(project, method);
+                    uploadSelectedMethodToYApi(project, method);
                     uploadSuccess = true;
                 }
             }
@@ -1351,7 +1358,7 @@ public class ApiGenerateAction extends AnAction {
                         selectedConfig.setBasePath(project.getBasepath());
                         // 将修复后的配置持久化保存到xml文件中
                         for (YApiProjectConfigInfo yApiProjectConfigInfo : config.yApiProjectConfigInfoList) {
-                            if(yApiProjectConfigInfo.getId().equals(selectedConfig.getId())){
+                            if (yApiProjectConfigInfo.getId().equals(selectedConfig.getId())) {
                                 yApiProjectConfigInfo.setProjectId(selectedConfig.getProjectId());
                                 yApiProjectConfigInfo.setBasePath(selectedConfig.getBasePath());
                             }
