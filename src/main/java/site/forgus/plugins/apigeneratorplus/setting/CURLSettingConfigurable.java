@@ -1,15 +1,18 @@
 package site.forgus.plugins.apigeneratorplus.setting;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.*;
 import com.intellij.ui.components.labels.LinkLabel;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
 import site.forgus.plugins.apigeneratorplus.curl.CurlUtils;
+import site.forgus.plugins.apigeneratorplus.curl.enums.ArrayFormatEnum;
 import site.forgus.plugins.apigeneratorplus.curl.model.CURLModuleInfo;
 
 import javax.swing.*;
@@ -34,7 +37,8 @@ public class CURLSettingConfigurable implements Configurable {
     JBTextArea canonicalClassNameTextFields;
     JBTextArea includeFiledTextFields;
     JBTextArea excludeFieldTextFields;
-    JBTextField arrayFormatTextFields;
+    ComboBox<String> myArrayFormatComboBox;
+    LinkLabel myArrayFormatExternalLink;
     JBCheckBox excludeChildrenCheckBox;
 
     JBTextField credentialsTextField;
@@ -77,7 +81,16 @@ public class CURLSettingConfigurable implements Configurable {
         canonicalClassNameTextFields = new JBTextArea(oldState.filterFieldInfo.canonicalClassName, 3, 0);
         includeFiledTextFields = new JBTextArea(oldState.filterFieldInfo.includeFiled, 3, 0);
         excludeFieldTextFields = new JBTextArea(oldState.filterFieldInfo.excludeField, 3, 0);
-        arrayFormatTextFields = new JBTextField(oldState.arrayFormat);
+        myArrayFormatComboBox = new ComboBox<>(220);
+        myArrayFormatComboBox.setModel(new DefaultComboBoxModel<>(ArrayFormatEnum.names()));
+        myArrayFormatComboBox.setSelectedItem(oldState.arrayFormat);
+        myArrayFormatExternalLink = LinkLabel.create("How it works",
+                                                     () -> BrowserUtil.browse("https://github.com/buyili/api-generator-plus?tab=readme-ov-file#array-format"));
+
+        JPanel arrayFormatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        arrayFormatPanel.add(myArrayFormatComboBox);
+        arrayFormatPanel.add(myArrayFormatExternalLink);
+
         excludeChildrenCheckBox = new JBCheckBox("", oldState.filterFieldInfo.excludeChildren);
 
         curlModuleInfoUI = new CURLModuleInfoUI(oldState);
@@ -151,7 +164,7 @@ public class CURLSettingConfigurable implements Configurable {
                 .addLabeledComponent(new JBLabel("Canonical Class Name:"), canonicalClassNameTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Include Fields:"), includeFiledTextFields, 1, true)
                 .addLabeledComponent(new JBLabel("Exclude Fields:"), excludeFieldTextFields, 1, true)
-                .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatTextFields, 1, false)
+                .addLabeledComponent(new JBLabel("Array Format:"), arrayFormatPanel, 1, false)
                 .addTooltip("indices    // 'a[0]=b&a[1]=c'      brackets    // 'a[]=b&a[]=c'        repeat  // 'a=b&a=c'        comma   // 'a=b,c'")
                 .addLabeledComponent(new JBLabel("Exclude Children Field"), excludeChildrenCheckBox)
                 .addVerticalGap(16)
@@ -193,7 +206,7 @@ public class CURLSettingConfigurable implements Configurable {
                 || !oldState.filterFieldInfo.canonicalClassName.equals(canonicalClassNameTextFields.getText())
                 || !oldState.filterFieldInfo.includeFiled.equals(includeFiledTextFields.getText())
                 || !oldState.filterFieldInfo.excludeField.equals(excludeFieldTextFields.getText())
-                || !oldState.arrayFormat.equals(arrayFormatTextFields.getText())
+                || !oldState.arrayFormat.equals(myArrayFormatComboBox.getSelectedItem())
                 || oldState.filterFieldInfo.excludeChildren != excludeChildrenCheckBox.isSelected()
         ) {
             return true;
@@ -221,7 +234,7 @@ public class CURLSettingConfigurable implements Configurable {
         oldState.filterFieldInfo.canonicalClassName = canonicalClassNameTextFields.getText();
         oldState.filterFieldInfo.includeFiled = includeFiledTextFields.getText();
         oldState.filterFieldInfo.excludeField = excludeFieldTextFields.getText();
-        oldState.arrayFormat = arrayFormatTextFields.getText();
+        oldState.arrayFormat = String.valueOf(myArrayFormatComboBox.getSelectedItem());
         oldState.filterFieldInfo.excludeChildren = excludeChildrenCheckBox.isSelected();
 
 
@@ -242,7 +255,7 @@ public class CURLSettingConfigurable implements Configurable {
         canonicalClassNameTextFields.setText(oldState.filterFieldInfo.canonicalClassName);
         includeFiledTextFields.setText(oldState.filterFieldInfo.includeFiled);
         excludeFieldTextFields.setText(oldState.filterFieldInfo.excludeField);
-        arrayFormatTextFields.setText(oldState.arrayFormat);
+        myArrayFormatComboBox.setSelectedItem(oldState.arrayFormat);
         excludeChildrenCheckBox.setSelected(oldState.filterFieldInfo.excludeChildren);
 
         credentialsTextField.setText(oldState.fetchConfig.credentials);

@@ -1,5 +1,7 @@
 package site.forgus.plugins.apigeneratorplus.curl.enums;
 
+import java.util.Arrays;
+
 /**
  * qs.stringify({ a: ['b', 'c'] }, { arrayFormat: 'indices' })
  * // 'a[0]=b&a[1]=c'
@@ -19,5 +21,9 @@ public enum ArrayFormatEnum {
     repeat,
 
     comma;
+
+    public static String[] names(){
+        return Arrays.stream(values()).map(Enum::name).toArray(String[]::new);
+    }
 
 }
