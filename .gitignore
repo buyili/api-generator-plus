@@ -1,7 +1,8 @@
-.idea/
+.gradle
+.idea
+build
 out/
 *.iml
 *.zip
-/.idea/
 /Test.html
 docs/docs/.vuepress/dist

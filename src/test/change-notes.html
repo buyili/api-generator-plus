@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Change Notes</title>
+</head>
+<body>
+<h2>v1.0.14</h2>
+<h3>Bug fixes</h3>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 修复配置模块token成功后上传接口失败并提示: "默认 token 为空"</a></li>
+      <li>🎉 修复@RequestMapping等注释中path属性包含静态常量时路径解析为空 </a></li>
+    </ul>
+  </li>
+</ul>
+<h3>New features</h3>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 Copy as 选择端口时增加选择IP地址 </li>
+    </ul>
+  </li>
+</ul>
+<h2>v1.0.13</h2>
+<h3>Bug fixes</h3>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 修复读取字段时死循环</a></li>
+    </ul>
+  </li>
+</ul>
+<h3>New features</h3>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 将注解标签 @res_body,@res_body_type,@res_body_is_json_schema 增加至 Live Templates </li>
+    </ul>
+  </li>
+</ul>
+<h2>v1.0.12</h2>
+<h3>Bug fixes</h3>
+<ul>
+  <li>copy as curl
+    <ul>
+      <li>🎉🎉🎉修复copy as fetch、copy as axios字段过滤功能失效问题</li>
+      <li>🎉🎉🎉修复copy as fetch、copy as axios未处理包含@RequestAttribute、@RequestHeader注释的字段的问题</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>v1.0.11</h2>
+<h3>Bug fixes</h3>
+<ul>
+  <li>api generator plus
+    <ul>
+      <li>🎉🎉🎉未指定接口名称时使用接口路径代替</li>
+      <li>🎉🎉🎉修复Server Url或Token错误时空指针异常<a href="https://github.com/buyili/api-generator-plus/issues/7">(#7)</a></li>
+    </ul>
+  </li>
+</ul>
+<h3>New features</h3>
+<ul>
+  <li>copy as curl
+    <ul>
+      <li>🎉🎉 新增Copy as axios功能</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.10</h3>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 修复类型转换异常 <a href="https://github.com/buyili/api-generator-plus/issues/6">(#6)</a></li>
+    </ul>
+  </li>
+  <li>
+    copy as curl
+    <ul>
+      <li>🎉🎉🎉修复打开设置报错，保存后配置数据丢失等问题</li>
+    </ul>
+  </li>
+</ul>
+<h4>New features</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>✨✨✨新增自定义Date、LocalDateTime、LocalDate、LocalTime返回值</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.9</h3>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 修复字段类型为long而不是Long时报错问题</li>
+      <li>🎉 修复嵌套泛型导致idea卡死的问题 <a href="https://github.com/buyili/api-generator-plus/issues/4">(#4)</a></li>
+      <li>🎉 修复返回类型为ResponseEntity&lt;xx&gt;时，idea卡死的问题</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.8</h3>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>🎉 Fixed throw exception on 2020.2+ issue <a
+        href="https://github.com/buyili/api-generator-plus/issues/1">(#1)</a></li>
+    </ul>
+  </li>
+</ul>
+<h4>New features</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>✨ Specify the tag for the excuse</li>
+      <li>🎉 Custom interface state</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.7</h3>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>Fixed Parameter description is not uploaded if it contains Spaces</li>
+    </ul>
+  </li>
+</ul>
+<h4>New features</h4>
+<ul>
+  <li>
+    api generator plus
+    <ul>
+      <li>Ignore update response data for YApi api</li>
+      <li>Add annotation @res_body @res_body_is_json_schema @res_body_type</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.6</h3>
+<h4>New features</h4>
+<ul>
+  <li>
+    add <b>copy Restful uri</b>
+  </li>
+</ul>
+<h3>1.0.5</h3>
+<h4>New features</h4>
+<ul>
+  <li>
+    Kotlin language support
+  </li>
+</ul>
+<h3>1.0.4</h3>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>Fixed curl and fetch syntax errors when content-type was multipart/form-data</li>
+    </ul>
+  </li>
+</ul>
+<h4>Bug 修复</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>修复Content-Type为 multipart/form-data时curl、fetch语法错误</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.3</h3>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>Fixed an error with a content-Type exception for the POST method without arguments</li>
+    </ul>
+  </li>
+</ul>
+<h4>Bug 修复</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>修复POST方法没有参数时，content-type 异常的错误</li>
+    </ul>
+  </li>
+</ul>
+<h3>1.0.2</h3>
+<h4>New features</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>scan base path for module configuration</i></li>
+    </ul>
+  </li>
+  <li>
+    api generator plus
+    <ul>
+      <li>Support for custom rule filtering request fields</li>
+      <li>Support for matching YApi projects by module name</li>
+    </ul>
+  </li>
+</ul>
+<h4>Bug fixes</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>Fix that the method that contains the @RequestBody annotation does not generate the query parameter</li>
+      <li>Fix module header configuration error</i></li>
+    </ul>
+  </li>
+</ul>
+<h4>新特性</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>自动扫描模块信息时读取配置文件（application.yaml,application.yml,application.properties）中的上下文路径</i></li>
+    </ul>
+  </li>
+  <li>
+    api generator plus
+    <ul>
+      <li>支持自定义规则过滤请求字段</li>
+      <li>支持根据模块名匹配YApi项目</li>
+    </ul>
+  </li>
+</ul>
+<h4>Bug 修复</h4>
+<ul>
+  <li>
+    copy as curl
+    <ul>
+      <li>修复包含@RequestBody的方法没有生成Query参数</i></li>
+      <li>修复配置模块header时保存位置错误</i></li>
+    </ul>
+  </li>
+</ul>
+<em>1.0.1</em><br>
+<ul>
+  <li>Add the <i>Copy as fetch</i></li>
+</ul>
+<em>1.0.0</em><br>
+<ul>
+  <li>YApi Api automatic Generator</li>
+  <li>Copy as CUrl</li>
+</ul>
+</body>
+</html>
