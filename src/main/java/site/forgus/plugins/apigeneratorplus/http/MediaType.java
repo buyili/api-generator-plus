@@ -13,7 +13,6 @@ public enum MediaType {
 
     APPLICATION_JSON("application/json"),
 
-    @Deprecated
     APPLICATION_JSON_UTF8("application/json;charset=UTF-8"),
 
     MULTIPART_FORM_DATA("multipart/form-data"),
@@ -31,7 +30,6 @@ public enum MediaType {
 
     public static final String APPLICATION_JSON_VALUE = "application/json";
 
-    @Deprecated
     public static final String APPLICATION_JSON_UTF8_VALUE = "application/json;charset=UTF-8";
 
     public static final String MULTIPART_FORM_DATA_VALUE = "multipart/form-data";
